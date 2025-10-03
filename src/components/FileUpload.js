@@ -17,13 +17,13 @@ const FileUpload = ({ files, setFiles }) => {
   return (
     <div className="form-section">
       {/* Update the title to specify DOCX only */}
-      <h3>1. Upload Your Latest Resume (DOCX only)</h3>
+      <h3>Upload Your Documents</h3>
       <div className="file-upload-area">
         <input
           type="file"
           id="file-upload"
           // Update the 'accept' attribute to only allow .docx files
-          accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,application/pdf"
           onChange={handleFileChange}
           multiple
         />

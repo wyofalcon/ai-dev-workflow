@@ -102,7 +102,7 @@ function App() {
                 <Typography variant="h5">Step 1: Upload Your Resume</Typography>
               </Box>
               <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
-                Upload your existing resume in PDF or DOCX format. This will be used as the basis for your new, tailored CV.
+                Upload up to 5 of your existing resumes, cover letters, or any other relevant documents in PDF or DOCX format. This will be used as the basis for your new, tailored CV.
               </Typography>
               <FileUpload files={files} setFiles={setFiles} />
             </CardContent>

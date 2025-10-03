@@ -43,6 +43,17 @@ const extractTextFromFile = async (filePath) => {
         if (extension === 'docx') {
             const { value } = await mammoth.extractRawText({ buffer: dataBuffer });
             return value;
+        } else if (extension === 'pdf') {
+            const loadingTask = getDocument(dataBuffer);
+            const pdf = await loadingTask.promise;
+            let text = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                const strings = content.items.map(item => item.str);
+                text += strings.join(' ') + '\n';
+            }
+            return text;
         } else {
             // Fallback for other text-based files like .txt
             return dataBuffer.toString('utf8');
