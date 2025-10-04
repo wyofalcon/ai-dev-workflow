@@ -52,6 +52,39 @@ body {
   border-radius: 8px;
   padding: 1.5rem;
   min-height: 400px;
+  overflow: auto; /* Add this */
+}
+
+@media print {
+  body, .App {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  .App-main {
+    padding: 0;
+  }
+
+  .modal-overlay, .modal-content, .modal-header, .modal-body, .page-controls {
+    all: unset;
+  }
+
+  .resume-output {
+    border: none;
+    padding: 0;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  #resume-content {
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Hide elements that are not part of the resume */
+  .AppBar, .banner, .card h2, .spinner-container, .placeholder-text, .page-controls {
+    display: none;
+  }
 }
 
 .spinner-container {
