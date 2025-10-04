@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import axios from 'axios';
+const axios = require('axios');
 import formidable from 'formidable';
 import fs from 'fs';
 import mammoth from 'mammoth';
