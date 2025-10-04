@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import axios from 'axios';
 import formidable from 'formidable';
 import fs from 'fs';
 import mammoth from 'mammoth';
@@ -95,6 +96,13 @@ export default async function handler(req, res) {
     }
     
     console.log('Extracted CV text:', originalCvText);
+
+    try {
+      const response = await axios.get(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
+      console.log('Available Models:', JSON.stringify(response.data.models, null, 2));
+    } catch (error) {
+      console.error('Error listing models:', error.response ? error.response.data : error.message);
+    }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
