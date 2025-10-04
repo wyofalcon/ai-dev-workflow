@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/generate-cv.js": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "node_modules/pdfjs-dist/build/pdf.worker.js"
     }
   }
 }
