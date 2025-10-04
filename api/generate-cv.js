@@ -97,32 +97,10 @@ export default async function handler(req, res) {
     
     console.log('Extracted CV text:', originalCvText);
 
-    try {
-      const https = require('https');
-      const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
 
-      https.get(url, (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        res.on('end', () => {
-          try {
-            const models = JSON.parse(data).models;
-            console.log('Available Models:', JSON.stringify(models, null, 2));
-          } catch (e) {
-            console.error('Error parsing model list:', e);
-          }
-        });
-      }).on('error', (err) => {
-        console.error('Error listing models:', err.message);
-      });
-    } catch (error) {
-      console.error('Error setting up model list request:', error);
-    }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro-latest' });
 
     const prompt = `
       You are an elite-level professional resume writer and career strategist. Your task is to act as a personal hiring consultant for the user.
