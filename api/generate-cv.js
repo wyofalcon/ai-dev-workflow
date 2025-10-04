@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-const axios = require('axios');
+
 import formidable from 'formidable';
 import fs from 'fs';
 import mammoth from 'mammoth';
@@ -98,10 +98,27 @@ export default async function handler(req, res) {
     console.log('Extracted CV text:', originalCvText);
 
     try {
-      const response = await axios.get(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
-      console.log('Available Models:', JSON.stringify(response.data.models, null, 2));
+      const https = require('https');
+      const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
+
+      https.get(url, (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          try {
+            const models = JSON.parse(data).models;
+            console.log('Available Models:', JSON.stringify(models, null, 2));
+          } catch (e) {
+            console.error('Error parsing model list:', e);
+          }
+        });
+      }).on('error', (err) => {
+        console.error('Error listing models:', err.message);
+      });
     } catch (error) {
-      console.error('Error listing models:', error.response ? error.response.data : error.message);
+      console.error('Error setting up model list request:', error);
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
