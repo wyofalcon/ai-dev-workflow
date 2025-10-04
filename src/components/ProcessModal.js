@@ -55,6 +55,12 @@ const ProcessModal = ({
     formData.append('personalStories', personalStories);
     formData.append('jobDescription', jobDescription);
     formData.append('selectedSections', selectedSections.join(','));
+    
+    // Log the form data entries
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
     try {
       const cv = await generateCv(formData);
       setGeneratedCv(cv);

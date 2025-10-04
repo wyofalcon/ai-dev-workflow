@@ -44,7 +44,8 @@ const extractTextFromFile = async (filePath) => {
             const { value } = await mammoth.extractRawText({ buffer: dataBuffer });
             return value;
         } else if (extension === 'pdf') {
-            const loadingTask = getDocument(dataBuffer);
+            const uint8Array = new Uint8Array(dataBuffer);
+            const loadingTask = getDocument(uint8Array);
             const pdf = await loadingTask.promise;
             let text = '';
             for (let i = 1; i <= pdf.numPages; i++) {
@@ -96,7 +97,7 @@ export default async function handler(req, res) {
     console.log('Extracted CV text:', originalCvText);
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     const prompt = `
       You are an elite-level professional resume writer and career strategist. Your task is to act as a personal hiring consultant for the user.
