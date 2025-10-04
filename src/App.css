@@ -1,18 +1,3 @@
-
-
-:root {
-  /* Dark Theme Color Palette */
-  --primary-color: #7e78d2;
-  --secondary-color: #9d99e5;
-  --background-color: #121212;
-  --card-background: #1e1e1e;
-  --text-color: #e0e0e0;
-  --light-text-color: #ffffff;
-  --border-color: #333;
-  --border-radius: 8px;
-  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -20,340 +5,21 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--background-color);
-  color: var(--text-color);
+  background-color: #121212 !important;
+  color: #e0e0e0 !important;
 }
 
-.App { display: flex; flex-direction: column; min-height: 100vh; }
-.App-header { background-color: var(--card-background); padding: 1rem 2rem; text-align: center; box-shadow: var(--box-shadow); border-bottom: 1px solid var(--border-color); position: relative; }
-.App-header h1 { margin: 0; color: var(--secondary-color); font-weight: 300; }
-.App-header h1 span { font-weight: 700; color: var(--primary-color); }
-.tutorial-btn { position: absolute; top: 50%; right: 2rem; transform: translateY(-50%); background: none; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 0.4rem 0.8rem; border-radius: var(--border-radius); cursor: pointer; transition: background-color 0.2s, color 0.2s; }
-.tutorial-btn:hover { background-color: var(--primary-color); color: var(--light-text-color); }
-.App-main { flex-grow: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; padding: 2rem; }
-.input-column, .output-column { display: flex; flex-direction: column; gap: 1.5rem; }
-.card { background: var(--card-background); border-radius: var(--border-radius); padding: 1.5rem; box-shadow: var(--box-shadow); display: flex; flex-direction: column; border: 1px solid var(--border-color); }
-.card.full-height { flex-grow: 1; }
-.card h2 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600; color: var(--secondary-color); }
-textarea { flex-grow: 1; border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 0.75rem; font-family: inherit; font-size: 1rem; resize: vertical; min-height: 150px; background-color: #2c2c2c; color: var(--text-color); }
-textarea::placeholder { color: #888; }
-.dropzone-replacement { border: 2px dashed var(--border-color); border-radius: var(--border-radius); padding: 2rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background-color 0.2s; }
-.dropzone-replacement:hover { border-color: var(--primary-color); background-color: #2a2a2a; }
-.file-list { margin-top: 1rem; }
-.file-list ul { list-style: none; padding: 0; }
-.file-list li { background: #2a2a2a; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); }
-.file-list button { background: #c94040; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; }
-.resume-output {
-  flex-grow: 1;
-  background-color: #252525;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 1.5rem;
-  overflow: hidden; /* Changed from auto to hidden */
-  min-height: 400px;
-  transition: all 0.3s ease;
-  position: relative; /* Added for page controls */
-}
-
-.page-controls {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.5);
-  padding: 5px 10px;
-  border-radius: 5px;
+.App {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-.page-controls button {
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 3px;
-  cursor: pointer;
+.App-main {
+  flex-grow: 1;
+  padding: 2rem;
 }
 
-.page-controls span {
-  color: white;
-}
-.placeholder-text { color: #888; display: flex; align-items: center; justify-content: center; height: 100%; }
-.App-footer { padding: 1rem 2rem; background: var(--card-background); text-align: center; box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1); border-top: 1px solid var(--border-color); }
-.generate-btn, .download-btn { background: var(--primary-color); color: var(--light-text-color); border: none; padding: 0.8rem 1.5rem; font-size: 1.1rem; border-radius: var(--border-radius); cursor: pointer; transition: background-color 0.2s; margin: 0 0.5rem; }
-.generate-btn:hover { background: var(--secondary-color); }
-.generate-btn:disabled { background: #555; color: #999; cursor: not-allowed; }
-.download-btn { background-color: #28a745; }
-.download-btn:hover { background-color: #218838; }
-.error-message { color: #f07178; text-align: center; padding: 1rem; }
-.spinner-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #888; }
-.spinner { border: 6px solid #444; border-top: 6px solid var(--secondary-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 1rem; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.section-selector-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.5rem 1rem; max-height: 250px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background-color: #2c2c2c; }
-.section-item { display: flex; align-items: center; gap: 0.5rem; }
-.section-item label { cursor: pointer; flex-grow: 1; }
-.section-item input[type="checkbox"] { cursor: pointer; accent-color: var(--primary-color); }
-.recommended-badge { background-color: #2a2a45; color: #adadea; border: 1px solid #4a4a88; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; font-weight: bold; }
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.modal-content { background: var(--card-background); padding: 2rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem; }
-.modal-header h2 { margin: 0; border: none; }
-.close-button { background: none; border: none; font-size: 1.5rem; color: var(--text-color); cursor: pointer; }
-.modal-body ol { padding-left: 20px; }
-.modal-body li { margin-bottom: 1rem; line-height: 1.6; }
-
-/* --- NEW STYLES FOR STYLE SELECTOR --- */
-.style-selector-container { display: flex; gap: 1rem; }
-.style-btn { flex-grow: 1; background: #333; color: var(--text-color); border: 1px solid var(--border-color); padding: 0.8rem; font-size: 1rem; border-radius: var(--border-radius); cursor: pointer; transition: all 0.2s; }
-.style-btn:hover { border-color: var(--secondary-color); color: var(--secondary-color); }
-.style-btn.active { background-color: var(--primary-color); color: var(--light-text-color); border-color: var(--primary-color); font-weight: bold; }
-
-/* --- NEW STYLES FOR RESUME THEMES --- */
-.resume-output #resume-content {
-    background: #fff;
-    color: #000;
-    font-family: 'Georgia', serif;
-    aspect-ratio: 210 / 297; /* A4 aspect ratio */
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    box-sizing: border-box;
-}
-
-.resume-output #resume-content * { transition: all 0.3s ease; }
-.resume-output #resume-content h1 { 
-  font-size: 2.5em; 
-  margin-bottom: 0.3em; 
-  font-weight: bold;
-  text-align: center;
-}
-.resume-output #resume-content h2 { font-size: 1.4em; margin-top: 1em; padding-bottom: 0.2em; }
-.resume-output #resume-content ul { padding-left: 20px; margin-top: 0.5em; }
-.resume-output #resume-content li { margin-bottom: 0.5em; }
-
-/* Style contact info that comes right after the name */
-.resume-output #resume-content h1 + p,
-.resume-output #resume-content h1 + ul {
-  text-align: center;
-  margin-bottom: 1.5em;
-  font-size: 0.9em;
-  line-height: 1.4;
-}
-
-/* Hide page controls (pagination buttons) */
-.page-controls {
-  display: none !important;
-}
-
-/* Modern Style */
-.resume-style-modern { font-family: 'Segoe UI', sans-serif; }
-.resume-style-modern h1 { color: #2c3e50; text-align: center; }
-.resume-style-modern h2 { color: #3498db; border-bottom: 2px solid #3498db; }
-
-/* Classic Style */
-.resume-style-classic { font-family: 'Georgia', serif; }
-.resume-style-classic h1 { font-weight: bold; text-align: left; }
-.resume-style-classic h2 { font-style: italic; border-bottom: 1px solid #ccc; }
-
-/* Technical Style */
-.resume-style-technical { font-family: 'Consolas', 'Menlo', monospace; }
-.resume-style-technical h1 { background-color: #333; color: #fff; padding: 0.5rem; }
-.resume-style-technical h2 { color: #555; border: none; }
-.resume-style-technical ul { list-style-type: '» '; }
-
-@media (max-width: 900px) { .App-main { grid-template-columns: 1fr; } }
-
-/* --- Print-Friendly Styles for PDF Export --- */
-@media print {
-  @page {
-    size: A4;
-    margin: 0.75in 0.75in 0.75in 0.75in; /* Top, Right, Bottom, Left margins */
-  }
-
-  body, html {
-    margin: 0;
-    padding: 0;
-    background: #fff !important;
-    font-size: 12pt;
-    line-height: 1.4;
-  }
-
-  .App-header, .App-footer, .input-column, .download-btn, .tutorial-btn, .page-controls {
-    display: none !important;
-  }
-
-  /* Hide the section and style selector components completely */
-  .output-column > *:not(.card:first-child) {
-    display: none !important;
-  }
-
-  /* Hide card titles but NOT resume content headers */
-  .card > h2 {
-    display: none !important;
-  }
-
-  /* Ensure resume content headers are visible */
-  #resume-content h1,
-  #resume-content h2,
-  #resume-content h3 {
-    display: block !important;
-  }
-
-  .App, .App-main, .output-column, .card, .resume-output {
-    all: unset !important;
-    display: block !important;
-  }
-
-  #resume-content {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    max-width: none;
-    height: auto;
-    box-sizing: border-box;
-    box-shadow: none;
-    border: none;
-    aspect-ratio: unset;
-    transform: none !important; /* Remove any transforms for print */
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    font-size: 12pt;
-    line-height: 1.4;
-  }
-
-  /* Ensure proper page breaks */
-  #resume-content h1 {
-    page-break-after: avoid;
-    break-after: avoid;
-    margin-top: 0;
-  }
-
-  /* Section breaks - group h2 with following content */
-  #resume-content h2 {
-    page-break-after: avoid;
-    break-after: avoid;
-    page-break-before: auto;
-    break-before: auto;
-    margin-top: 20pt;
-    margin-bottom: 8pt;
-  }
-
-  /* Keep section content together */
-  #resume-content h2 + * {
-    page-break-before: avoid;
-    break-before: avoid;
-  }
-
-  #resume-content h2 + * + * {
-    page-break-before: avoid;
-    break-before: avoid;
-  }
-
-  #resume-content h3 {
-    page-break-after: avoid;
-    break-after: avoid;
-    margin-top: 12pt;
-    margin-bottom: 6pt;
-  }
-
-  #resume-content p {
-    margin-bottom: 8pt;
-  }
-
-  #resume-content ul, #resume-content ol {
-    margin-bottom: 12pt;
-  }
-
-  #resume-content li {
-    margin-bottom: 4pt;
-  }
-
-  /* Prevent widows and orphans */
-  #resume-content * {
-    orphans: 3;
-    widows: 3;
-  }
-
-  /* Keep job entries together */
-  #resume-content h3 + ul,
-  #resume-content h3 + p {
-    page-break-before: avoid;
-    break-before: avoid;
-  }
-
-  /* Keep bullet point lists together when possible */
-  #resume-content ul {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  /* Allow list items to break if list is too long */
-  #resume-content li {
-    page-break-inside: auto;
-    break-inside: auto;
-  }
-
-  /* Force page break when needed */
-  .page-break {
-    page-break-before: always;
-    break-before: page;
-  }
-
-  /* Avoid breaking important content */
-  .keep-together {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  /* Adjust font sizes for print */
-  #resume-content h1 {
-    font-size: 24pt;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 8pt;
-    margin-top: 0;
-  }
-
-  #resume-content h2 {
-    font-size: 14pt;
-    font-weight: bold;
-  }
-
-  #resume-content h3 {
-    font-size: 12pt;
-    font-weight: bold;
-  }
-
-  #resume-content {
-    font-size: 11pt;
-  }
-
-  /* Style contact info that comes right after the name */
-  #resume-content h1 + p,
-  #resume-content h1 + ul {
-    text-align: center;
-    margin-bottom: 16pt;
-    font-size: 10pt;
-    line-height: 1.3;
-  }
-
-  /* Ensure links are visible in print */
-  #resume-content a {
-    color: #000 !important;
-    text-decoration: underline;
-  }
-
-  /* Remove any unnecessary spacing */
-  #resume-content * {
-    max-width: 100%;
-  }
-}
-
-/* Add this to your App.css file */
 .banner {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -372,5 +38,42 @@ textarea::placeholder { color: #888; }
   text-align: center;
 }
 
+.card {
+  background: #1e1e1e;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  border: 1px solid #333;
+}
 
+.resume-output {
+  background-color: #252525;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem;
+  min-height: 400px;
+}
 
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #888;
+}
+
+.spinner {
+  border: 6px solid #444;
+  border-top: 6px solid #9d99e5;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

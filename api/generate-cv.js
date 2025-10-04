@@ -71,26 +71,29 @@ export default async function handler(req, res) {
 
   try {
     const { fields, files } = await parseFormData(req);
-    const { personalStories, jobDescription, selectedSections: sectionsString } = fields;
+    const { resumeText, personalStories, jobDescription, selectedSections: sectionsString } = fields;
     const documents = files.documents || [];
     
     const selectedSections = sectionsString ? sectionsString.split(',') : [];
 
-    if (documents.length === 0 || !jobDescription || selectedSections.length === 0) {
+    if ((documents.length === 0 && !resumeText) || !jobDescription || selectedSections.length === 0) {
       return res.status(400).json({ error: 'Resume, job description, and at least one section are required.' });
     }
 
     let originalCvText = '';
-    for (const file of documents) {
-      const text = await extractTextFromFile(file.filepath);
-     // Inside the loop
-                console.log('Extracted text:', text);
-      originalCvText += text + '\n\n---\n\n';
-      if (fs.existsSync(file.filepath)) {
-        fs.unlinkSync(file.filepath);
+    if (resumeText) {
+      originalCvText = resumeText;
+    } else {
+      for (const file of documents) {
+        const text = await extractTextFromFile(file.filepath);
+        originalCvText += text + '\n\n---\n\n';
+        if (fs.existsSync(file.filepath)) {
+          fs.unlinkSync(file.filepath);
+        }
       }
     }
-    console.log('Extracted CV text:', originalCvText); // <-- Add this line
+    
+    console.log('Extracted CV text:', originalCvText);
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });

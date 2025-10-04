@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nolan McIntyre - AI Product Engineer Resume</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .resume-container {
+            max-width: 8.5in;
+            /* A4-ish height */
+            min-height: 11in;
+            margin: auto;
+            padding: 0.75in;
+            background: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        
+        h2 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #4A5568;
+            border-bottom: 2px solid #E2E8F0;
+            padding-bottom: 0.25rem;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .job-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #2D3748;
+        }
+        
+        .company-info {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+        
+        ul {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+        }
+        
+        li {
+            margin-bottom: 0.35rem;
+        }
+        
+        .competency-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 640px) {
+            .competency-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        .competency-category h4 {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: #2D3748;
+        }
+        
+        .competency-category ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .competency-category li {
+            font-size: 0.9rem;
+            color: #4A5568;
+            margin-bottom: 0.25rem;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                background: none;
+            }
+            .resume-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 0.5in;
+                max-width: 100%;
+                min-height: 0;
+            }
+            .print-hide {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 p-4 md:p-8">
+
+    <div class="text-center mb-6 print-hide">
+        <button onclick="window.print()" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+            Save as PDF
+        </button>
+    </div>
+
+    <div class="resume-container text-gray-800 leading-relaxed">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">Nolan McIntyre</h1>
+            <p class="text-md text-gray-600 mt-2">
+                Rochester, MN |
+                <a href="mailto:Wyofalcon@outlook.com" class="text-blue-600 hover:underline">Wyofalcon@outlook.com</a> |
+                <a href="https://linkedin.com/in/nolan-mcintyre" target="_blank" class="text-blue-600 hover:underline">linkedin.com/in/nolan-mcintyre</a>
+            </p>
+        </header>
+
+        <section class="mb-4">
+            <h2>Professional Summary</h2>
+            <p class="text-sm">
+                An AI Product Engineer with a proven track record of building 0-to-1 product experiences, from ideation to functional prototypes, in lean, startup-like environments. An early adopter of AI-native workflows who continuously experiments with emerging tools
+                to design intelligent, user-facing solutions. Expertly combines full-stack development with a deep knowledge of LLM application architecture to transform complex workflows into automated, impactful products.
+            </p>
+        </section>
+
+        <section class="mb-4">
+            <h2>Core Competencies</h2>
+            <div class="competency-grid text-sm">
+                <div class="competency-category">
+                    <h4>AI & LLM Development</h4>
+                    <ul>
+                        <li>LLM Application Architecture</li>
+                        <li>Agentic AI & Workflows</li>
+                        <li>Advanced Prompt Engineering</li>
+                        <li>Retrieval-Augmented Generation</li>
+                        <li>API Integration (Gemini, OpenAI)</li>
+                    </ul>
+                </div>
+                <div class="competency-category">
+                    <h4>Full-Stack & Product</h4>
+                    <ul>
+                        <li>Full-Stack Development</li>
+                        <li>React/Next.js (Exposure)</li>
+                        <li>User Authentication (Firebase)</li>
+                        <li>Version Control (GitHub)</li>
+                        <li>Rapid Prototyping (0-to-1)</li>
+                    </ul>
+                </div>
+                <div class="competency-category">
+                    <h4>Technical Proficiencies</h4>
+                    <ul>
+                        <li>Python</li>
+                        <li>Google Cloud Environment</li>
+                        <li>Productivity Architecture</li>
+                        <li>System Debugging & Config</li>
+                        <li>Financial Systems Concepts</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-4">
+            <h2>Key AI Product Engineering Projects</h2>
+            <div class="mb-3">
+                <h3>(Ai)nsworth | AI-Powered Conversational Mediator</h3>
+                <ul class="text-sm mt-1">
+                    <li>Architected and built a full-stack, AI-native web application that serves as an empathetic mediator, moving from a 15-minute ideation session to a functional prototype with secure user authentication (Firebase for email/password and
+                        Google SSO).</li>
+                    <li>Engineered an LLM-powered agent that autonomously reasons through conversational dynamics, utilizing context-aware workflows rooted in Attachment Theory (the project is a nod to its pioneer, Mary Ainsworth) to reframe conflict.</li>
+                    <li>Roadmapping future implementation of non-invasive recording triggers (e.g., verbal cues, location-based) while prioritizing user privacy by developing a secure, containerized, and locally deployable prototype.</li>
+                </ul>
+            </div>
+            <div>
+                <h3>CVstomize.com | AI-Powered Resume Automation Platform</h3>
+                <ul class="text-sm mt-1">
+                    <li>Developed an end-to-end automation platform that re-imagines the manual task of resume tailoring as a streamlined, AI-driven system.</li>
+                    <li>Differentiated the platform with a unique "Add Personal Story" feature, enabling users to surface relevant, job-winning skills from life experiences that other applications miss; architected as a containerized rapid prototype for future
+                        scalability.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="mb-4">
+            <h2>Professional Experience</h2>
+            <div class="mb-3">
+                <h3 class="job-title">Test Operator III</h3>
+                <p class="company-info">Benchmark Electronics - Rochester, MN (September 2025 - Present)</p>
+                <ul class="text-sm mt-1">
+                    <li>Conduct root cause analysis of complex system failures, demonstrating a methodical problem-solving process directly applicable to debugging AI automation workflows.</li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="job-title">System Support Specialist</h3>
+                <p class="company-info">IBM - Rochester, MN (February 2024 - February 2025)</p>
+                <ul class="text-sm mt-1">
+                    <li>Diagnosed and resolved critical system-level hardware and software issues for over 200 server systems, ensuring high reliability and uptime through proactive maintenance.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="mb-4">
+            <h2>Additional Experience</h2>
+            <div>
+                <h3 class="job-title">Server Trainer</h3>
+                <p class="company-info">Texas Roadhouse - Rochester, MN</p>
+                <ul class="text-sm mt-1">
+                    <li>Trained and mentored new staff on service protocols and point-of-sale systems, ensuring a consistent and high-quality guest experience.</li>
+                    <li>Demonstrated an ability to quickly build rapport and earn customer trust, resulting in a high rate of repeat clientele and positive reviews.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Education & Certifications</h2>
+            <div class="text-sm">
+                <div class="mb-2">
+                    <p class="font-semibold">IBM Systems Support Apprenticeship Certification</p>
+                    <p class="italic text-gray-600">A comprehensive, U.S. Department of Labor-recognized technical training program focused on hands-on diagnostics and system support.</p>
+                </div>
+                <div class="mb-2">
+                    <p class="font-semibold">IBM IT Support Professional Certificate</p>
+                    <p class="italic text-gray-600">Completed 7 courses covering IT fundamentals, hardware/software configuration, networking, and cybersecurity essentials.</p>
+                </div>
+                <div class="mb-2">
+                    <p class="font-semibold">Casper College - Casper, WY</p>
+                    <p class="italic text-gray-600">Completed coursework in General Studies before pivoting to a more hands-on, specialized career path through the IBM Apprenticeship program.</p>
+                </div>
+                <div>
+                    <p class="font-semibold">Sheridan High School - Sheridan, WY</p>
+                    <p class="italic text-gray-600">High School Diploma</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+</body>
+
+</html>
