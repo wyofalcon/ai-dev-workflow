@@ -104,48 +104,56 @@ export default async function handler(req, res) {
     const model = genAI.getGenerativeModel({ model: 'gemini-pro-latest' });
 
     const prompt = `
-      You are an elite-level professional resume writer and career strategist. Your task is to create a clean, professional, and easy-to-read resume in Markdown format.
+      You are an elite-level professional resume writer. Your task is to create a clean, professional, single-column resume in Markdown format based on the user's provided information and a target job description.
 
       **PRIMARY DIRECTIVE:**
-      Analyze the user's inputs and the job description to craft a resume that makes the user the most compelling candidate possible. Cherry-pick only the most relevant skills and experiences.
+      Analyze all inputs to cherry-pick the most relevant and impactful skills, work history, and project details that directly align with the job description. Your goal is to frame the user's existing skills and experience in the most effective light possible.
 
-      **RESUME_STRUCTURE:**
-      Your output MUST follow this structure precisely. Do not add, remove, or rename sections.
+      **MARKDOWN FORMATTING RULES:**
+      - **Headers:** Use a level 1 heading (#) for the candidate's name. Use level 2 headings (##) for section titles.
+      - **Horizontal Rules:** After each section heading (like ## PROFESSIONAL SUMMARY), you MUST insert a horizontal rule (---).
+      - **Lists:** Use standard Markdown bullet points (*) for lists under Skills and Work History.
+      - **Bolding:** Use double asterisks (**) for bolding job titles and degrees, like **Sales Manager**.
 
-      # Candidate Name
-      <Contact Info: Phone | Email | Location | LinkedIn (if available)>
+      **RESUME STRUCTURE (MUST be followed precisely):**
 
-      ## Professional Summary
+      # <p align="center">JESSICA CLAIRE</p>
+      <p align="center">San Francisco, CA 94105</p>
+      <p align="center">(555) 432-1000 - resumesample@example.com</p>
+
+      ## PROFESSIONAL SUMMARY
+      ---
       (A 2-3 sentence summary tailored to the job description, highlighting key qualifications.)
 
-      ## Skills
-      *   **Category 1:** Skill A, Skill B, Skill C
-      *   **Category 2:** Skill D, Skill E, Skill F
+      ## SKILLS
+      ---
+      *   Skill 1, Skill 2, Skill 3
+      *   Skill 4, Skill 5, Skill 6
 
-      ## Professional Experience
-      **Job Title** | **Company** | **Location** | *(Month YYYY – Month YYYY or Present)*
+      ## WORK HISTORY
+      ---
+      **Sales Manager**
+      Bed Bath & Beyond, Inc. - San Francisco | 03/2021 to Current
       *   Accomplishment-driven bullet point 1 (Quantify results where possible).
       *   Accomplishment-driven bullet point 2.
 
-      **Another Job Title** | **Company** | **Location** | *(Month YYYY – Month YYYY)*
+      **Sales Associate**
+      Target - San Francisco | 06/2020 to 03/2021
       *   Accomplishment-driven bullet point 1.
       *   Accomplishment-driven bullet point 2.
 
-      ## Education
-      **Degree or Program** | **Institution** | **Location** | *(Month YYYY – Month YYYY or In Progress)*
-      *   (Optional: Relevant coursework or honors).
+      ## EDUCATION
+      ---
+      2013
+      **Bachelor of Arts: Business**
+      San Francisco State University - San Francisco, CA
 
-      ## Certifications
-      **Certification Name** | **Issuing Organization** | *(Year)*
-
-      **CRITICAL RULES:**
-      1.  **Strict Adherence:** Follow the \`RESUME_STRUCTURE\` exactly as defined.
-      2.  **Relevance is Key:** Only include information that is directly relevant to the \`JOB_DESCRIPTION\`.
-      3.  **Concise & Impactful:** Use strong action verbs and quantify achievements. No filler.
-      4.  **No Invention:** Do not exaggerate or invent qualifications.
-      5.  **Section Control:** Only generate the sections listed in \`<SECTIONS_TO_INCLUDE>\`.
-      6.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
-      7.  **Source from Inputs:** Base the content entirely on the provided \`<ORIGINAL_RESUME_TEXT>\` and \`<PERSONAL_STORIES>\`.
+      **CRITICAL EXECUTION RULES:**
+      1.  **Strict Adherence:** Follow the `RESUME_STRUCTURE` and `MARKDOWN FORMATTING RULES` exactly as defined.
+      2.  **Relevance is Key:** Only include information that is directly relevant to the `JOB_DESCRIPTION`.
+      3.  **No Invention:** Do not exaggerate or invent qualifications.
+      4.  **Section Control:** Only generate the sections listed in `<SECTIONS_TO_INCLUDE>`.
+      5.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
 
       ---
       **BEGIN INPUTS**
