@@ -122,9 +122,8 @@ export default async function handler(req, res) {
 
       **RESUME STRUCTURE (MUST be followed precisely):**
 
-      # JESSICA CLAIRE
-      San Francisco, CA 94105
-      (555) 432-1000 - resumesample@example.com
+      **NOLAN MCINTYRE**
+      Rochester, MN | (507) 271-1884 | mc3793.nm@gmail.com
 
       ## PROFESSIONAL SUMMARY
       ---
@@ -132,26 +131,21 @@ export default async function handler(req, res) {
 
       ## SKILLS
       ---
-      *   Skill 1, Skill 2, Skill 3
-      *   Skill 4, Skill 5, Skill 6
+      *   **Hardware Testing & Diagnostics:** Test Equipment Qualification, System Bring-Up, Component-Level Troubleshooting.
+      *   **Systems & Configuration:** IBM Power & Intel Servers, System Assembly, OS Installation.
+      *   **Technical Acumen:** Electrical Schematics Interpretation, A.C. & D.C. Circuit Fundamentals.
 
       ## WORK HISTORY
       ---
-      **Sales Manager**
-      Bed Bath & Beyond, Inc. - San Francisco | 03/2021 to Current
-      *   Accomplishment-driven bullet point 1 (Quantify results where possible).
-      *   Accomplishment-driven bullet point 2.
-
-      **Sales Associate**
-      Target - San Francisco | 06/2020 to 03/2021
+      **System Support Specialist (Apprentice)**
+      IBM - Rochester, MN | 02/2024 to 02/2025
       *   Accomplishment-driven bullet point 1.
       *   Accomplishment-driven bullet point 2.
 
       ## EDUCATION
       ---
-      2013
-      **Bachelor of Arts: Business**
-      San Francisco State University - San Francisco, CA
+      **Associate of Science, General Studies (Coursework Completed)**
+      Casper College - Casper, WY
 
       **CRITICAL EXECUTION RULES:**
       1.  **Strict Adherence:** Follow the 'RESUME_STRUCTURE' and 'MARKDOWN FORMATTING RULES' exactly as defined.
