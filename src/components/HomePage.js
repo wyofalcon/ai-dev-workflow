@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Button, Typography } from '@mui/material';
-import HomeGraphic from './HomeGraphic'; // Import the graphic
+import HomeGraphic from './HomeGraphic.js';
 
 function HomePage({ onStart }) {
   return (

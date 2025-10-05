@@ -14,22 +14,22 @@ import {
   Alert,
   Typography
 } from '@mui/material';
-import FileUpload from './FileUpload';
-import TextInput from './TextInput';
-import SectionSelector from './SectionSelector';
-import StyleSelector from './StyleSelector';
-import UploadGraphic from './UploadGraphic';
-import StoriesGraphic from './StoriesGraphic';
-import JobDescriptionGraphic from './JobDescriptionGraphic';
-import SectionsGraphic from './SectionsGraphic';
-import StyleGraphic from './StyleGraphic';
-import StepHeader from './StepHeader';
+import FileUpload from './FileUpload.js';
+import TextInput from './TextInput.js';
+import SectionSelector from './SectionSelector.js';
+import StyleSelector from './StyleSelector.js';
+import UploadGraphic from './UploadGraphic.js';
+import StoriesGraphic from './StoriesGraphic.js';
+import JobDescriptionGraphic from './JobDescriptionGraphic.js';
+import SectionsGraphic from './SectionsGraphic.js';
+import StyleGraphic from './StyleGraphic.js';
+import StepHeader from './StepHeader.js';
 import UploadFile from '@mui/icons-material/UploadFile';
 import AutoStories from '@mui/icons-material/AutoStories';
 import Description from '@mui/icons-material/Description';
 import Tune from '@mui/icons-material/Tune';
 import Palette from '@mui/icons-material/Palette';
-import { generateCv } from '../services/api';
+import { generateCv } from '../services/api.js';
 
 const steps = ['Upload Resume', 'Add Personal Stories', 'Job Description', 'Customize Sections', 'Choose Style'];
 

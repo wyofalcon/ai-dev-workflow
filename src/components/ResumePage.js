@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ResumeDisplay from './ResumeDisplay';
+import ResumeDisplay from './ResumeDisplay.js';
 import { Button, Container, Box } from '@mui/material';
 
 const ResumePage = () => {

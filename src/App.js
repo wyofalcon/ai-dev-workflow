@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useCvState } from './hooks/useCvState';
-import HomePage from './components/HomePage';
-import TutorialModal from './components/TutorialModal';
-import ResumePage from './components/ResumePage';
-import ProcessModal from './components/ProcessModal';
-import Footer from './components/Footer';
+import { useCvState } from './hooks/useCvState.js';
+import HomePage from './components/HomePage.js';
+import TutorialModal from './components/TutorialModal.js';
+import ResumePage from './components/ResumePage.js';
+import ProcessModal from './components/ProcessModal.js';
+import Footer from './components/Footer.js';
 import {
   Container,
   Typography,
