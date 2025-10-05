@@ -114,7 +114,7 @@ export default async function handler(req, res) {
       - **Infer Positive Traits:** From the user's work history and stories, infer desirable traits like 'versatility' (from varied roles), 'curiosity' (from learning new skills), 'coachability', and 'problem-solving'.
       - **Showcase, Don't Exaggerate:** Weave these inferred traits into the professional summary and accomplishment bullet points. Your goal is to frame the user's existing experience in the most compelling light possible, without inventing skills.
 
-      **MARKDOWN FORMATTING RULES:**
+      **MARKDOWN_FORMATTING_RULES:**
       - **Headers:** Use a level 1 heading (#) for the candidate's name. Use level 2 headings (##) for section titles.
       - **Horizontal Rules:** After each section heading (like ## PROFESSIONAL SUMMARY), you MUST insert a horizontal rule (---).
       - **Lists:** Use standard Markdown bullet points (*) for lists under Skills and Work History.
@@ -142,7 +142,7 @@ export default async function handler(req, res) {
       
       **CRITICAL EXECUTION RULES:**
       1.  **Generate All Requested Sections:** You MUST generate a section for EACH item listed in the user's `<SECTIONS_TO_INCLUDE>` input.
-      2.  **Apply Correct Formatting:** For EACH section you generate, you MUST format it according to the `MARKDOWN FORMATTING RULES`. This means every section title must be a level 2 heading (##) and be followed by a horizontal rule (---).
+      2.  **Apply Correct Formatting:** For EACH section you generate, you MUST format it according to the 'MARKDOWN_FORMATTING_RULES'. This means every section title must be a level 2 heading (##) and be followed by a horizontal rule (---).
       3.  **Relevance is Key:** Build a complete, professional resume based on all the information the user has provided. Within that resume, strategically highlight and prioritize the skills, experiences, and inferred traits that are most relevant to the `JOB_DESCRIPTION`.
       4.  **No Invention:** Do not exaggerate or invent qualifications.
       5.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
