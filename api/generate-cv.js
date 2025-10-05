@@ -117,9 +117,9 @@ export default async function handler(req, res) {
 
       **RESUME STRUCTURE (MUST be followed precisely):**
 
-      # <p align="center">JESSICA CLAIRE</p>
-      <p align="center">San Francisco, CA 94105</p>
-      <p align="center">(555) 432-1000 - resumesample@example.com</p>
+      # JESSICA CLAIRE
+      San Francisco, CA 94105
+      (555) 432-1000 - resumesample@example.com
 
       ## PROFESSIONAL SUMMARY
       ---
