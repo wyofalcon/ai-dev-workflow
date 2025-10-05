@@ -120,38 +120,31 @@ export default async function handler(req, res) {
       - **Lists:** Use standard Markdown bullet points (*) for lists under Skills and Work History.
       - **Bolding:** Use double asterisks (**) for bolding job titles and degrees, like **Sales Manager**.
 
-      **RESUME STRUCTURE (MUST be followed precisely):**
+      **EXAMPLE LAYOUT (Use this as a guide for formatting):**
 
       # NOLAN MCINTYRE
       Rochester, MN | (507) 271-1884 | mc3793.nm@gmail.com
 
       ## PROFESSIONAL SUMMARY
       ---
-      (A 2-3 sentence summary tailored to the job description, highlighting key qualifications.)
+      (A 2-3 sentence summary...)
 
       ## SKILLS
       ---
-      *   **Hardware Testing & Diagnostics:** Test Equipment Qualification, System Bring-Up, Component-Level Troubleshooting.
-      *   **Systems & Configuration:** IBM Power & Intel Servers, System Assembly, OS Installation.
-      *   **Technical Acumen:** Electrical Schematics Interpretation, A.C. & D.C. Circuit Fundamentals.
+      *   **Category:** Skill, Skill, Skill.
 
       ## WORK HISTORY
       ---
-      **System Support Specialist (Apprentice)**
-      IBM - Rochester, MN | 02/2024 to 02/2025
-      *   Accomplishment-driven bullet point 1.
-      *   Accomplishment-driven bullet point 2.
+      **Job Title**
+      Company - Location | Date Range
+      *   Accomplishment 1.
 
-      ## EDUCATION
-      ---
-      **Associate of Science, General Studies (Coursework Completed)**
-      Casper College - Casper, WY
-
+      
       **CRITICAL EXECUTION RULES:**
-      1.  **Strict Adherence:** Follow the 'RESUME_STRUCTURE' and 'MARKDOWN FORMATTING RULES' exactly as defined.
-      2.  **Relevance is Key:** Only include information that is directly relevant to the 'JOB_DESCRIPTION'.
-      3.  **No Invention:** Do not exaggerate or invent qualifications.
-      4.  **Section Control:** Only generate the sections listed in '<SECTIONS_TO_INCLUDE>'.
+      1.  **Generate All Requested Sections:** You MUST generate a section for EACH item listed in the user's `<SECTIONS_TO_INCLUDE>` input.
+      2.  **Apply Correct Formatting:** For EACH section you generate, you MUST format it according to the `MARKDOWN FORMATTING RULES`. This means every section title must be a level 2 heading (##) and be followed by a horizontal rule (---).
+      3.  **Relevance is Key:** Only include information that is directly relevant to the `JOB_DESCRIPTION`.
+      4.  **No Invention:** Do not exaggerate or invent qualifications.
       5.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
 
       ---
