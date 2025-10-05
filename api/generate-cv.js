@@ -14,7 +14,7 @@ export const config = {
 
 const parseFormData = async (req) => {
   return new Promise((resolve, reject) => {
-    const form = formidable({ keepExtensions: true }); // This will now work correctly with the 'import' syntax
+    const form = formidable({ keepExtensions: true });
     form.parse(req, (err, fields, files) => {
       if (err) {
         reject(err);
@@ -58,7 +58,6 @@ const extractTextFromFile = async (filePath) => {
             }
             return text;
         } else {
-            // Fallback for other text-based files like .txt
             return dataBuffer.toString('utf8');
         }
     } catch (error) {
@@ -97,8 +96,6 @@ export default async function handler(req, res) {
     }
     
     console.log('Extracted CV text:', originalCvText);
-
-
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-pro-latest' });
@@ -141,9 +138,9 @@ export default async function handler(req, res) {
 
       
       **CRITICAL EXECUTION RULES:**
-      1.  **Generate All Requested Sections:** You MUST generate a section for EACH item listed in the user's `<SECTIONS_TO_INCLUDE>` input.
+      1.  **Generate All Requested Sections:** You MUST generate a section for EACH item listed in the user's '<SECTIONS_TO_INCLUDE>' input.
       2.  **Apply Correct Formatting:** For EACH section you generate, you MUST format it according to the 'MARKDOWN_FORMATTING_RULES'. This means every section title must be a level 2 heading (##) and be followed by a horizontal rule (---).
-      3.  **Relevance is Key:** Build a complete, professional resume based on all the information the user has provided. Within that resume, strategically highlight and prioritize the skills, experiences, and inferred traits that are most relevant to the `JOB_DESCRIPTION`.
+      3.  **Relevance is Key:** Build a complete, professional resume based on all the information the user has provided. Within that resume, strategically highlight and prioritize the skills, experiences, and inferred traits that are most relevant to the 'JOB_DESCRIPTION'.
       4.  **No Invention:** Do not exaggerate or invent qualifications.
       5.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
 
