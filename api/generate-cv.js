@@ -143,7 +143,7 @@ export default async function handler(req, res) {
       **CRITICAL EXECUTION RULES:**
       1.  **Generate All Requested Sections:** You MUST generate a section for EACH item listed in the user's `<SECTIONS_TO_INCLUDE>` input.
       2.  **Apply Correct Formatting:** For EACH section you generate, you MUST format it according to the `MARKDOWN FORMATTING RULES`. This means every section title must be a level 2 heading (##) and be followed by a horizontal rule (---).
-      3.  **Relevance is Key:** Only include information that is directly relevant to the `JOB_DESCRIPTION`.
+      3.  **Relevance is Key:** Build a complete, professional resume based on all the information the user has provided. Within that resume, strategically highlight and prioritize the skills, experiences, and inferred traits that are most relevant to the `JOB_DESCRIPTION`.
       4.  **No Invention:** Do not exaggerate or invent qualifications.
       5.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
 

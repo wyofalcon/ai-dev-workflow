@@ -31,7 +31,7 @@ import Tune from '@mui/icons-material/Tune';
 import Palette from '@mui/icons-material/Palette';
 import { generateCv } from '../services/api.js';
 
-const steps = ['Upload Resume', 'Add Personal Stories', 'Job Description', 'Customize Sections', 'Choose Style'];
+const steps = ['Your Secret Weapon', 'Upload Resume', 'Job Description', 'Customize Sections', 'Choose Style'];
 
 export default function ProcessModal({ open, handleClose, cvState }) {
   const {
@@ -83,7 +83,22 @@ export default function ProcessModal({ open, handleClose, cvState }) {
       case 0:
         return (
           <>
-            <StepHeader graphic={<UploadGraphic />} icon={<UploadFile sx={{ mr: 1 }} />} title="Step 1: Upload or Paste Your Resume" />
+            <StepHeader graphic={<StoriesGraphic />} icon={<AutoStories sx={{ mr: 1 }} />} title="Step 1: Unleash Your Secret Weapon" />
+            <TextInput
+              title="Tell Us Your Stories. We'll Find Your Strengths."
+              placeholder="Tell me a story about a time you solved a complex problem, learned a new skill, led a team, or even a hobby you're passionate about..."
+              value={personalStories}
+              onChange={(e) => setPersonalStories(e.target.value)}
+            />
+            <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+              This is what makes CVstomize different. Your work experience is only half the story. Share stories about your projects, hobbies, or even that time you won a silly game. Our AI will find the hidden skills that make you the perfect candidate.
+            </Typography>
+          </>
+        );
+      case 1:
+        return (
+          <>
+            <StepHeader graphic={<UploadGraphic />} icon={<UploadFile sx={{ mr: 1 }} />} title="Step 2: Add Your Experience" />
             <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
               Upload up to 5 of your existing resumes, cover letters, or any other relevant documents in DOCX format.
             </Typography>
@@ -97,21 +112,6 @@ export default function ProcessModal({ open, handleClose, cvState }) {
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
             />
-          </>
-        );
-      case 1:
-        return (
-          <>
-            <StepHeader graphic={<StoriesGraphic />} icon={<AutoStories sx={{ mr: 1 }} />} title="Step 2: Add Personal Stories" />
-            <TextInput
-              title="This is your secret weapon!"
-              placeholder="Tell me a story about a time you solved a problem, learned a new skill, or accomplished something you're proud of..."
-              value={personalStories}
-              onChange={(e) => setPersonalStories(e.target.value)}
-            />
-            <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
-              Share stories about your projects, hobbies, or even that time you won a silly game. Our AI will find the hidden skills that make you stand out.
-            </Typography>
           </>
         );
       case 2:
