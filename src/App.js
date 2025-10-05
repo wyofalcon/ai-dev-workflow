@@ -5,7 +5,7 @@ import HomePage from './components/HomePage';
 import TutorialModal from './components/TutorialModal';
 import ResumePage from './components/ResumePage';
 import ProcessModal from './components/ProcessModal';
-import import Footer from './components/Footer';
+import Footer from './components/Footer';
 import {
   Container,
   Typography,
