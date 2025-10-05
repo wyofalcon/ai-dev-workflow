@@ -3,7 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import formidable from 'formidable';
 import fs from 'fs';
 import mammoth from 'mammoth';
-import { getDocument } from 'pdfjs-dist/build/pdf.js';
+import pdfjsDist from 'pdfjs-dist/build/pdf.js';
+const { getDocument } = pdfjsDist;
 
 export const config = {
   api: {
