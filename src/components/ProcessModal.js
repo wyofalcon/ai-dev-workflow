@@ -69,8 +69,7 @@ export default function ProcessModal({ open, handleClose, cvState }) {
       setGeneratedCv(cv);
       localStorage.setItem('generatedCv', cv);
       localStorage.setItem('selectedStyle', selectedStyle);
-      window.open('/resume', '_blank');
-      handleClose();
+      window.location.href = '/resume';
     } catch (err) {
       console.error("An error occurred during CV generation:", err);
       setError("An error occurred while generating the CV. Please try again.");
