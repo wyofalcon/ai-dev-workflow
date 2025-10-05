@@ -23,7 +23,7 @@ const ResumePage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+      <Box className="no-print" sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button variant="contained" color="primary" onClick={handleDownload}>
           Download as PDF
         </Button>

@@ -82,6 +82,17 @@ body {
   }
 
   /* Hide elements that are not part of the resume */
+  .no-print {
+    display: none !important;
+  }
+
+  #resume-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
   .AppBar, .banner, .card h2, .spinner-container, .placeholder-text, .page-controls {
     display: none;
   }
