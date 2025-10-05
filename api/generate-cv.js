@@ -138,7 +138,7 @@ export default async function handler(req, res) {
       **Certification Name** | **Issuing Organization** | *(Year)*
 
       **CRITICAL RULES:**
-      1.  **Strict Adherence:** Follow the `RESUME_STRUCTURE` exactly as defined.
+      1.  **Strict Adherence:** Follow the \`RESUME_STRUCTURE\` exactly as defined.
       2.  **Relevance is Key:** Only include information that is directly relevant to the `JOB_DESCRIPTION`.
       3.  **Concise & Impactful:** Use strong action verbs and quantify achievements. No filler.
       4.  **No Invention:** Do not exaggerate or invent qualifications.
