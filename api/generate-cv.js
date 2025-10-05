@@ -149,10 +149,10 @@ export default async function handler(req, res) {
       San Francisco State University - San Francisco, CA
 
       **CRITICAL EXECUTION RULES:**
-      1.  **Strict Adherence:** Follow the `RESUME_STRUCTURE` and `MARKDOWN FORMATTING RULES` exactly as defined.
-      2.  **Relevance is Key:** Only include information that is directly relevant to the `JOB_DESCRIPTION`.
+      1.  **Strict Adherence:** Follow the 'RESUME_STRUCTURE' and 'MARKDOWN FORMATTING RULES' exactly as defined.
+      2.  **Relevance is Key:** Only include information that is directly relevant to the 'JOB_DESCRIPTION'.
       3.  **No Invention:** Do not exaggerate or invent qualifications.
-      4.  **Section Control:** Only generate the sections listed in `<SECTIONS_TO_INCLUDE>`.
+      4.  **Section Control:** Only generate the sections listed in '<SECTIONS_TO_INCLUDE>'.
       5.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
 
       ---
