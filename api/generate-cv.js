@@ -111,38 +111,16 @@ export default async function handler(req, res) {
       - **Infer Positive Traits:** From the user's work history and stories, infer desirable traits like 'versatility' (from varied roles), 'curiosity' (from learning new skills), 'coachability', and 'problem-solving'.
       - **Showcase, Don't Exaggerate:** Weave these inferred traits into the professional summary and accomplishment bullet points. Your goal is to frame the user's existing experience in the most compelling light possible, without inventing skills.
 
-      **MARKDOWN_FORMATTING_RULES:**
-      - **Headers:** Use a level 1 heading (#) for the candidate's name. Use level 2 headings (##) for section titles.
-      - **Horizontal Rules:** After each section heading (like ## PROFESSIONAL SUMMARY), you MUST insert a horizontal rule (---).
-      - **Lists:** Use standard Markdown bullet points (*) for lists under Skills and Work History.
-      - **Bolding:** Use double asterisks (**) for bolding job titles and degrees, like **Sales Manager**.
-
-      **EXAMPLE LAYOUT (Use this as a guide for formatting):**
-
-      # NOLAN MCINTYRE
-      Rochester, MN | (507) 271-1884 | mc3793.nm@gmail.com
-
-      ## PROFESSIONAL SUMMARY
-      ---
-      (A 2-3 sentence summary...)
-
-      ## SKILLS
-      ---
-      *   **Category:** Skill, Skill, Skill.
-
-      ## WORK HISTORY
-      ---
-      **Job Title**
-      Company - Location | Date Range
-      *   Accomplishment 1.
-
-      
-      **CRITICAL EXECUTION RULES:**
-      1.  **Generate All Requested Sections:** You MUST generate a section for EACH item listed in the user's '<SECTIONS_TO_INCLUDE>' input.
-      2.  **Apply Correct Formatting:** For EACH section you generate, you MUST format it according to the 'MARKDOWN_FORMATTING_RULES'. This means every section title must be a level 2 heading (##) and be followed by a horizontal rule (---).
-      3.  **Relevance is Key:** Build a complete, professional resume based on all the information the user has provided. Within that resume, strategically highlight and prioritize the skills, experiences, and inferred traits that are most relevant to the 'JOB_DESCRIPTION'.
-      4.  **No Invention:** Do not exaggerate or invent qualifications.
-      5.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
+      **FORMATTING & EXECUTION RULES:**
+      1.  **Header Formatting:** The resume MUST start with the candidate's name as a level 1 Markdown heading (#), followed by their contact information on the next line.
+      2.  **Generate All Requested Sections:** You MUST generate a section for EACH item listed in the user's `<SECTIONS_TO_INCLUDE>` input.
+      3.  **Section Formatting:** For EACH section you generate, you MUST format it as follows:
+          - The section title MUST be a level 2 Markdown heading (e.g., `## PROFESSIONAL SUMMARY`).
+          - The title MUST be immediately followed by a Markdown horizontal rule on the next line (`---`).
+      4.  **Content Strategy:** Build a complete, professional resume based on all the information the user has provided. Within that resume, strategically highlight and prioritize the skills, experiences, and inferred traits that are most relevant to the `JOB_DESCRIPTION`.
+      5.  **Bolding:** Use double asterisks (**) for bolding job titles and degrees.
+      6.  **No Invention:** Do not exaggerate or invent qualifications.
+      7.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
 
       ---
       **BEGIN INPUTS**
