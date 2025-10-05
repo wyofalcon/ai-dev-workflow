@@ -139,12 +139,12 @@ export default async function handler(req, res) {
 
       **CRITICAL RULES:**
       1.  **Strict Adherence:** Follow the \`RESUME_STRUCTURE\` exactly as defined.
-      2.  **Relevance is Key:** Only include information that is directly relevant to the `JOB_DESCRIPTION`.
+      2.  **Relevance is Key:** Only include information that is directly relevant to the \`JOB_DESCRIPTION\`.
       3.  **Concise & Impactful:** Use strong action verbs and quantify achievements. No filler.
       4.  **No Invention:** Do not exaggerate or invent qualifications.
-      5.  **Section Control:** Only generate the sections listed in `<SECTIONS_TO_INCLUDE>`.
+      5.  **Section Control:** Only generate the sections listed in \`<SECTIONS_TO_INCLUDE>\`.
       6.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
-      7.  **Source from Inputs:** Base the content entirely on the provided `<ORIGINAL_RESUME_TEXT>` and `<PERSONAL_STORIES>`.
+      7.  **Source from Inputs:** Base the content entirely on the provided \`<ORIGINAL_RESUME_TEXT>\` and \`<PERSONAL_STORIES>\`.
 
       ---
       **BEGIN INPUTS**
