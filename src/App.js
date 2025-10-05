@@ -5,12 +5,14 @@ import HomePage from './components/HomePage';
 import TutorialModal from './components/TutorialModal';
 import ResumePage from './components/ResumePage';
 import ProcessModal from './components/ProcessModal';
+import import Footer from './components/Footer';
 import {
   Container,
   Typography,
   Button,
   AppBar,
   Toolbar,
+  Box,
 } from '@mui/material';
 import './App.css';
 
@@ -29,7 +31,7 @@ function MainLayout() {
   };
 
   return (
-    <div>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid #333' }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: '#9d99e5' }}>
@@ -48,7 +50,8 @@ function MainLayout() {
           <ProcessModal open={isProcessStarted} handleClose={handleClose} cvState={cvState} />
         )}
       </Container>
-    </div>
+      <Footer />
+    </Box>
   );
 }
 

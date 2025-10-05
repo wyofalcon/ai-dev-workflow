@@ -23,6 +23,7 @@ import StoriesGraphic from './StoriesGraphic';
 import JobDescriptionGraphic from './JobDescriptionGraphic';
 import SectionsGraphic from './SectionsGraphic';
 import StyleGraphic from './StyleGraphic';
+import StepHeader from './StepHeader';
 import UploadFile from '@mui/icons-material/UploadFile';
 import AutoStories from '@mui/icons-material/AutoStories';
 import Description from '@mui/icons-material/Description';
@@ -83,11 +84,7 @@ export default function ProcessModal({ open, handleClose, cvState }) {
       case 0:
         return (
           <>
-            <UploadGraphic />
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <UploadFile sx={{ mr: 1 }} />
-              <Typography variant="h5">Step 1: Upload or Paste Your Resume</Typography>
-            </Box>
+            <StepHeader graphic={<UploadGraphic />} icon={<UploadFile sx={{ mr: 1 }} />} title="Step 1: Upload or Paste Your Resume" />
             <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
               Upload up to 5 of your existing resumes, cover letters, or any other relevant documents in DOCX format.
             </Typography>
@@ -106,11 +103,7 @@ export default function ProcessModal({ open, handleClose, cvState }) {
       case 1:
         return (
           <>
-            <StoriesGraphic />
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <AutoStories sx={{ mr: 1 }} />
-              <Typography variant="h5">Step 2: Add Personal Stories</Typography>
-            </Box>
+            <StepHeader graphic={<StoriesGraphic />} icon={<AutoStories sx={{ mr: 1 }} />} title="Step 2: Add Personal Stories" />
             <TextInput
               title="This is your secret weapon!"
               placeholder="Tell me a story about a time you solved a problem, learned a new skill, or accomplished something you're proud of..."
@@ -125,11 +118,7 @@ export default function ProcessModal({ open, handleClose, cvState }) {
       case 2:
         return (
           <>
-            <JobDescriptionGraphic />
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Description sx={{ mr: 1 }} />
-              <Typography variant="h5">Step 3: Paste the Job Description</Typography>
-            </Box>
+            <StepHeader graphic={<JobDescriptionGraphic />} icon={<Description sx={{ mr: 1 }} />} title="Step 3: Paste the Job Description" />
             <TextInput
               title=""
               placeholder="Paste the entire job description here..."
@@ -141,11 +130,7 @@ export default function ProcessModal({ open, handleClose, cvState }) {
       case 3:
         return (
           <>
-            <SectionsGraphic />
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Tune sx={{ mr: 1 }} />
-              <Typography variant="h5">Step 4: Customize Your CV Sections</Typography>
-            </Box>
+            <StepHeader graphic={<SectionsGraphic />} icon={<Tune sx={{ mr: 1 }} />} title="Step 4: Customize Your CV Sections" />
             <SectionSelector
               allSections={ALL_SECTIONS}
               recommendedSections={RECOMMENDED_SECTIONS}
@@ -157,11 +142,7 @@ export default function ProcessModal({ open, handleClose, cvState }) {
       case 4:
         return (
           <>
-            <StyleGraphic />
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Palette sx={{ mr: 1 }} />
-              <Typography variant="h5">Step 5: Choose a Style</Typography>
-            </Box>
+            <StepHeader graphic={<StyleGraphic />} icon={<Palette sx={{ mr: 1 }} />} title="Step 5: Choose a Style" />
             <StyleSelector
               selectedStyle={selectedStyle}
               setSelectedStyle={setSelectedStyle}
