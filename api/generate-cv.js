@@ -122,7 +122,7 @@ export default async function handler(req, res) {
 
       **RESUME STRUCTURE (MUST be followed precisely):**
 
-      **NOLAN MCINTYRE**
+      # NOLAN MCINTYRE
       Rochester, MN | (507) 271-1884 | mc3793.nm@gmail.com
 
       ## PROFESSIONAL SUMMARY
