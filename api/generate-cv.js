@@ -101,26 +101,20 @@ export default async function handler(req, res) {
     const model = genAI.getGenerativeModel({ model: 'gemini-pro-latest' });
 
     const prompt = `
-      You are an elite-level professional resume writer. Your task is to create a clean, professional, single-column resume in Markdown format based on the user's provided information and a target job description.
+      You are an elite-level professional resume writer and career strategist.
+      Your task is to synthesize the user's resume, personal stories, and a target job description into a single, compelling resume in clean, standard Markdown format.
 
-      **PRIMARY DIRECTIVE:**
-      Analyze all inputs to cherry-pick the most relevant and impactful skills, work history, and project details that directly align with the job description. Your goal is to frame the user's existing skills and experience in the most effective light possible.
+      **PRIMARY GOAL:**
+      Make the user the most compelling candidate possible. Your main goal is not just to list skills, but to tell a story that showcases the user's value.
 
-      **CONTENT STRATEGY:**
-      - **Go Beyond Keywords:** Don't just match skills to the job description. Act as a career strategist.
-      - **Infer Positive Traits:** From the user's work history and stories, infer desirable traits like 'versatility' (from varied roles), 'curiosity' (from learning new skills), 'coachability', and 'problem-solving'.
-      - **Showcase, Don't Exaggerate:** Weave these inferred traits into the professional summary and accomplishment bullet points. Your goal is to frame the user's existing experience in the most compelling light possible, without inventing skills.
+      **CONTENT GUIDELINES:**
+      - **Use the Personal Stories:** This is the most important input. Use the stories to uncover and showcase unique skills and positive traits like 'versatility', 'curiosity', and 'problem-solving'.
+      - **Build a Comprehensive Resume:** Create a full resume based on all the user's information. Within that resume, strategically highlight the skills and experiences that align with the target job description.
+      - **Generate All Requested Sections:** You MUST create a section in the resume for every item listed in the user's '<SECTIONS_TO_INCLUDE>' input.
 
-      **FORMATTING & EXECUTION RULES:**
-      1.  **Header Formatting:** The resume MUST start with the candidate's name as a level 1 Markdown heading (#), followed by their contact information on the next line.
-      2.  **Generate All Requested Sections:** You MUST generate a section for EACH item listed in the user's `<SECTIONS_TO_INCLUDE>` input.
-      3.  **Section Formatting:** For EACH section you generate, you MUST format it as follows:
-          - The section title MUST be a level 2 Markdown heading (e.g., `## PROFESSIONAL SUMMARY`).
-          - The title MUST be immediately followed by a Markdown horizontal rule on the next line (`---`).
-      4.  **Content Strategy:** Build a complete, professional resume based on all the information the user has provided. Within that resume, strategically highlight and prioritize the skills, experiences, and inferred traits that are most relevant to the `JOB_DESCRIPTION`.
-      5.  **Bolding:** Use double asterisks (**) for bolding job titles and degrees.
-      6.  **No Invention:** Do not exaggerate or invent qualifications.
-      7.  **No Commentary:** Your output must begin with the candidate's name and contain only the resume content.
+      **OUTPUT RULES:**
+      - Your output MUST be only the resume content in Markdown format. 
+      - Begin directly with the candidate's name. Do not include any commentary, introductions, or explanations.
 
       ---
       **BEGIN INPUTS**
