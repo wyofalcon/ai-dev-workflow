@@ -54,6 +54,18 @@ body {
   overflow: auto; /* Add this */
 }
 
+#resume-content h2 {
+  color: #7e78d2;
+}
+
+#resume-content hr {
+  border: none;
+  height: 2px;
+  background-color: #7e78d2;
+  margin-top: 4px;
+  margin-bottom: 1em;
+}
+
 @media print {
   body, .App {
     background-color: white !important;
