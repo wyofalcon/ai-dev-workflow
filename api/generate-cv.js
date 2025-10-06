@@ -104,6 +104,11 @@ export default async function handler(req, res) {
       You are an elite-level professional resume writer and career strategist.
       Your task is to synthesize the user's resume, personal stories, and a target job description into a single, compelling resume in clean, standard Markdown format.
 
+      **HEADER FORMATTING (MUST FOLLOW):**
+      - The candidate's name MUST be the very first thing in the resume.
+      - The name MUST be a level 1 Markdown heading (e.g., # John Doe).
+      - The contact information (phone, email, location) MUST appear directly below the name in a clean, professional format.
+
       **PRIMARY GOAL:**
       Make the user the most compelling candidate possible. Your main goal is not just to list skills, but to tell a story that showcases the user's value.
 
