@@ -102,12 +102,20 @@ export default async function handler(req, res) {
 
     const prompt = `
       You are an elite-level professional resume writer and career strategist.
-      Your task is to synthesize the user's resume, personal stories, and a target job description into a single, compelling resume in clean, standard Markdown format.
+      Your task is to synthesize the user's resume, personal stories, and a target job description into a single, compelling resume in clean, standard Markdown format, with some HTML for styling.
 
       **HEADER FORMATTING (MUST FOLLOW):**
       - The candidate's name MUST be the very first thing in the resume.
       - The name MUST be a level 1 Markdown heading (e.g., # John Doe).
       - The contact information (phone, email, location) MUST appear directly below the name in a clean, professional format.
+
+      **SECTION WRAPPING (MUST FOLLOW):**
+      - For every section you generate, you MUST wrap the entire section in a div. Start the div before the section title (##) and end it after the section's content.
+      - Example: 
+      ## WORK HISTORY
+      ---
+      ...content...
+      
 
       **PRIMARY GOAL:**
       Make the user the most compelling candidate possible. Your main goal is not just to list skills, but to tell a story that showcases the user's value.
@@ -118,7 +126,7 @@ export default async function handler(req, res) {
       - **Generate All Requested Sections:** You MUST create a section in the resume for every item listed in the user's '<SECTIONS_TO_INCLUDE>' input.
 
       **OUTPUT RULES:**
-      - Your output MUST be only the resume content in Markdown format. 
+      - Your output MUST be only the resume content in Markdown and HTML format as specified.
       - Begin directly with the candidate's name. Do not include any commentary, introductions, or explanations.
 
       ---

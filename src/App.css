@@ -134,5 +134,10 @@ body {
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+} 
+
+.resume-section:nth-of-type(even) {
+  background-color: #2a2a2a; /* A subtle, slightly lighter shade of the background */
+  padding: 1rem;
+  border-radius: 8px;
 }
