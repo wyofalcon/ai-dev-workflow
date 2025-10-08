@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import HomeGraphic from './HomeGraphic.js';
+import logo from './logo.png';
 
 function HomePage({ onStart }) {
   return (
@@ -14,6 +15,7 @@ function HomePage({ onStart }) {
         textAlign: 'center',
       }}
     >
+      <img src={logo} alt="logo" style={{ width: '150px', marginBottom: '20px' }} />
       <HomeGraphic /> {/* Add the graphic here */}
       <Typography variant="h3" component="h1" gutterBottom>
         Tell Your Story. Land The Job.
