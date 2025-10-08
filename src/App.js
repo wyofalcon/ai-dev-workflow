@@ -14,6 +14,7 @@ import {
   Toolbar,
   Box,
 } from '@mui/material';
+import logo from './components/logo.png';
 import './App.css';
 
 function MainLayout() {
@@ -34,9 +35,8 @@ function MainLayout() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid #333' }}>
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: '#9d99e5' }}>
-            CVstomize
-          </Typography>
+          <img src={logo} alt="logo" style={{ width: '80px', marginRight: '10px' }} />
+          <Box sx={{ flexGrow: 1 }} />
           <Button color="primary" onClick={() => setIsTutorialOpen(true)}>
             How to Use
           </Button>
