@@ -18,7 +18,7 @@ const ResumeGenerator = ({ cvData }) => {
 
   return (
     <div>
-      <div id="resume-preview" style={{ padding: '20px', backgroundColor: 'white' }}>
+      <div id="resume-preview" style={{ padding: '20px', backgroundColor: 'white', color: 'black' }}>
         {/* Basic resume structure */}
         <h1>{cvData.name}</h1>
         <p>{cvData.email} | {cvData.phone}</p>
