@@ -2,5 +2,9 @@
     "geminicodeassist.enableTelemetry": false,
     "window.autoDetectColorScheme": true,
     "window.closeWhenEmpty": true,
-    "window.title": ""
+    "window.title": "",
+    "editor.defaultFormatter": "google.geminicodeassist",
+    "terminal.integrated.automationProfile.linux": {
+        
+    }
 }
