@@ -1,9 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
 import formidable from 'formidable';
 import fs from 'fs';
 import mammoth from 'mammoth';
 import pdfjsDist from 'pdfjs-dist/build/pdf.js';
+import puppeteer from 'puppeteer';
+
 const { getDocument } = pdfjsDist;
 
 export const config = {
@@ -149,8 +150,16 @@ export default async function handler(req, res) {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const generatedText = response.text();
-    
-    res.status(200).json({ generatedCv: generatedText });
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(generatedText);
+    const pdfBuffer = await page.pdf({ format: 'A4' });
+    await browser.close();
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=resume.pdf');
+    res.send(pdfBuffer);
 
   } catch (error) {
     console.error('Error in /api/generate-cv:', error);

@@ -17,28 +17,25 @@ import {
 import FileUpload from './FileUpload.js';
 import TextInput from './TextInput.js';
 import SectionSelector from './SectionSelector.js';
-import StyleSelector from './StyleSelector.js';
 import UploadGraphic from './UploadGraphic.js';
 import StoriesGraphic from './StoriesGraphic.js';
 import JobDescriptionGraphic from './JobDescriptionGraphic.js';
 import SectionsGraphic from './SectionsGraphic.js';
-import StyleGraphic from './StyleGraphic.js';
 import StepHeader from './StepHeader.js';
 import UploadFile from '@mui/icons-material/UploadFile';
 import AutoStories from '@mui/icons-material/AutoStories';
 import Description from '@mui/icons-material/Description';
 import Tune from '@mui/icons-material/Tune';
-import Palette from '@mui/icons-material/Palette';
 import { generateCv } from '../services/api.js';
 
-const steps = ['Your Secret Weapon', 'Upload Resume', 'Job Description', 'Customize Sections', 'Choose Style'];
+const steps = ['Your Secret Weapon', 'Upload Resume', 'Job Description', 'Customize Sections'];
 
 export default function ProcessModal({ open, handleClose, cvState }) {
   const {
     files, setFiles, resumeText, setResumeText, personalStories, setPersonalStories,
     jobDescription, setJobDescription, setGeneratedCv, isLoading,
     setIsLoading, error, setError, selectedSections, setSelectedSections,
-    selectedStyle, setSelectedStyle, ALL_SECTIONS, RECOMMENDED_SECTIONS
+    ALL_SECTIONS, RECOMMENDED_SECTIONS
   } = cvState;
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -65,11 +62,10 @@ export default function ProcessModal({ open, handleClose, cvState }) {
     formData.append('jobDescription', jobDescription);
     formData.append('selectedSections', selectedSections.join(','));
     try {
-      const cv = await generateCv(formData);
-      setGeneratedCv(cv);
-      localStorage.setItem('generatedCv', cv);
-      localStorage.setItem('selectedStyle', selectedStyle);
-      window.location.href = '/resume';
+      const pdfBlob = await generateCv(formData);
+      const url = window.URL.createObjectURL(pdfBlob);
+      window.open(url, '_blank');
+      handleClose();
     } catch (err) {
       console.error("An error occurred during CV generation:", err);
       setError("An error occurred while generating the CV. Please try again.");
@@ -135,16 +131,6 @@ export default function ProcessModal({ open, handleClose, cvState }) {
               recommendedSections={RECOMMENDED_SECTIONS}
               selectedSections={selectedSections}
               setSelectedSections={setSelectedSections}
-            />
-          </>
-        );
-      case 4:
-        return (
-          <>
-            <StepHeader graphic={<StyleGraphic />} icon={<Palette sx={{ mr: 1 }} />} title="Step 5: Choose a Style" />
-            <StyleSelector
-              selectedStyle={selectedStyle}
-              setSelectedStyle={setSelectedStyle}
             />
           </>
         );
