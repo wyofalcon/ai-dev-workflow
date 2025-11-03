@@ -44,7 +44,7 @@ async function getFirebaseAdmin() {
 async function verifyFirebaseToken(req, res, next) {
   try {
     // Ensure Firebase is initialized (will reuse if already exists)
-    await getFirebaseAdmin();
+    const app = await getFirebaseAdmin();
 
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
@@ -57,8 +57,8 @@ async function verifyFirebaseToken(req, res, next) {
 
     const token = authHeader.split('Bearer ')[1];
 
-    // Verify the token with Firebase
-    const decodedToken = await admin.auth().verifyIdToken(token);
+    // Verify the token with Firebase - USE APP INSTANCE NOT GLOBAL
+    const decodedToken = await app.auth().verifyIdToken(token);
 
     // Attach user info to request
     req.user = {
