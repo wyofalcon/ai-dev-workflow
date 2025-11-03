@@ -1302,8 +1302,120 @@ Latency: 100-500ms (fast, not timeout related)
 - ✅ Error logging shows actual error messages in Cloud Run logs
 - ✅ Database test endpoint returns connection status
 - ✅ Root cause identified (Firebase vs database vs Prisma)
-- ✅ At least one auth endpoint returns 200 OK with valid data
-- ✅ User can complete signup flow end-to-end
+- ✅ Database connection verified - test endpoint returns connected status
+- ⚠️ User registration partially working (logout succeeds but no DB records)
+
+**Issues Discovered at End of Session:**
+1. ⚠️ **Frontend URL Wrong**: `.env` has `http://localhost:3001/api` but should be Cloud Run URL
+2. ⚠️ **Firebase Race Condition**: Double initialization still occurring despite fix
+
+**Next Session Fix Plan (30 minutes to complete Week 2):**
+
+**Fix 1: Update Frontend .env (5 minutes)**
+```bash
+cd /mnt/storage/shared_windows/Cvstomize
+
+# Update REACT_APP_API_URL
+sed -i 's|http://localhost:3001/api|https://cvstomize-api-351889420459.us-central1.run.app/api|' .env
+
+# Verify
+cat .env | grep API_URL
+
+# Restart frontend to pick up new .env
+```
+
+**Fix 2: Fix Firebase Double Initialization Race Condition (15 minutes)**
+
+File: [api/middleware/authMiddleware.js](api/middleware/authMiddleware.js)
+
+Add promise-based lock to prevent concurrent initialization:
+
+```javascript
+let firebaseInitPromise = null;
+
+async function getFirebaseAdmin() {
+  // If already initialized, return existing app
+  if (admin.apps.length > 0) {
+    console.log('🔥 Firebase app already exists, reusing...');
+    return admin.app();
+  }
+
+  // If initialization in progress, wait for it
+  if (firebaseInitPromise) {
+    console.log('⏳ Firebase initialization in progress, waiting...');
+    return firebaseInitPromise;
+  }
+
+  // Start initialization and cache the promise
+  console.log('🚀 Initializing Firebase Admin SDK...');
+  firebaseInitPromise = (async () => {
+    try {
+      const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
+      const client = new SecretManagerServiceClient();
+
+      const [projectIdResponse] = await client.accessSecretVersion({
+        name: 'projects/351889420459/secrets/cvstomize-project-id/versions/latest',
+      });
+      const projectId = projectIdResponse.payload.data.toString('utf8');
+
+      const [serviceAccountResponse] = await client.accessSecretVersion({
+        name: `projects/${projectId}/secrets/cvstomize-service-account-key/versions/latest`,
+      });
+      const serviceAccountKey = JSON.parse(
+        serviceAccountResponse.payload.data.toString('utf8')
+      );
+
+      const app = admin.initializeApp({
+        credential: admin.credential.cert(serviceAccountKey),
+        projectId: projectId,
+      });
+
+      console.log('✅ Firebase Admin SDK initialized successfully');
+      return app;
+    } catch (error) {
+      console.error('❌ Failed to initialize Firebase:', error);
+      firebaseInitPromise = null; // Reset on error to allow retry
+      throw error;
+    }
+  })();
+
+  return firebaseInitPromise;
+}
+```
+
+**Fix 3: Deploy and Test (10 minutes)**
+```bash
+cd ~/cvstomize/api
+
+# Build
+gcloud builds submit --tag gcr.io/cvstomize/cvstomize-api .
+
+# Deploy
+gcloud run deploy cvstomize-api \
+  --image gcr.io/cvstomize/cvstomize-api:latest \
+  --region us-central1 \
+  --platform managed \
+  --allow-unauthenticated \
+  --add-cloudsql-instances="cvstomize:us-central1:cvstomize-db" \
+  --set-secrets="DATABASE_URL=cvstomize-db-url:latest,GCP_PROJECT_ID=cvstomize-project-id:latest"
+
+# Test registration - check logs
+gcloud run services logs read cvstomize-api --limit=30
+
+# Verify user in database
+export PGPASSWORD='CVst0mize_App_2025!'
+psql -h localhost -p 5432 -U cvstomize_app -d cvstomize_production \
+  -c "SELECT id, email, display_name, created_at FROM users ORDER BY created_at DESC LIMIT 5;"
+```
+
+**Expected Result After Fixes:**
+- ✅ Frontend connects to Cloud Run backend
+- ✅ Firebase initializes once per container
+- ✅ User registration creates database record
+- ✅ Audit logs track all events
+- ✅ Week 2 100% complete!
+
+---
 
 - ✅ **Auth Context** ([src/contexts/AuthContext.js](src/contexts/AuthContext.js) - 218 lines):
   - Global authentication state management with React Context
