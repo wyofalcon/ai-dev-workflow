@@ -27,15 +27,18 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Trust proxy for Cloud Run (behind load balancer)
-app.set('trust proxy', true);
+// Set to number of proxies between user and server (Cloud Run uses 1 proxy)
+app.set('trust proxy', 1);
 
-// Rate limiting
+// Rate limiting with proper trust proxy configuration
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  // Validate that trust proxy is properly configured
+  validate: { trustProxy: false },
 });
 app.use('/api/', limiter);
 

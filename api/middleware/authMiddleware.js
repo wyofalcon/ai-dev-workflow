@@ -12,6 +12,13 @@ async function initializeFirebaseAdmin() {
   }
 
   try {
+    // Check if Firebase Admin is already initialized
+    if (admin.apps.length > 0) {
+      console.log('✅ Firebase Admin SDK already initialized, reusing existing app');
+      firebaseInitialized = true;
+      return;
+    }
+
     const client = new SecretManagerServiceClient();
     const projectId = process.env.GCP_PROJECT_ID || 'cvstomize';
 
