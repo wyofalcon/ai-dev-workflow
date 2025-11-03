@@ -898,7 +898,7 @@
 ## 🔗 **Quick Reference - URLs & Credentials**
 
 ### **Frontend (Local Development)**
-- **URL**: http://localhost:3010
+- **URL**: http://localhost:3010 ⚠️ (Port 3010, NOT 3000)
 - **Login**: Use Google OAuth or Email/Password
 - **Test Flow**: Signup → Login → Dashboard
 
@@ -1409,11 +1409,17 @@ psql -h localhost -p 5432 -U cvstomize_app -d cvstomize_production \
 ```
 
 **Expected Result After Fixes:**
-- ✅ Frontend connects to Cloud Run backend
+- ✅ Frontend (http://localhost:3010) connects to Cloud Run backend
 - ✅ Firebase initializes once per container
 - ✅ User registration creates database record
 - ✅ Audit logs track all events
 - ✅ Week 2 100% complete!
+
+**Testing:**
+1. Open http://localhost:3010 in browser
+2. Click "Sign Up with Google"
+3. Check browser console for 201 response
+4. Verify user in database (command above)
 
 ---
 
