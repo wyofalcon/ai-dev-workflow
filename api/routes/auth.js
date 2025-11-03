@@ -6,20 +6,70 @@ const { verifyFirebaseToken } = require('../middleware/authMiddleware');
 const prisma = new PrismaClient();
 
 /**
+ * GET /api/auth/test/db
+ * Test database connection (no auth required)
+ */
+router.get('/test/db', async (req, res) => {
+  try {
+    console.log('🧪 Testing database connection...');
+    const result = await prisma.$queryRaw`SELECT 1 as test, NOW() as current_time`;
+    console.log('✅ Database query successful:', result);
+    res.json({
+      status: 'connected',
+      message: 'Database connection successful',
+      result,
+      prismaVersion: require('@prisma/client').Prisma.prismaVersion,
+    });
+  } catch (error) {
+    console.error('❌ Database connection failed:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      name: error.name,
+    });
+    res.status(500).json({
+      status: 'failed',
+      message: 'Database connection failed',
+      error: error.message,
+      code: error.code,
+    });
+  }
+});
+
+/**
+ * GET /api/auth/test/token
+ * Test Firebase token verification (no database)
+ */
+router.get('/test/token', verifyFirebaseToken, (req, res) => {
+  console.log('✅ Token verified successfully, user:', req.user);
+  res.json({
+    status: 'success',
+    message: 'Firebase token verified successfully',
+    user: req.user,
+  });
+});
+
+/**
  * POST /api/auth/register
  * Create user record in database after Firebase signup
  * Requires valid Firebase token
  */
 router.post('/register', verifyFirebaseToken, async (req, res, next) => {
   try {
+    console.log('📝 /api/auth/register - Starting registration');
+    console.log('👤 User from token:', JSON.stringify(req.user, null, 2));
+
     const { firebaseUid, email, emailVerified, displayName, photoUrl, authProvider } = req.user;
 
     // Check if user already exists
+    console.log('🔍 Checking for existing user:', firebaseUid);
     const existingUser = await prisma.user.findUnique({
       where: { firebaseUid },
     });
+    console.log('✅ Database query successful, existing user:', !!existingUser);
 
     if (existingUser) {
+      console.log('👤 User already exists, returning existing record');
       return res.status(200).json({
         message: 'User already registered',
         user: {
@@ -34,6 +84,7 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
     }
 
     // Create new user
+    console.log('➕ Creating new user in database');
     const newUser = await prisma.user.create({
       data: {
         firebaseUid,
@@ -48,8 +99,10 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
         lastLoginAt: new Date(),
       },
     });
+    console.log('✅ User created successfully, ID:', newUser.id);
 
     // Log audit event
+    console.log('📋 Creating audit log entry');
     await prisma.auditLog.create({
       data: {
         userId: newUser.id,
@@ -62,7 +115,9 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
         },
       },
     });
+    console.log('✅ Audit log created');
 
+    console.log('🎉 Registration complete, sending response');
     res.status(201).json({
       message: 'User registered successfully',
       user: {
@@ -75,6 +130,13 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error('❌ ERROR in /api/auth/register:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      name: error.name,
+      prismaCode: error.code,
+    });
     next(error);
   }
 });
