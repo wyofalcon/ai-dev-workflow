@@ -1,13 +1,38 @@
+// Mock Firebase Admin BEFORE requiring the app
+jest.mock('firebase-admin', () => {
+  const mockVerifyIdToken = jest.fn();
+  const mockAuth = {
+    verifyIdToken: mockVerifyIdToken,
+  };
+  const mockApp = {
+    auth: jest.fn(() => mockAuth),
+  };
+
+  return {
+    apps: [],
+    app: jest.fn(() => mockApp),
+    initializeApp: jest.fn(() => mockApp),
+    credential: {
+      cert: jest.fn(),
+    },
+    auth: jest.fn(() => mockAuth),
+    __mockAuth: mockAuth,
+    __mockVerifyIdToken: mockVerifyIdToken,
+  };
+});
+
 const request = require('supertest');
-const { app } = require('../index');
 const admin = require('firebase-admin');
+
+// Import app AFTER mocking Firebase
+const { app } = require('../index');
 
 describe('Authentication Endpoints', () => {
   let validToken;
   let mockFirebaseUser;
 
   beforeAll(async () => {
-    // Mock Firebase Admin SDK
+    // Setup mock Firebase user
     mockFirebaseUser = {
       uid: 'test-uid-123',
       email: 'test@example.com',
@@ -19,11 +44,11 @@ describe('Authentication Endpoints', () => {
       },
     };
 
-    // Mock the verifyIdToken function
-    jest.spyOn(admin.auth(), 'verifyIdToken').mockResolvedValue(mockFirebaseUser);
+    // Configure the mock to return our test user
+    admin.__mockVerifyIdToken.mockResolvedValue(mockFirebaseUser);
 
     validToken = 'mock-firebase-token-12345';
-  });
+  }, 10000);
 
   afterAll(() => {
     jest.restoreAllMocks();
