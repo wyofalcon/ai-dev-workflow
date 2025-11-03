@@ -1,0 +1,230 @@
+// Prisma schema for CVstomize
+// Database: PostgreSQL 15 on Google Cloud SQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User account - linked to Firebase Auth
+model User {
+  id                    String    @id @default(uuid())
+  firebaseUid           String    @unique @map("firebase_uid")
+  email                 String    @unique
+  emailVerified         Boolean   @default(false) @map("email_verified")
+  displayName           String?   @map("display_name")
+  photoUrl              String?   @map("photo_url")
+  authProvider          String    @default("email") @map("auth_provider")
+  subscriptionTier      String    @default("free") @map("subscription_tier")
+  resumesGenerated      Int       @default(0) @map("resumes_generated")
+  resumesLimit          Int       @default(1) @map("resumes_limit")
+  lastLoginAt           DateTime? @map("last_login_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  gdprConsent           Boolean   @default(false) @map("gdpr_consent")
+  gdprConsentDate       DateTime? @map("gdpr_consent_date")
+  dataRetentionUntil    DateTime? @map("data_retention_until")
+
+  profile               UserProfile?
+  personalityTraits     PersonalityTraits?
+  conversations         Conversation[]
+  resumes               Resume[]
+  subscriptions         Subscription[]
+  referrals             Referral[]       @relation("Referrer")
+  referredBy            Referral[]       @relation("Referred")
+  socialShares          SocialShare[]
+  auditLogs             AuditLog[]
+  apiUsage              ApiUsage[]
+
+  @@map("users")
+}
+
+// User profile - collected via AI conversation
+model UserProfile {
+  id                    String    @id @default(uuid())
+  userId                String    @unique @map("user_id")
+  fullName              String?   @map("full_name")
+  phone                 String?
+  location              String?
+  linkedinUrl           String?   @map("linkedin_url")
+  yearsExperience       Int?      @map("years_experience")
+  careerLevel           String?   @map("career_level")
+  targetRoles           String[]  @map("target_roles")
+  industries            String[]
+  skills                String[]
+  educationLevel        String?   @map("education_level")
+  certifications        String[]
+  languages             String[]
+  workPreferences       Json?     @map("work_preferences")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// Personality traits - inferred from conversation (Big Five model)
+model PersonalityTraits {
+  id                    String    @id @default(uuid())
+  userId                String    @unique @map("user_id")
+  openness              Int?
+  conscientiousness     Int?
+  extraversion          Int?
+  agreeableness         Int?
+  neuroticism           Int?
+  workStyle             String?   @map("work_style")
+  communicationStyle    String?   @map("communication_style")
+  confidence            Int?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("personality_traits")
+}
+
+// Conversation history with AI
+model Conversation {
+  id                    String    @id @default(uuid())
+  userId                String    @map("user_id")
+  messages              Json[]
+  status                String    @default("active")
+  completedAt           DateTime? @map("completed_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumes               Resume[]
+
+  @@map("conversations")
+}
+
+// Generated resumes
+model Resume {
+  id                    String    @id @default(uuid())
+  userId                String    @map("user_id")
+  conversationId        String?   @map("conversation_id")
+  jobTitle              String    @map("job_title")
+  jobDescription        String?   @map("job_description")
+  resumeContent         Json?     @map("resume_content")
+  pdfUrl                String?   @map("pdf_url")
+  status                String    @default("pending")
+  geminiPrompt          String?   @map("gemini_prompt")
+  geminiResponse        String?   @map("gemini_response")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation          Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  socialShares          SocialShare[]
+
+  @@map("resumes")
+}
+
+// Subscription tracking
+model Subscription {
+  id                    String    @id @default(uuid())
+  userId                String    @map("user_id")
+  tier                  String    @default("free")
+  status                String    @default("active")
+  startedAt             DateTime  @default(now()) @map("started_at")
+  endsAt                DateTime? @map("ends_at")
+  stripeCustomerId      String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId  String?   @unique @map("stripe_subscription_id")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+// Referral tracking
+model Referral {
+  id                    String    @id @default(uuid())
+  referrerId            String    @map("referrer_id")
+  referredUserId        String?   @map("referred_user_id")
+  referralCode          String    @unique @map("referral_code")
+  status                String    @default("pending")
+  rewardGranted         Boolean   @default(false) @map("reward_granted")
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  referrer              User      @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser          User?     @relation("Referred", fields: [referredUserId], references: [id], onDelete: SetNull)
+
+  @@map("referrals")
+}
+
+// Social share tracking (viral gate)
+model SocialShare {
+  id                    String    @id @default(uuid())
+  userId                String    @map("user_id")
+  resumeId              String?   @map("resume_id")
+  platform              String
+  sharedAt              DateTime  @default(now()) @map("shared_at")
+  clicked               Int       @default(0)
+  conversions           Int       @default(0)
+
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume                Resume?   @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  @@map("social_shares")
+}
+
+// Viral metrics tracking
+model ViralMetric {
+  id                    String    @id @default(uuid())
+  metricType            String    @map("metric_type")
+  value                 Float
+  metadata              Json?
+  recordedAt            DateTime  @default(now()) @map("recorded_at")
+
+  @@map("viral_metrics")
+}
+
+// Audit log for compliance
+model AuditLog {
+  id                    String    @id @default(uuid())
+  userId                String?   @map("user_id")
+  action                String
+  resource              String
+  resourceId            String?   @map("resource_id")
+  ipAddress             String?   @map("ip_address")
+  userAgent             String?   @map("user_agent")
+  details               Json?
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  user                  User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+// API usage tracking
+model ApiUsage {
+  id                    String    @id @default(uuid())
+  userId                String?   @map("user_id")
+  endpoint              String
+  method                String
+  responseStatus        Int       @map("response_status")
+  responseTime          Int       @map("response_time")
+  geminiTokens          Int?      @map("gemini_tokens")
+  timestamp             DateTime  @default(now())
+
+  user                  User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("api_usage")
+}
+
+// Schema version tracking
+model SchemaVersion {
+  version               Int       @id
+  appliedAt             DateTime  @default(now()) @map("applied_at")
+  description           String?
+
+  @@map("schema_versions")
+}

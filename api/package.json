@@ -1,0 +1,48 @@
+{
+  "name": "cvstomize-api",
+  "version": "1.0.0",
+  "description": "CVstomize Backend API - Node.js + Express + Prisma",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "resume",
+    "ai",
+    "gemini",
+    "express",
+    "prisma"
+  ],
+  "author": "CVstomize Team",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/secret-manager": "^6.1.1",
+    "@google-cloud/storage": "^7.17.2",
+    "@prisma/client": "^6.18.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "firebase-admin": "^13.5.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^6.18.0",
+    "winston": "^3.18.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.9.2",
+    "nodemon": "^3.1.10",
+    "typescript": "^5.9.3"
+  }
+}
