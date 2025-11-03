@@ -1,37 +1,85 @@
-// Mock Firebase Admin BEFORE requiring the app
-jest.mock('firebase-admin', () => {
-  const mockVerifyIdToken = jest.fn();
-  const mockAuth = {
-    verifyIdToken: mockVerifyIdToken,
-  };
-  const mockApp = {
-    auth: jest.fn(() => mockAuth),
-  };
+// Set environment BEFORE any imports
+process.env.NODE_ENV = 'test';
+process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
 
-  return {
-    apps: [],
-    app: jest.fn(() => mockApp),
-    initializeApp: jest.fn(() => mockApp),
-    credential: {
-      cert: jest.fn(),
-    },
-    auth: jest.fn(() => mockAuth),
-    __mockAuth: mockAuth,
-    __mockVerifyIdToken: mockVerifyIdToken,
-  };
-});
+// Mock Prisma Client BEFORE requiring any modules that use it
+const mockUser = {
+  id: 'user-123',
+  firebaseUid: 'test-uid-123',
+  email: 'test@example.com',
+  emailVerified: true,
+  displayName: 'Test User',
+  photoUrl: 'https://example.com/photo.jpg',
+  authProvider: 'google.com',
+  subscriptionTier: 'free',
+  resumesGenerated: 0,
+  resumesLimit: 1,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+const mockPrismaClient = {
+  user: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+  },
+  profile: {
+    findUnique: jest.fn(),
+  },
+  personalityTraits: {
+    findUnique: jest.fn(),
+  },
+  auditLog: {
+    create: jest.fn(),
+  },
+  $disconnect: jest.fn(),
+};
+
+jest.mock('@prisma/client', () => ({
+  PrismaClient: jest.fn(() => mockPrismaClient),
+}));
+
+// Mock Secret Manager
+jest.mock('@google-cloud/secret-manager', () => ({
+  SecretManagerServiceClient: jest.fn().mockImplementation(() => ({
+    accessSecretVersion: jest.fn().mockResolvedValue([{
+      payload: {
+        data: Buffer.from(JSON.stringify({
+          type: 'service_account',
+          project_id: 'cvstomize-test',
+          private_key: '-----BEGIN PRIVATE KEY-----\nMOCK_KEY\n-----END PRIVATE KEY-----\n',
+          client_email: 'test@cvstomize-test.iam.gserviceaccount.com',
+        }))
+      }
+    }])
+  }))
+}));
+
+// Mock Firebase Admin
+const mockVerifyIdToken = jest.fn();
+const mockAuth = { verifyIdToken: mockVerifyIdToken };
+const mockApp = { auth: jest.fn(() => mockAuth) };
+
+jest.mock('firebase-admin', () => ({
+  apps: [],
+  app: jest.fn(() => mockApp),
+  initializeApp: jest.fn(() => mockApp),
+  credential: { cert: jest.fn() },
+  auth: jest.fn(() => mockAuth),
+}));
 
 const request = require('supertest');
 const admin = require('firebase-admin');
 
-// Import app AFTER mocking Firebase
+// Import app AFTER all mocks are set up
 const { app } = require('../index');
 
 describe('Authentication Endpoints', () => {
   let validToken;
   let mockFirebaseUser;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     // Setup mock Firebase user
     mockFirebaseUser = {
       uid: 'test-uid-123',
@@ -44,14 +92,14 @@ describe('Authentication Endpoints', () => {
       },
     };
 
-    // Configure the mock to return our test user
-    admin.__mockVerifyIdToken.mockResolvedValue(mockFirebaseUser);
-
+    // Configure Firebase mock
+    mockVerifyIdToken.mockResolvedValue(mockFirebaseUser);
     validToken = 'mock-firebase-token-12345';
-  }, 10000);
+  });
 
-  afterAll(() => {
-    jest.restoreAllMocks();
+  beforeEach(() => {
+    // Reset mock call counts before each test
+    jest.clearAllMocks();
   });
 
   describe('POST /api/auth/register', () => {
@@ -74,6 +122,13 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should register new user with valid token', async () => {
+      // Mock: user doesn't exist yet
+      mockPrismaClient.user.findUnique.mockResolvedValue(null);
+      // Mock: create returns new user
+      mockPrismaClient.user.create.mockResolvedValue(mockUser);
+      // Mock: audit log
+      mockPrismaClient.auditLog.create.mockResolvedValue({ id: 'audit-123' });
+
       const response = await request(app)
         .post('/api/auth/register')
         .set('Authorization', `Bearer ${validToken}`)
@@ -87,7 +142,13 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should return 200 if user already exists', async () => {
-      // Second registration attempt
+      // Mock: user already exists
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+      // Mock: update last login
+      mockPrismaClient.user.update.mockResolvedValue(mockUser);
+      // Mock: audit log
+      mockPrismaClient.auditLog.create.mockResolvedValue({ id: 'audit-124' });
+
       const response = await request(app)
         .post('/api/auth/register')
         .set('Authorization', `Bearer ${validToken}`)
@@ -108,6 +169,24 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should return user profile with valid token', async () => {
+      // Mock: user with profile
+      const userWithProfile = {
+        ...mockUser,
+        profile: {
+          id: 'profile-123',
+          userId: 'user-123',
+          fullName: 'Test User',
+          phone: '+1234567890',
+        },
+        personalityTraits: {
+          id: 'traits-123',
+          userId: 'user-123',
+          openness: 75,
+          conscientiousness: 80,
+        },
+      };
+      mockPrismaClient.user.findUnique.mockResolvedValue(userWithProfile);
+
       const response = await request(app)
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${validToken}`)
@@ -130,6 +209,11 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should successfully logout with valid token', async () => {
+      // Mock: find user for audit log
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+      // Mock: audit log
+      mockPrismaClient.auditLog.create.mockResolvedValue({ id: 'audit-125' });
+
       const response = await request(app)
         .post('/api/auth/logout')
         .set('Authorization', `Bearer ${validToken}`)
