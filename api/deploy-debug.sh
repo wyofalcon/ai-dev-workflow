@@ -16,10 +16,8 @@ echo ""
 
 # Step 2: Build Docker image
 echo "🐳 Step 2: Building Docker image..."
-# Build from parent directory (where Dockerfile is)
-cd ..
+# Build from current directory (api/) where Dockerfile is located
 gcloud builds submit --tag gcr.io/cvstomize/cvstomize-api .
-cd api
 
 echo "✅ Docker image built successfully"
 echo ""
