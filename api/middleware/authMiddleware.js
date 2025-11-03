@@ -1,24 +1,18 @@
 const admin = require('firebase-admin');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 
-let firebaseInitialized = false;
-
 /**
- * Initialize Firebase Admin SDK with service account from Secret Manager
+ * Get or initialize Firebase Admin SDK
+ * Always checks admin.apps first to prevent double initialization
  */
-async function initializeFirebaseAdmin() {
-  if (firebaseInitialized) {
-    return;
-  }
-
+async function getFirebaseAdmin() {
   try {
-    // Check if Firebase Admin is already initialized
+    // If already initialized, return existing app
     if (admin.apps.length > 0) {
-      console.log('✅ Firebase Admin SDK already initialized, reusing existing app');
-      firebaseInitialized = true;
-      return;
+      return admin.app();
     }
 
+    // Initialize for the first time
     const client = new SecretManagerServiceClient();
     const projectId = process.env.GCP_PROJECT_ID || 'cvstomize';
 
@@ -30,15 +24,15 @@ async function initializeFirebaseAdmin() {
     const serviceAccount = JSON.parse(version.payload.data.toString());
 
     // Initialize Firebase Admin
-    admin.initializeApp({
+    const app = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       projectId: projectId,
     });
 
-    firebaseInitialized = true;
     console.log('✅ Firebase Admin SDK initialized successfully');
+    return app;
   } catch (error) {
-    console.error('❌ Failed to initialize Firebase Admin SDK:', error);
+    console.error('❌ Failed to get/initialize Firebase Admin SDK:', error);
     throw error;
   }
 }
@@ -49,10 +43,8 @@ async function initializeFirebaseAdmin() {
  */
 async function verifyFirebaseToken(req, res, next) {
   try {
-    // Ensure Firebase is initialized
-    if (!firebaseInitialized) {
-      await initializeFirebaseAdmin();
-    }
+    // Ensure Firebase is initialized (will reuse if already exists)
+    await getFirebaseAdmin();
 
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
@@ -182,7 +174,7 @@ async function checkResumeLimit(req, res, next) {
 }
 
 module.exports = {
-  initializeFirebaseAdmin,
+  getFirebaseAdmin,
   verifyFirebaseToken,
   requireSubscription,
   checkResumeLimit,
