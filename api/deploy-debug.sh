@@ -16,9 +16,10 @@ echo ""
 
 # Step 2: Build Docker image
 echo "🐳 Step 2: Building Docker image..."
-CACHEBUST=$(date +%s)
-gcloud builds submit --tag gcr.io/cvstomize/cvstomize-api \
-  --build-arg CACHEBUST=$CACHEBUST
+# Build from parent directory (where Dockerfile is)
+cd ..
+gcloud builds submit --tag gcr.io/cvstomize/cvstomize-api .
+cd api
 
 echo "✅ Docker image built successfully"
 echo ""
