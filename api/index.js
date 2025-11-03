@@ -19,8 +19,8 @@ app.use(helmet());
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://cvstomize.web.app', 'https://cvstomize.firebaseapp.com']
-    : ['http://localhost:3000', 'http://localhost:3001'],
+    ? ['https://cvstomize.web.app', 'https://cvstomize.firebaseapp.com', 'http://localhost:3000', 'http://localhost:3010']
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3010'],
   credentials: true,
   optionsSuccessStatus: 200,
 };
