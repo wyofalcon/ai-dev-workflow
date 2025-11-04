@@ -59,8 +59,8 @@ router.post('/generate', verifyFirebaseToken, async (req, res, next) => {
 
     // Check resume limit
     const userRecord = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { resumesGenerated: true, resumesLimit: true, subscriptionTier: true }
+      where: { firebaseUid: user.firebaseUid },
+      select: { id: true, resumesGenerated: true, resumesLimit: true, subscriptionTier: true }
     });
 
     if (userRecord.resumesGenerated >= userRecord.resumesLimit) {
@@ -81,13 +81,13 @@ router.post('/generate', verifyFirebaseToken, async (req, res, next) => {
     const startTime = Date.now();
 
     // Load or infer personality
-    let personality = await prisma.personalityTrait.findUnique({ where: { userId: user.id } });
+    let personality = await prisma.personalityTrait.findUnique({ where: { userId: userRecord.id } });
 
     if (!personality && personalStories) {
       console.log('Inferring personality from stories...');
       const inferredTraits = inferPersonality([{ messageRole: 'user', messageContent: personalStories }]);
       personality = await prisma.personalityTrait.create({
-        data: { userId: user.id, ...inferredTraits }
+        data: { userId: userRecord.id, ...inferredTraits }
       });
     }
 
@@ -113,7 +113,7 @@ router.post('/generate', verifyFirebaseToken, async (req, res, next) => {
     // Save to database
     const resume = await prisma.resume.create({
       data: {
-        userId: user.id,
+        userId: userRecord.id,
         title: targetCompany ? `Resume for ${targetCompany}` : 'Tailored Resume',
         targetCompany: targetCompany || null,
         jobDescription,
@@ -128,7 +128,7 @@ router.post('/generate', verifyFirebaseToken, async (req, res, next) => {
 
     // Increment counter
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id: userRecord.id },
       data: { resumesGenerated: { increment: 1 }, updatedAt: new Date() }
     });
 
