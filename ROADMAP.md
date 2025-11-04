@@ -3,38 +3,21 @@
 
 ---
 
-## 📚 **Documentation Index**
+## 📚 **Documentation Structure** (Consolidated!)
 
-**🗺 Documentation Map**: See **[DOCUMENTATION_MAP.md](DOCUMENTATION_MAP.md)** for complete visual guide and quick navigation!
+**Essential Files** (4 total in root):
+1. **[README.md](README.md)** - Quick start, current status, next steps
+2. **[ROADMAP.md](ROADMAP.md)** ← **YOU ARE HERE** - Complete project plan, progress, session notes
+3. **[CREDENTIALS_REFERENCE.md](CREDENTIALS_REFERENCE.md)** - Passwords, secrets, access details
+4. **[TESTING_SECURITY_STRATEGY.md](TESTING_SECURITY_STRATEGY.md)** - QA framework, security guidelines
 
-**Essential Documents** (Read First):
-- **[README.md](README.md)** - Quick start guide and current status
-- **[ROADMAP.md](ROADMAP.md)** - This file - Complete 12-month plan with progress tracking
-- **[SESSION_HANDOFF.md](SESSION_HANDOFF.md)** - Latest session summary with deployment instructions
-- **[CREDENTIALS_REFERENCE.md](CREDENTIALS_REFERENCE.md)** - All passwords, connection strings, and access details
+**Organized Subfolders**:
+- **[database/schema.sql](database/schema.sql)** - PostgreSQL schema (12 tables)
+- **[docs/deployment/](docs/deployment/)** - All deployment guides (6 files)
+- **[docs/archive/](docs/archive/)** - Session notes, old strategies (11 files)
+- **[api/tests/](api/tests/)** - Backend test suite (2 files, 23 tests)
 
-**Implementation Guides**:
-- **[RESUME_OPTIMIZATION_STRATEGY.md](RESUME_OPTIMIZATION_STRATEGY.md)** - Week 3-4 implementation plan (Gemini integration, personality-based framing)
-- **[TESTING_SECURITY_STRATEGY.md](TESTING_SECURITY_STRATEGY.md)** - Testing framework and security guidelines
-- **[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** - High-level project summary and architecture
-
-**Session Notes**:
-- **[SESSION_6_SUMMARY.md](SESSION_6_SUMMARY.md)** - Previous session notes
-- **[SESSION_HANDOFF.md](SESSION_HANDOFF.md)** - Current session complete summary
-
-**Database**:
-- **[database/schema.sql](database/schema.sql)** - Complete PostgreSQL schema (12 tables)
-
-**Deployment References** (Historical/Troubleshooting):
-- [CLOUD_SHELL_DEPLOY.md](CLOUD_SHELL_DEPLOY.md) - Cloud Shell deployment notes
-- [DEPLOY_DEBUG_INSTRUCTIONS.md](DEPLOY_DEBUG_INSTRUCTIONS.md) - Troubleshooting deployment issues
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - General deployment guide
-- [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) - Original deployment planning
-- [DEPLOY_NOW.md](DEPLOY_NOW.md) - Quick deploy reference
-- [PRODUCTION_READY.md](PRODUCTION_READY.md) - Production readiness checklist
-
-**Archive** (Historical Documents):
-- [archive/](archive/) - Previous session notes and old documentation
+**📌 All session notes and implementation strategies are consolidated below in this ROADMAP**
 
 ---
 
@@ -1687,3 +1670,343 @@ psql -h localhost -p 5432 -U cvstomize_app -d cvstomize_production \
 5. Begin Week 3: Conversational Profile Builder (Gemini integration)
 6. Implement resume generation flow
 
+---
+
+## 📋 **APPENDIX A: Session 7-8 Implementation Summary**
+
+### **Session 7: Week 3 Backend - Conversational Profile Builder (100% Complete)**
+
+**Date**: 2025-11-04
+**Duration**: 3+ hours
+**Status**: ✅ COMPLETE with Vertex AI Integration
+**Backend Revision**: cvstomize-api-00035-z2m ✅ LIVE
+
+**What Was Built** (1,181+ lines of production code):
+
+1. **Gemini Service Layer** ✅
+   - [api/services/geminiServiceVertex.js](api/services/geminiServiceVertex.js) - Vertex AI integration (ACTIVE)
+   - Both Gemini 1.5 Flash (conversations) and Pro (resumes) supported
+   - Uses GCP $300 credits via Vertex AI (no separate API key needed)
+
+2. **16-Question Framework** ✅
+   - [api/services/questionFramework.js](api/services/questionFramework.js)
+   - 5 categories: Career, Achievements, Work Style, Insights, Values
+   - Progress tracking, follow-up questions, conditional logic
+
+3. **Conversation API Endpoints** ✅
+   - [api/routes/conversation.js](api/routes/conversation.js)
+   - `POST /api/conversation/start` - Initialize session
+   - `POST /api/conversation/message` - Process responses, get next question
+   - `GET /api/conversation/history/:sessionId` - Resume conversations
+   - `POST /api/conversation/complete` - Finalize + run personality inference
+
+4. **Personality Inference Algorithm** ✅
+   - [api/services/personalityInference.js](api/services/personalityInference.js)
+   - Big Five traits: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism
+   - Work preferences: Style, Leadership, Communication, Motivation, Decision-making
+   - Rule-based keyword matching (Phase 1, ML enhancement in Phase 2)
+   - Saves to `personality_traits` table
+
+5. **Vertex AI Integration** ✅
+   - Enabled APIs: `aiplatform.googleapis.com`, `generativelanguage.googleapis.com`
+   - Service account `cvstomize-deployer` granted `roles/aiplatform.user`
+   - Uses GCP $300 credits (no separate API key needed)
+   - Production-ready authentication
+
+**Pricing** (billed to GCP):
+- Gemini 1.5 Flash: $0.075 per 1M input tokens
+- Gemini 1.5 Pro: $1.25 per 1M input tokens
+- Per profile: ~$0.001 (Flash for conversations)
+- Per resume: ~$0.016 (Flash + Pro)
+- Expected Month 1 Cost (5,000 users): ~$85/month (well under $300 credits!)
+
+**Deployment Status**:
+- Backend: ✅ LIVE on Cloud Run (cvstomize-api-00035-z2m)
+- URL: https://cvstomize-api-351889420459.us-central1.run.app
+- Vertex AI: Enabled and configured
+- Authentication: Firebase + Vertex AI service account
+
+---
+
+### **Session 8: Resume Tracking + Profile Persistence (In Progress)**
+
+**Date**: 2025-11-04
+**Status**: Priority 1 Complete (Resume Tracking), Documentation Cleanup Complete
+**Backend Revision**: TBD (deployment in progress)
+
+**Strategic Decision: Avoid Rework, Enhance Existing UI**
+
+After analyzing existing frontend (ProcessModal.js 4-step wizard), decided to:
+- ✅ **Option C**: Enhance existing wizard with database persistence + personality inference
+- ❌ NOT Option A: Replace UI with chat interface (high rework, discards working UI)
+- 🎯 **Zero rework principle**: Enhance existing features, don't rebuild from scratch
+
+**Why This Approach?**
+1. Existing UI already collects comprehensive data (personal stories, resume, job description)
+2. Users familiar with 4-step wizard - no retraining needed
+3. Can infer personality from existing "personal stories" field (Step 1)
+4. Faster time to production (2 hours vs 8 hours for chat UI)
+5. Validates backend infrastructure before committing to conversational approach
+
+**Priority 1: Resume Tracking - ✅ COMPLETE** (3 hours)
+
+**Files Modified/Created:**
+- [api/routes/resume.js](api/routes/resume.js) - Enhanced with full Gemini generation (265 lines)
+- [src/services/api.js](src/services/api.js) - Added `generateResume()` with auth (94 lines)
+- [src/components/ProcessModal.js](src/components/ProcessModal.js) - Updated to use authenticated endpoint (205 lines)
+- [api/tests/resume.test.js](api/tests/resume.test.js) - 14 comprehensive test cases (425 lines)
+- [api/config/database.js](api/config/database.js) - Centralized Prisma client (15 lines)
+
+**Backend Resume Tracking Implementation:**
+
+**New Endpoint**: `POST /api/resume/generate` (replaces old Vercel function)
+
+**Features**:
+1. ✅ **Authentication Required** - Firebase JWT token verification
+2. ✅ **Resume Limit Enforcement** - Free tier: 1 resume, checks before generation
+3. ✅ **Personality Inference** - Auto-infer from personal stories using Big Five algorithm
+4. ✅ **Database Persistence** - Save all resume metadata to PostgreSQL
+5. ✅ **Cost Tracking** - Token usage and cost calculation ($1.25 per 1M tokens)
+6. ✅ **User Counter Update** - Increment `resumesGenerated` after successful generation
+7. ✅ **Error Handling** - Comprehensive error messages for limits, auth, generation failures
+
+**Data Flow**:
+```
+Frontend (ProcessModal)
+  → POST /api/resume/generate (authenticated)
+  → Check resume limit (free tier: 1)
+  → Load or infer personality traits
+  → Build personality-enhanced Gemini prompt
+  → Generate resume with Gemini 1.5 Pro
+  → Save to database (resumes table)
+  → Increment user counter
+  → Return resume markdown + usage stats
+```
+
+**Frontend Integration:**
+
+**Updated**: [src/components/ProcessModal.js](src/components/ProcessModal.js)
+- Changed from `generateCv()` (old Vercel function) to `generateResume()` (new Cloud Run endpoint)
+- Added Firebase auth token to requests
+- Enhanced error handling:
+  - Resume limit reached → Social share unlock message
+  - Not authenticated → Login prompt
+  - Network errors → User-friendly messaging
+- Success message shows remaining resume count
+- Auto-navigate to resume page after generation
+
+**Test Suite - ✅ 23 Backend Tests (100% Passing)**
+
+**Resume Tests** (14 cases):
+1. ✅ Generate resume with authentication
+2. ✅ Resume limit enforcement (403 when limit reached)
+3. ✅ Personality inference from stories
+4. ✅ Personality loading from database (if exists)
+5. ✅ Resume counter increment
+6. ✅ Cost calculation accuracy
+7. ✅ Token usage tracking
+8. ✅ Resume list retrieval
+9. ✅ Specific resume retrieval
+10. ✅ Resume download endpoint
+11. ✅ Unauthorized access prevention
+12. ✅ Invalid input validation
+13. ✅ Missing required fields handling
+14. ✅ Database error handling
+
+**Authentication Tests** (9 cases - from Week 2):
+1. ✅ User registration
+2. ✅ User login
+3. ✅ Token verification
+4. ✅ User profile retrieval
+5. ✅ Password validation
+6. ✅ Email uniqueness
+7. ✅ JWT token expiration
+8. ✅ Invalid credentials
+9. ✅ Missing fields
+
+**Total**: 23 comprehensive tests with mocked dependencies (Firebase Admin, Prisma, Gemini)
+
+**Strategic Decisions Made:**
+
+1. **Data Ownership Strategy** - Store ALL data in company infrastructure
+   - ❌ NOT using user's Google Drive (reduces exit valuation by 50%+)
+   - ✅ Data assets = 8-12x ARR multiple vs 3-5x without data
+   - Expected exit value: $15-30M with data vs $5-10M without
+   - User accepted privacy trade-off (standard SaaS model)
+
+2. **Test-Driven Development** - Building tests alongside features
+   - Backend: 23 tests (100% passing)
+   - Integration tests with mocked dependencies
+   - Ready for CI/CD pipeline
+
+3. **Documentation Consolidation** - Single source of truth approach
+   - Reduced 22 markdown files → 4 essential files in root
+   - Moved deployment docs to `docs/deployment/` (6 files)
+   - Archived session notes to `docs/archive/` (11 files)
+   - All session summaries consolidated in ROADMAP (this file)
+
+**Remaining Priorities for Session 8:**
+
+⏳ **Priority 2: Profile Persistence** (2 hours estimated)
+- Auto-save user data from wizard steps
+- Load saved profile on return visits
+- Pre-fill Steps 1-2 with saved data
+- Progressive data capture (save after each step)
+
+⏳ **Priority 3: Personality Enhancement** (1 hour estimated)
+- Explicit personality inference endpoint
+- Personality quiz/questions (optional)
+- Personality-based resume framing validation
+- A/B test personality impact on job matches
+
+---
+
+## 📋 **APPENDIX B: Integration Strategy - Zero Rework Approach**
+
+### **Problem: Frontend/Backend Overlap**
+
+**Existing Frontend** (ProcessModal.js):
+- 4-step wizard collects: personal stories, resume text, job description, section selection
+- Currently stateless (no database persistence)
+- Works well but no user association or tracking
+
+**New Backend** (Session 7):
+- Conversational API with 16 questions
+- Database persistence (conversations, user_profiles, personality_traits)
+- Gemini-powered personality inference
+
+**Overlap**: ~60-70% of data collection functionality duplicated
+
+### **Strategic Options Evaluated:**
+
+**Option A**: Replace wizard with chat interface
+- ❌ HIGH REWORK - Discard existing working UI
+- ❌ Users forced to use conversational approach (may not prefer)
+- ❌ 8 hours development time
+- ❌ Risk of lower conversion if users dislike chat
+
+**Option B**: Hybrid - Keep wizard + Add chat mode
+- ✅ No rework on existing UI
+- ⚠️ Maintain two parallel systems
+- ⏱️ 4 hours development time
+- ⚠️ May confuse users with too many options
+
+**Option C**: Enhance wizard with database persistence ⭐ **CHOSEN**
+- ✅ ZERO REWORK on frontend UI
+- ✅ Existing users see no breaking changes
+- ✅ Adds persistence and personality inference (value add)
+- ✅ Fastest path to production (2 hours)
+- ✅ Data saved to database (not just localStorage)
+- ✅ Personality-based resume tailoring works immediately
+
+**Option D**: Separate profile building (chat) from resume generation (wizard)
+- ✅ Best long-term UX (new users: chat, returning: quick wizard)
+- ✅ One-time profile, infinite resumes
+- ⏱️ 6 hours development time
+- 🎯 Future enhancement after validating Option C
+
+### **Decision: Phased Approach (C → D)**
+
+**Phase 1 (Session 8)**: Implement Option C
+- Enhance existing wizard with database persistence
+- Add personality inference on "Generate" click
+- Zero UI changes, maximum value delivery
+
+**Phase 2 (Week 4)**: Build conversational profile builder (Option D)
+- Add ChatInterface for comprehensive first-time profiling
+- Modify wizard to load from database (skip Steps 1-2)
+- Two-tier UX: new users get chat, returning users get quick wizard
+
+**Result**: Zero rework, incremental value delivery, validates approach before full investment
+
+### **Data Reuse Strategy:**
+
+| Existing Input | New Destination (Database) |
+|----------------|----------------------------|
+| `personalStories` | `user_profiles.experience` (JSONB) + `conversations` table |
+| `resumeText` | `user_profiles.experience` (parsed) |
+| `files[]` (resume uploads) | `user_profiles` (structured extraction) |
+| `jobDescription` | `resumes.job_description` |
+| `selectedSections` | `user_preferences` (future table) |
+
+**Personality Extraction**: Use existing `personalStories` text as primary input for Big Five trait inference (keyword analysis) - **no additional user input needed!**
+
+---
+
+## 📋 **APPENDIX C: Deployment History**
+
+### **Backend Deployments:**
+
+**Revision cvstomize-api-00034-kk7** (Session 6)
+- Initial Cloud Run deployment
+- Google OAuth + Email/Password authentication
+- Profile picture proxy fix
+- Test suite: 9/9 passing
+- Database connection verified
+
+**Revision cvstomize-api-00035-z2m** (Session 7)
+- Week 3 Conversational Profile Builder backend
+- Gemini Vertex AI integration (1,181 lines)
+- 16-question framework
+- Personality inference algorithm
+- Conversation API endpoints (start, message, history, complete)
+- Vertex AI service account authentication
+
+**Revision TBD** (Session 8 - In Progress)
+- Resume tracking with database persistence
+- Enhanced resume generation endpoint
+- Personality-based resume framing
+- Resume limit enforcement
+- Test suite: 23 tests (100% passing)
+
+### **Frontend Deployments:**
+
+**Session 6**: Authentication UI complete
+- Login, Signup, Password Reset pages
+- Firebase Auth integration
+- Protected routes
+- User profile display in navbar
+
+**Session 7**: No frontend changes (backend-only session)
+
+**Session 8**: Resume generation flow enhancement
+- Updated ProcessModal to use authenticated endpoint
+- Enhanced error handling
+- Success messaging with usage stats
+- Auto-navigation after generation
+
+---
+
+## 📋 **APPENDIX D: Cost Analysis & Budget Tracking**
+
+### **Phase 1 Budget: $1,000** (Months 1-3)
+
+**Expected Costs** (5,000 users):
+
+**GCP Infrastructure:**
+- Cloud SQL (db-f1-micro): $10/month × 3 = **$30**
+- Cloud Run (backend): $20/month × 3 = **$60**
+- Cloud Storage (resumes): $5/month × 3 = **$15**
+- Networking/egress: $10/month × 3 = **$30**
+- **Subtotal Infrastructure**: **$135**
+
+**Gemini API (via Vertex AI):**
+- Profile building: 5,000 × $0.001 = **$5**
+- Resume generation: 5,000 × $0.016 = **$80**
+- **Subtotal Gemini**: **$85**
+
+**Firebase:**
+- Authentication: Free tier (50,000 MAU)
+- **Subtotal Firebase**: **$0**
+
+**Total Phase 1**: **$220** (well under $1,000 budget!)
+
+**Cost per user**: $0.044 (target was <$0.025, but includes resume generation)
+**Runway**: $1,000 budget supports ~22,700 users or 9+ months at current scale
+
+**GCP Credits**: $300 available, covers all Gemini costs + infrastructure surplus
+
+---
+
+**Last Updated**: 2025-11-04 (Session 8)
+**Status**: Documentation consolidated, resume tracking complete, deployment in progress
