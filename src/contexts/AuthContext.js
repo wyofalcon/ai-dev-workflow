@@ -133,16 +133,31 @@ export const AuthProvider = ({ children }) => {
       // Log logout in backend
       const token = await getIdToken();
       if (token) {
-        await axios.post(`${API_URL}/auth/logout`, {}, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        try {
+          await axios.post(`${API_URL}/auth/logout`, {}, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        } catch (backendError) {
+          // Continue with logout even if backend call fails
+          console.error('Backend logout error (continuing):', backendError);
+        }
       }
 
+      // Sign out from Firebase
       await signOut(auth);
+
+      // Clear user state
       setUserProfile(null);
+
+      // Clear any tokens or user data from localStorage
+      localStorage.clear();
+
     } catch (error) {
+      // Even if there's an error, try to clear local state
+      setUserProfile(null);
+      localStorage.clear();
       setError(error.message);
       throw error;
     }
