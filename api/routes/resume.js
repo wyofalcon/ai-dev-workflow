@@ -81,13 +81,38 @@ router.post('/generate', verifyFirebaseToken, async (req, res, next) => {
     const startTime = Date.now();
 
     // Load or infer personality
-    let personality = await prisma.personalityTraits.findUnique({ where: { userId: userRecord.id } });
+    let personality = await prisma.personalityTraits.findUnique({
+      where: { userId: userRecord.id },
+      select: {
+        id: true,
+        openness: true,
+        conscientiousness: true,
+        extraversion: true,
+        agreeableness: true,
+        neuroticism: true,
+        workStyle: true,
+        communicationStyle: true
+      }
+    });
 
     if (!personality && personalStories) {
       console.log('Inferring personality from stories...');
       const inferredTraits = inferPersonality([{ messageRole: 'user', messageContent: personalStories }]);
+
+      // Only include fields that exist in database schema
+      const { openness, conscientiousness, extraversion, agreeableness, neuroticism, workStyle, communicationStyle } = inferredTraits;
+
       personality = await prisma.personalityTraits.create({
-        data: { userId: userRecord.id, ...inferredTraits }
+        data: {
+          userId: userRecord.id,
+          openness,
+          conscientiousness,
+          extraversion,
+          agreeableness,
+          neuroticism,
+          workStyle,
+          communicationStyle
+        }
       });
     }
 
