@@ -6,15 +6,19 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY prisma ./prisma/
 
-# Install production dependencies only
-RUN npm install --omit=dev
-
-# Copy application code
-COPY . .
+# Install ALL dependencies first (needed for Prisma generation)
+RUN npm install
 
 # Generate Prisma Client
 RUN npx prisma generate
+
+# Copy rest of application code
+COPY . .
+
+# Remove dev dependencies to reduce image size
+RUN npm prune --omit=dev
 
 # Create logs directory
 RUN mkdir -p logs

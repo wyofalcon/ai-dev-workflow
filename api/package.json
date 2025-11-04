@@ -26,6 +26,8 @@
   "dependencies": {
     "@google-cloud/secret-manager": "^6.1.1",
     "@google-cloud/storage": "^7.17.2",
+    "@google-cloud/vertexai": "^1.10.0",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.18.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
@@ -36,6 +38,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^6.18.0",
+    "uuid": "^13.0.0",
     "winston": "^3.18.3"
   },
   "devDependencies": {

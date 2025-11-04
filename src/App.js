@@ -105,8 +105,8 @@ function MainLayout() {
 
               {/* User Menu */}
               <IconButton onClick={handleMenuOpen} color="primary">
-                {currentUser.photoURL ? (
-                  <Avatar src={currentUser.photoURL} sx={{ width: 32, height: 32 }} />
+                {userProfile?.photoUrl ? (
+                  <Avatar src={userProfile.photoUrl} sx={{ width: 32, height: 32 }} />
                 ) : (
                   <AccountCircle />
                 )}

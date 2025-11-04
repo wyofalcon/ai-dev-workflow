@@ -19,8 +19,8 @@ app.use(helmet());
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://cvstomize.web.app', 'https://cvstomize.firebaseapp.com', 'http://localhost:3000', 'http://localhost:3010']
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3010'],
+    ? ['https://cvstomize.web.app', 'https://cvstomize.firebaseapp.com', 'http://localhost:3000', 'http://localhost:3010', 'http://localhost:3011']
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3010', 'http://localhost:3011'],
   credentials: true,
   optionsSuccessStatus: 200,
 };
@@ -77,11 +77,13 @@ const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 const conversationRoutes = require('./routes/conversation');
 const resumeRoutes = require('./routes/resume');
+const proxyRoutes = require('./routes/proxy');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/conversation', conversationRoutes);
 app.use('/api/resume', resumeRoutes);
+app.use('/api/proxy', proxyRoutes);
 
 // 404 handler
 app.use((req, res) => {

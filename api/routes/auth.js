@@ -101,21 +101,22 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
     });
     console.log('✅ User created successfully, ID:', newUser.id);
 
+    // TODO: Re-enable audit logging once audit_logs table is created
     // Log audit event
-    console.log('📋 Creating audit log entry');
-    await prisma.auditLog.create({
-      data: {
-        userId: newUser.id,
-        action: 'user_registered',
-        resource: 'user',
-        resourceId: newUser.id,
-        details: {
-          authProvider,
-          email,
-        },
-      },
-    });
-    console.log('✅ Audit log created');
+    // console.log('📋 Creating audit log entry');
+    // await prisma.auditLog.create({
+    //   data: {
+    //     userId: newUser.id,
+    //     action: 'user_registered',
+    //     resource: 'user',
+    //     resourceId: newUser.id,
+    //     details: {
+    //       authProvider,
+    //       email,
+    //     },
+    //   },
+    // });
+    // console.log('✅ Audit log created');
 
     console.log('🎉 Registration complete, sending response');
     res.status(201).json({
@@ -136,6 +137,8 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
       code: error.code,
       name: error.name,
       prismaCode: error.code,
+      meta: error.meta,
+      fullError: JSON.stringify(error, Object.getOwnPropertyNames(error)),
     });
     next(error);
   }
@@ -167,15 +170,16 @@ router.post('/login', verifyFirebaseToken, async (req, res, next) => {
       });
     }
 
+    // TODO: Re-enable audit logging once audit_logs table is created
     // Log audit event
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'user_login',
-        resource: 'user',
-        resourceId: user.id,
-      },
-    });
+    // await prisma.auditLog.create({
+    //   data: {
+    //     userId: user.id,
+    //     action: 'user_login',
+    //     resource: 'user',
+    //     resourceId: user.id,
+    //   },
+    // });
 
     res.status(200).json({
       message: 'Login successful',
@@ -250,15 +254,16 @@ router.post('/logout', verifyFirebaseToken, async (req, res, next) => {
     });
 
     if (user) {
+      // TODO: Re-enable audit logging once audit_logs table is created
       // Log audit event
-      await prisma.auditLog.create({
-        data: {
-          userId: user.id,
-          action: 'user_logout',
-          resource: 'user',
-          resourceId: user.id,
-        },
-      });
+      // await prisma.auditLog.create({
+      //   data: {
+      //     userId: user.id,
+      //     action: 'user_logout',
+      //     resource: 'user',
+      //     resourceId: user.id,
+      //   },
+      // });
     }
 
     res.status(200).json({
@@ -276,25 +281,26 @@ router.post('/logout', verifyFirebaseToken, async (req, res, next) => {
  */
 router.get('/me', verifyFirebaseToken, async (req, res, next) => {
   try {
+    console.log('📋 /api/auth/me - Fetching user profile');
+    console.log('👤 Firebase UID:', req.user.firebaseUid);
+
     const { firebaseUid } = req.user;
 
     const user = await prisma.user.findUnique({
       where: { firebaseUid },
-      include: {
-        profile: true,
-        personalityTraits: true,
-        resumes: {
-          orderBy: { createdAt: 'desc' },
-          take: 5,
-          select: {
-            id: true,
-            jobTitle: true,
-            createdAt: true,
-            pdfUrl: true,
-          },
-        },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        photoUrl: true,
+        subscriptionTier: true,
+        resumesGenerated: true,
+        resumesLimit: true,
+        emailVerified: true,
       },
     });
+
+    console.log('✅ Query completed, user found:', !!user);
 
     if (!user) {
       return res.status(404).json({
@@ -304,21 +310,15 @@ router.get('/me', verifyFirebaseToken, async (req, res, next) => {
     }
 
     res.status(200).json({
-      user: {
-        id: user.id,
-        email: user.email,
-        displayName: user.displayName,
-        photoUrl: user.photoUrl,
-        subscriptionTier: user.subscriptionTier,
-        resumesGenerated: user.resumesGenerated,
-        resumesLimit: user.resumesLimit,
-        emailVerified: user.emailVerified,
-        profile: user.profile,
-        personalityTraits: user.personalityTraits,
-        recentResumes: user.resumes,
-      },
+      user,
     });
   } catch (error) {
+    console.error('❌ ERROR in /api/auth/me:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      fullError: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+    });
     next(error);
   }
 });

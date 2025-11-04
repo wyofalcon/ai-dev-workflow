@@ -159,7 +159,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Get user profile from backend
+  // Get user profile from backend (with auto-registration fallback)
   const fetchUserProfile = async (user) => {
     try {
       const token = await user.getIdToken();
@@ -168,10 +168,43 @@ export const AuthProvider = ({ children }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      setUserProfile(response.data.user);
-      return response.data.user;
+      const user = response.data.user;
+
+      // Proxy Google profile image through our backend to avoid CORS/ORB issues
+      if (user.photoUrl && user.photoUrl.includes('googleusercontent.com')) {
+        user.photoUrl = `${API_URL}/proxy/avatar?url=${encodeURIComponent(user.photoUrl)}`;
+      }
+
+      setUserProfile(user);
+      return user;
     } catch (error) {
       console.error('Error fetching user profile:', error);
+
+      // If user not found (404), try to register them
+      if (error.response && error.response.status === 404) {
+        console.log('User not found in database, attempting registration...');
+        try {
+          await registerInBackend(user);
+          // Retry fetching profile after registration
+          const retryResponse = await axios.get(`${API_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${await user.getIdToken()}`,
+            },
+          });
+          const retryUser = retryResponse.data.user;
+
+          // Proxy Google profile image through our backend
+          if (retryUser.photoUrl && retryUser.photoUrl.includes('googleusercontent.com')) {
+            retryUser.photoUrl = `${API_URL}/proxy/avatar?url=${encodeURIComponent(retryUser.photoUrl)}`;
+          }
+
+          setUserProfile(retryUser);
+          return retryUser;
+        } catch (registerError) {
+          console.error('Failed to register user:', registerError);
+        }
+      }
+
       return null;
     }
   };

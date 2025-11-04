@@ -1,40 +1,62 @@
 const admin = require('firebase-admin');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 
+// Promise-based lock to prevent concurrent initialization
+let firebaseInitPromise = null;
+
 /**
- * Get or initialize Firebase Admin SDK
- * Always checks admin.apps first to prevent double initialization
+ * Get or initialize Firebase Admin SDK with race condition protection
+ * Uses promise caching to prevent concurrent initialization attempts
  */
 async function getFirebaseAdmin() {
-  try {
-    // If already initialized, return existing app
-    if (admin.apps.length > 0) {
-      return admin.app();
-    }
-
-    // Initialize for the first time
-    const client = new SecretManagerServiceClient();
-    const projectId = process.env.GCP_PROJECT_ID || 'cvstomize';
-
-    // Get service account key from Secret Manager
-    const [version] = await client.accessSecretVersion({
-      name: `projects/${projectId}/secrets/cvstomize-service-account-key/versions/latest`,
-    });
-
-    const serviceAccount = JSON.parse(version.payload.data.toString());
-
-    // Initialize Firebase Admin
-    const app = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      projectId: projectId,
-    });
-
-    console.log('✅ Firebase Admin SDK initialized successfully');
-    return app;
-  } catch (error) {
-    console.error('❌ Failed to get/initialize Firebase Admin SDK:', error);
-    throw error;
+  // If already initialized, return existing app
+  if (admin.apps.length > 0) {
+    console.log('🔥 Firebase app already exists, reusing...');
+    return admin.app();
   }
+
+  // If initialization in progress, wait for it
+  if (firebaseInitPromise) {
+    console.log('⏳ Firebase initialization in progress, waiting...');
+    return firebaseInitPromise;
+  }
+
+  // Start initialization and cache the promise
+  console.log('🚀 Initializing Firebase Admin SDK...');
+  firebaseInitPromise = (async () => {
+    try {
+      const client = new SecretManagerServiceClient();
+
+      // Get project ID from Secret Manager first
+      const [projectIdResponse] = await client.accessSecretVersion({
+        name: 'projects/351889420459/secrets/cvstomize-project-id/versions/latest',
+      });
+      const projectId = projectIdResponse.payload.data.toString('utf8').trim();
+
+      // Get service account key from Secret Manager
+      const [serviceAccountResponse] = await client.accessSecretVersion({
+        name: `projects/${projectId}/secrets/cvstomize-service-account-key/versions/latest`,
+      });
+      const serviceAccountKey = JSON.parse(
+        serviceAccountResponse.payload.data.toString('utf8')
+      );
+
+      // Initialize Firebase Admin
+      const app = admin.initializeApp({
+        credential: admin.credential.cert(serviceAccountKey),
+        projectId: projectId,
+      });
+
+      console.log('✅ Firebase Admin SDK initialized successfully');
+      return app;
+    } catch (error) {
+      console.error('❌ Failed to initialize Firebase:', error);
+      firebaseInitPromise = null; // Reset on error to allow retry
+      throw error;
+    }
+  })();
+
+  return firebaseInitPromise;
 }
 
 /**

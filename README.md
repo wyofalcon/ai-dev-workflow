@@ -8,10 +8,10 @@
 
 **For Development Setup:** See **[ROADMAP.md](ROADMAP.md)** - Your single source of truth for:
 - Complete project roadmap (12+ months)
-- Current progress (Week 2: 98% complete)
-- Next session tasks (2 quick fixes - 30 min to complete Week 2)
+- Current progress (Week 2: ✅ 100% COMPLETE)
+- Next session tasks (Week 3: Conversational Profile Builder)
 - All GCP infrastructure details
-- Session notes and detailed fix instructions
+- Session notes and implementation details
 
 **For Credentials:** See **[CREDENTIALS_REFERENCE.md](CREDENTIALS_REFERENCE.md)** for:
 - Database connection strings
@@ -21,32 +21,39 @@
 
 ---
 
-## 📊 Current Status (2025-11-03)
+## 📊 Current Status (2025-11-04)
 
-**Phase**: Phase 1 - Viral MVP (Month 1, Week 2)
-**Progress**: Week 2 - 98% complete (2 quick fixes remaining)
-**Next Session**: Fix frontend URL and Firebase race condition (30 minutes)
+**Phase**: Phase 1 - Viral MVP (Month 1, Week 3)
+**Progress**: Week 3 - 90% COMPLETE (Backend 100%, Frontend Strategy Revised)
+**Next Session**: Resume Tracking + Profile Persistence (6 hours)
 
-### ✅ Completed Today:
-- Backend deployed to Cloud Run (revision cvstomize-api-00025-7zh)
-- Test suite: **9/9 passing** (register, login, /me, logout, health)
-- Fixed Firebase Admin SDK double initialization
-- Fixed DATABASE_URL format for Cloud SQL Proxy (Unix socket)
-- Fixed database name (`cvstomize_production` not `cvstomize`)
-- **Database connection verified and working** ✅
-- Verbose error logging added throughout
-- Test endpoints created for debugging
+👉 **START HERE**: [SESSION_7_HANDOFF_SUMMARY.md](SESSION_7_HANDOFF_SUMMARY.md) - Complete handoff for next session
 
-### ⚠️ 2 Quick Fixes Remaining (30 min):
-1. **Frontend URL** - Update `.env` to point to Cloud Run (not localhost:3001)
-2. **Firebase Race Condition** - Add promise lock to prevent concurrent initialization
+### ✅ Week 2 Complete:
+- ✅ Backend deployed to Cloud Run (revision **cvstomize-api-00034-kk7**)
+- ✅ Google OAuth + Email/Password authentication fully working
+- ✅ Profile picture display fixed (proxied through backend)
+- ✅ Test suite: 9/9 passing
+- ✅ Database connection verified
 
-### ⏳ Next Session (Complete Week 2):
-1. Update `REACT_APP_API_URL` in frontend `.env` to Cloud Run URL (5 min)
-2. Fix Firebase `getFirebaseAdmin()` with promise-based lock (15 min)
-3. Deploy, test registration, verify user in database (10 min)
+### ✅ Week 3 Backend Complete (100%):
+- ✅ Gemini Vertex AI Integration ([api/services/geminiServiceVertex.js](api/services/geminiServiceVertex.js))
+- ✅ 16-Question Framework across 5 categories ([api/services/questionFramework.js](api/services/questionFramework.js))
+- ✅ Conversation API Endpoints: start, message, history, complete
+- ✅ Personality Inference Algorithm - Big Five traits + work preferences
+- ✅ Backend deployed to Cloud Run (revision **cvstomize-api-00035-z2m**)
+- ✅ Vertex AI configured (uses GCP $300 credits, no API key needed)
+- ✅ 1,181 lines of production code
 
-**See ROADMAP.md Session 5 notes for detailed fix instructions**
+**Session 8 Priorities** (Strategy Revised):
+- 🎯 **Priority 1**: Resume Tracking (3 hours) - Save resumes to database, enforce limits
+- 🎯 **Priority 2**: Profile Persistence (2 hours) - Save user data, auto-fill on return
+- 🎯 **Priority 3**: Personality Enhancement (1 hour) - Infer Big Five traits from existing UI
+
+**See**:
+- [SESSION_7_HANDOFF_SUMMARY.md](SESSION_7_HANDOFF_SUMMARY.md) - **Complete handoff summary**
+- [RESUME_TRACKING_PLAN.md](RESUME_TRACKING_PLAN.md) - Detailed implementation plan
+- [INTEGRATION_STRATEGY.md](INTEGRATION_STRATEGY.md) - Why we changed approach
 
 ---
 
@@ -118,21 +125,34 @@ CVstomize helps job seekers create perfect, tailored resumes in 5 minutes throug
 
 ---
 
-## 📂 Project Structure
+## 📂 Project Structure & Documentation
 
 ```
 Cvstomize/
-├── ROADMAP.md                    # ⭐ PRIMARY REFERENCE - Start here
-├── CREDENTIALS_REFERENCE.md      # All passwords and access
-├── README.md                     # This file
-├── TESTING_SECURITY_STRATEGY.md  # Testing framework (85%+ coverage)
-├── PROJECT_OVERVIEW.md           # Detailed project summary
+├── README.md                            # This file - Quick start guide
+├── ROADMAP.md                           # ⭐ PRIMARY REFERENCE - 12-month plan
+├── SESSION_HANDOFF.md                   # Latest session summary & deployment commands
+├── CREDENTIALS_REFERENCE.md             # All passwords and access details
+├── RESUME_OPTIMIZATION_STRATEGY.md      # Week 3-4 implementation guide
+├── TESTING_SECURITY_STRATEGY.md         # Testing framework (85%+ coverage)
+├── PROJECT_OVERVIEW.md                  # Detailed project summary
+├── SESSION_6_SUMMARY.md                 # Previous session notes
 ├── database/
-│   └── schema.sql               # PostgreSQL schema (12 tables)
-├── api/                         # Backend (Node.js + Express)
-├── src/                         # Frontend (React)
-└── archive/                     # Old documentation
+│   └── schema.sql                      # PostgreSQL schema (12 tables)
+├── api/                                # Backend (Node.js + Express)
+│   ├── generate-cv.js                  # Existing Gemini integration (Vercel)
+│   ├── routes/                         # API routes
+│   └── middleware/                     # Auth, CORS, etc.
+├── src/                                # Frontend (React)
+└── archive/                            # Old documentation
 ```
+
+**📚 Essential Reading Order**:
+1. [README.md](README.md) ← You are here
+2. [ROADMAP.md](ROADMAP.md) - Full project plan with Week 2 complete (100%)
+3. [SESSION_HANDOFF.md](SESSION_HANDOFF.md) - Latest session details
+4. [RESUME_OPTIMIZATION_STRATEGY.md](RESUME_OPTIMIZATION_STRATEGY.md) - Next steps (Weeks 3-4)
+5. [CREDENTIALS_REFERENCE.md](CREDENTIALS_REFERENCE.md) - When you need access
 
 ---
 
