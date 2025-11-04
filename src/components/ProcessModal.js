@@ -26,7 +26,8 @@ import UploadFile from '@mui/icons-material/UploadFile';
 import AutoStories from '@mui/icons-material/AutoStories';
 import Description from '@mui/icons-material/Description';
 import Tune from '@mui/icons-material/Tune';
-import { generateCv } from '../services/api.js';
+import { generateCv, generateResume } from '../services/api.js';
+import { useNavigate } from 'react-router-dom';
 
 const steps = ['Your Secret Weapon', 'Upload Resume', 'Job Description', 'Customize Sections'];
 
@@ -39,6 +40,8 @@ export default function ProcessModal({ open, handleClose, cvState }) {
   } = cvState;
 
   const [currentStep, setCurrentStep] = useState(0);
+  const [successMessage, setSuccessMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleNext = () => {
     setCurrentStep((prevActiveStep) => prevActiveStep + 1);
@@ -49,26 +52,53 @@ export default function ProcessModal({ open, handleClose, cvState }) {
   };
 
   const handleGenerate = async () => {
-    if ((files.length === 0 && !resumeText) || !jobDescription || selectedSections.length === 0) {
-      setError('Please upload or paste a resume, provide a job description, and select at least one section.');
+    if ((files.length === 0 && !resumeText && !personalStories) || !jobDescription || selectedSections.length === 0) {
+      setError('Please provide your experience (resume or stories), job description, and select sections.');
       return;
     }
     setIsLoading(true);
     setError('');
-    const formData = new FormData();
-    files.forEach(file => formData.append('documents', file));
-    formData.append('resumeText', resumeText);
-    formData.append('personalStories', personalStories);
-    formData.append('jobDescription', jobDescription);
-    formData.append('selectedSections', selectedSections.join(','));
+    setSuccessMessage('');
+
     try {
-      const pdfBlob = await generateCv(formData);
-      const url = window.URL.createObjectURL(pdfBlob);
-      window.open(url, '_blank');
-      handleClose();
+      // Use NEW authenticated endpoint with tracking
+      const payload = {
+        resumeText: resumeText || '',
+        personalStories: personalStories || '',
+        jobDescription,
+        selectedSections,
+        targetCompany: null // TODO: Extract from job description if possible
+      };
+
+      console.log('Calling new resume generation API...');
+      const result = await generateResume(payload);
+
+      console.log('Resume generated:', result);
+
+      // Store markdown in localStorage for preview
+      localStorage.setItem('generatedCv', result.resume.markdown);
+
+      // Show success message with usage info
+      const usageMsg = `Resume generated! (${result.usage.remaining} of ${result.usage.resumesLimit} remaining)`;
+      setSuccessMessage(usageMsg);
+
+      // Navigate to resume page after brief delay
+      setTimeout(() => {
+        navigate('/resume');
+        handleClose();
+      }, 1500);
+
     } catch (err) {
-      console.error("An error occurred during CV generation:", err);
-      setError("An error occurred while generating the CV. Please try again.");
+      console.error("Resume generation error:", err);
+
+      // Handle specific error types
+      if (err.message && err.message.includes('limit reached')) {
+        setError('🎯 Resume limit reached! Share on social media to unlock more resumes, or upgrade to Pro for unlimited access.');
+      } else if (err.message && err.message.includes('Not authenticated')) {
+        setError('Please log in to generate resumes.');
+      } else {
+        setError(err.message || "An error occurred while generating the resume. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -155,6 +185,7 @@ export default function ProcessModal({ open, handleClose, cvState }) {
           {renderStepContent(currentStep)}
         </Box>
         {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+        {successMessage && <Alert severity="success" sx={{ mt: 2 }}>{successMessage}</Alert>}
       </DialogContent>
       <DialogActions>
         <Button disabled={currentStep === 0} onClick={handleBack}>
