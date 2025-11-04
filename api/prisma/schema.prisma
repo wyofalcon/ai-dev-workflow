@@ -79,7 +79,6 @@ model PersonalityTraits {
   neuroticism           Int?
   workStyle             String?   @map("work_style")
   communicationStyle    String?   @map("communication_style")
-  confidence            Int?
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
 
