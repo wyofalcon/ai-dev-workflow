@@ -183,15 +183,15 @@ export const AuthProvider = ({ children }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      const user = response.data.user;
+      const userProfile = response.data.user;
 
       // Proxy Google profile image through our backend to avoid CORS/ORB issues
-      if (user.photoUrl && user.photoUrl.includes('googleusercontent.com')) {
-        user.photoUrl = `${API_URL}/proxy/avatar?url=${encodeURIComponent(user.photoUrl)}`;
+      if (userProfile.photoUrl && userProfile.photoUrl.includes('googleusercontent.com')) {
+        userProfile.photoUrl = `${API_URL}/proxy/avatar?url=${encodeURIComponent(userProfile.photoUrl)}`;
       }
 
-      setUserProfile(user);
-      return user;
+      setUserProfile(userProfile);
+      return userProfile;
     } catch (error) {
       console.error('Error fetching user profile:', error);
 
