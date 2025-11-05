@@ -1,0 +1,104 @@
+--- a/routes/resume.js
++++ b/routes/resume.js
+@@ -59,8 +59,8 @@
+ 
+     // Check resume limit
+     const userRecord = await prisma.user.findUnique({
+-      where: { id: user.id },
+-      select: { resumesGenerated: true, resumesLimit: true, subscriptionTier: true }
++      where: { firebaseUid: user.firebaseUid },
++      select: { id: true, resumesGenerated: true, resumesLimit: true, subscriptionTier: true }
+     });
+ 
+     if (userRecord.resumesGenerated >= userRecord.resumesLimit) {
+@@ -81,13 +81,13 @@
+     const startTime = Date.now();
+ 
+     // Load or infer personality
+-    let personality = await prisma.personalityTrait.findUnique({ where: { userId: user.id } });
++    let personality = await prisma.personalityTrait.findUnique({ where: { userId: userRecord.id } });
+ 
+     if (!personality && personalStories) {
+       console.log('Inferring personality from stories...');
+       const inferredTraits = inferPersonality([{ messageRole: 'user', messageContent: personalStories }]);
+       personality = await prisma.personalityTrait.create({
+-        data: { userId: user.id, ...inferredTraits }
++        data: { userId: userRecord.id, ...inferredTraits }
+       });
+     }
+ 
+@@ -113,7 +113,7 @@
+     // Save to database
+     const resume = await prisma.resume.create({
+       data: {
+-        userId: user.id,
++        userId: userRecord.id,
+         title: targetCompany ? `Resume for ${targetCompany}` : 'Tailored Resume',
+         targetCompany: targetCompany || null,
+         jobDescription,
+@@ -128,7 +128,7 @@
+ 
+     // Increment counter
+     await prisma.user.update({
+-      where: { id: user.id },
++      where: { id: userRecord.id },
+       data: { resumesGenerated: { increment: 1 }, updatedAt: new Date() }
+     });
+ 
+@@ -165,6 +165,13 @@
+     const { firebaseUid } = req.user;
+     const { id } = req.params;
+ 
++    const userRecord = await prisma.user.findUnique({
++      where: { firebaseUid },
++      select: { id: true },
++    });
++
++    if (!userRecord) return res.status(404).json({ error: 'User not found' });
++
+     const user = await prisma.user.findUnique({
+       where: { firebaseUid },
+       select: { id: true },
+@@ -182,7 +189,7 @@
+     const resume = await prisma.resume.findFirst({
+       where: {
+         id,
+-        userId: user.id,
++        userId: userRecord.id,
+       },
+     });
+ 
+@@ -208,9 +215,15 @@
+ router.get('/list', verifyFirebaseToken, async (req, res, next) => {
+   try {
+     const { user } = req;
++    
++    const userRecord = await prisma.user.findUnique({
++      where: { firebaseUid: user.firebaseUid },
++      select: { id: true }
++    });
++    if (!userRecord) return res.status(404).json({ error: 'User not found' });
+ 
+     const resumes = await prisma.resume.findMany({
+-      where: { userId: user.id },
++      where: { userId: userRecord.id },
+       orderBy: { createdAt: 'desc' },
+       select: {
+         id: true,
+@@ -237,9 +250,14 @@
+   try {
+     const { user } = req;
+     const { id } = req.params;
++    
++    const userRecord = await prisma.user.findUnique({
++      where: { firebaseUid: user.firebaseUid },
++      select: { id: true }
++    });
++    if (!userRecord) return res.status(404).json({ error: 'User not found' });
+ 
+     const resume = await prisma.resume.findFirst({
+-      where: { id, userId: user.id }
++      where: { id, userId: userRecord.id }
+     });
+ 
+     if (!resume) {

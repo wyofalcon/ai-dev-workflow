@@ -24,26 +24,26 @@ class GeminiServiceVertex {
   }
 
   /**
-   * Get Gemini 1.5 Flash model (optimized for conversations)
+   * Get Gemini 2.0 Flash model (optimized for conversations, latest stable)
    */
   getFlashModel() {
     if (!this.vertexAI) {
       throw new Error('Vertex AI not initialized');
     }
     return this.vertexAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash-001',
     });
   }
 
   /**
-   * Get Gemini 1.5 Pro model (optimized for complex tasks)
+   * Get Gemini 2.5 Pro model (optimized for complex tasks, latest stable)
    */
   getProModel() {
     if (!this.vertexAI) {
       throw new Error('Vertex AI not initialized');
     }
     return this.vertexAI.getGenerativeModel({
-      model: 'gemini-1.5-pro',
+      model: 'gemini-2.5-pro',
     });
   }
 

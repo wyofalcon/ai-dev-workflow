@@ -323,4 +323,39 @@ router.get('/me', verifyFirebaseToken, async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/auth/upgrade-unlimited
+ * Upgrade current user to unlimited resumes (for testing/admin)
+ */
+router.post('/upgrade-unlimited', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { firebaseUid } = req.user;
+
+    const updated = await prisma.user.update({
+      where: { firebaseUid },
+      data: {
+        resumesGenerated: 0,
+        resumesLimit: 999999,
+        subscriptionTier: 'unlimited'
+      },
+      select: {
+        email: true,
+        resumesGenerated: true,
+        resumesLimit: true,
+        subscriptionTier: true
+      }
+    });
+
+    console.log('✅ User upgraded to unlimited:', updated.email);
+
+    res.json({
+      message: 'Account upgraded to unlimited resumes',
+      user: updated
+    });
+  } catch (error) {
+    console.error('❌ Upgrade failed:', error);
+    next(error);
+  }
+});
+
 module.exports = router;

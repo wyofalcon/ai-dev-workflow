@@ -98,7 +98,6 @@ model Conversation {
   updatedAt             DateTime  @updatedAt @map("updated_at")
 
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  resumes               Resume[]
 
   @@map("conversations")
 }
@@ -107,19 +106,26 @@ model Conversation {
 model Resume {
   id                    String    @id @default(uuid())
   userId                String    @map("user_id")
-  conversationId        String?   @map("conversation_id")
-  jobTitle              String    @map("job_title")
+  title                 String
+  targetCompany         String?   @map("target_company")
   jobDescription        String?   @map("job_description")
-  resumeContent         Json?     @map("resume_content")
+  resumeMarkdown        String?   @map("resume_markdown")
+  resumeHtml            String?   @map("resume_html")
   pdfUrl                String?   @map("pdf_url")
-  status                String    @default("pending")
-  geminiPrompt          String?   @map("gemini_prompt")
-  geminiResponse        String?   @map("gemini_response")
+  pdfBucket             String?   @map("pdf_bucket")
+  pdfPath               String?   @map("pdf_path")
+  modelUsed             String?   @map("model_used")
+  tokensUsed            Int?      @map("tokens_used")
+  generationTimeMs      Int?      @map("generation_time_ms")
+  costUsd               Float?    @map("cost_usd")
+  status                String    @default("draft")
+  version               Int       @default(1)
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
+  downloadedAt          DateTime? @map("downloaded_at")
+  sharedAt              DateTime? @map("shared_at")
 
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  conversation          Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   socialShares          SocialShare[]
 
   @@map("resumes")

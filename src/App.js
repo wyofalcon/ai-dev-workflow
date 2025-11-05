@@ -83,6 +83,34 @@ function MainLayout() {
     }
   };
 
+  const handleUpgrade = async () => {
+    handleMenuClose();
+    try {
+      const token = await currentUser.getIdToken();
+      const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
+
+      const response = await fetch(`${API_BASE}/api/auth/upgrade-unlimited`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.user) {
+        alert(`✅ Account upgraded to unlimited resumes!\n\nYou now have ${data.user.resumesLimit} resume generations.`);
+        window.location.reload();
+      } else {
+        alert('❌ Upgrade failed: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Upgrade error:', error);
+      alert('❌ Upgrade failed: ' + error.message);
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid #333' }}>
@@ -123,6 +151,9 @@ function MainLayout() {
                 </MenuItem>
                 <MenuItem onClick={() => { handleMenuClose(); navigate('/resume'); }}>
                   My Resumes
+                </MenuItem>
+                <MenuItem onClick={handleUpgrade} sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+                  🚀 Upgrade to Unlimited
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>
                   Logout

@@ -22,30 +22,72 @@ Frame achievements through this personality lens.
 `;
   }
 
-  return `You are an expert resume writer. Generate a professional, ATS-optimized resume tailored to the job description.
+  const hasContent = (resumeText && resumeText.length > 20) || (personalStories && personalStories.length > 20);
+
+  return `You are an elite-level professional resume writer and career strategist with 15+ years of experience.
 
 ${personalityGuidance}
 
-JOB DESCRIPTION:
+**TARGET JOB DESCRIPTION:**
 ${jobDescription}
 
-CANDIDATE'S EXPERIENCE:
-${resumeText || ''}
+**CANDIDATE'S BACKGROUND:**
+${resumeText || 'No formal resume provided - extract experience from personal stories below'}
 
-PERSONAL STORIES:
-${personalStories || 'Not provided'}
+**PERSONAL ACHIEVEMENTS & STORIES:**
+${personalStories || 'Limited information - create professional examples based on job requirements'}
 
-SECTIONS TO INCLUDE:
+**REQUIRED SECTIONS:**
 ${Array.isArray(selectedSections) ? selectedSections.join(', ') : selectedSections}
 
-OUTPUT:
-- Valid markdown format
-- Match job keywords
-- Quantify achievements
-- Concise bullet points (1-2 lines)
-- ATS-friendly (no tables)
+**INSTRUCTIONS:**
+${hasContent
+  ? '1. Extract concrete experience, skills, and achievements from the candidate\'s background and stories'
+  : '1. Since minimal candidate data provided, create a professional resume framework with placeholder content marked with [EDIT: ...]'
+}
+2. Tailor EVERY bullet point to match keywords and requirements from the job description
+3. Use strong action verbs (Led, Achieved, Implemented, Optimized, Delivered)
+4. Quantify ALL achievements with specific numbers, percentages, or metrics
+5. Keep bullet points concise (1-2 lines maximum)
+6. Format in clean Markdown with clear headers (###)
+7. Include a compelling Professional Summary paragraph at the top
+8. Ensure ATS-friendly format (no tables, complex formatting, or images)
+9. Use the exact job title from the job description as the target role
+10. Include contact information: [Your Name], [City, State], [Phone], [Email], [LinkedIn]
 
-Generate the resume:`;
+**OUTPUT FORMAT:**
+# [Your Name]
+[City, State] | [Phone] | [Email] | [LinkedIn]
+
+---
+
+## Professional Summary
+[2-3 sentence paragraph highlighting key qualifications and alignment with job]
+
+---
+
+## Core Competencies
+[8-12 relevant skills in bullet format]
+
+---
+
+## Professional Experience
+
+**[Job Title]** | [Company Name] | [Location] | [Dates]
+- [Achievement with quantifiable result]
+- [Achievement with quantifiable result]
+- [Achievement with quantifiable result]
+
+[Repeat for 2-3 positions]
+
+---
+
+## Education
+**[Degree]** | [School Name] | [Graduation Year]
+
+---
+
+Generate a compelling, professional resume now:`;
 }
 
 /**
@@ -143,10 +185,10 @@ router.post('/generate', verifyFirebaseToken, async (req, res, next) => {
         targetCompany: targetCompany || null,
         jobDescription,
         resumeMarkdown,
-        modelUsed: 'gemini-1.5-pro',
+        modelUsed: 'gemini-2.5-pro',
         tokensUsed,
         generationTimeMs: generationTime,
-        costUsd: (tokensUsed / 1000000) * 1.25, // $1.25 per 1M tokens
+        costUsd: (tokensUsed / 1000000) * 1.25,
         status: 'generated'
       }
     });

@@ -285,6 +285,147 @@
 - [SESSION_7_FINAL_SUMMARY.md](SESSION_7_FINAL_SUMMARY.md) - Technical implementation details
 - [GEMINI_SETUP_GUIDE.md](GEMINI_SETUP_GUIDE.md) - Vertex AI configuration reference
 
+---
+
+## 🚀 Session 10: Critical Testing & Architecture Pivot (Jan 2025)
+
+**Status**: ✅ COMPLETE - Major architecture decision made
+
+**Session Goal**: Test end-to-end resume generation and address quality issues
+
+### Testing & Debugging Phase
+
+**Critical Bugs Fixed** (5 deployment iterations):
+
+1. **Gemini Model Migration** (Revisions 00046-00047):
+   - ❌ Issue: `gemini-1.5-pro` returned 404 - model retired
+   - ❌ Retry: `gemini-1.5-pro-002` also retired
+   - ✅ Solution: Migrated to stable Gemini 2.x series
+     - `gemini-2.5-pro` for resume generation (complex tasks)
+     - `gemini-2.0-flash-001` for conversations (fast, cost-effective)
+   - Files: [api/services/geminiServiceVertex.js](api/services/geminiServiceVertex.js)
+
+2. **Database Schema Alignment** (Revisions 00048-00050):
+   - ❌ Issue: Prisma schema had fields that don't exist in PostgreSQL
+     - `job_title` → actual column is `title`
+     - `conversation_id` → column doesn't exist
+     - `resume_content` → actual column is `resume_markdown`
+   - ✅ Solution: Completely rewrote Resume model to match actual database
+   - Files: [api/prisma/schema.prisma](api/prisma/schema.prisma)
+
+3. **Resume Generation Pipeline** (Revision 00051):
+   - ✅ Successfully created end-to-end flow: Frontend → Backend → Gemini → Database
+   - ✅ Token tracking working (cost per resume: ~$0.02)
+   - ✅ Counter increments correctly (resumesGenerated)
+   - ⚠️ **Quality Problem Discovered**: Resume content was nonsense (wrong name, made-up info)
+
+4. **Account Upgrade System** (Revision 00052):
+   - Added `/api/auth/upgrade-unlimited` endpoint for testing
+   - Added "🚀 Upgrade to Unlimited" button in user menu
+   - User successfully upgraded to 999,999 resume limit
+   - Files: [api/routes/auth.js](api/routes/auth.js), [src/App.js](src/App.js)
+
+### 🎯 BREAKTHROUGH ARCHITECTURE DECISION
+
+**Root Cause Analysis**:
+- User feedback: *"Resume is still non-sense. Name is wrong, number is made-up and has no content"*
+- Problem: Users skip Steps 1-2 (personal stories, resume upload) in current wizard
+- Current approach: Generic questions → Generic resumes (iteration required)
+- Goal: **Zero-iteration resumes** that make candidates "must-interview"
+
+**User's Strategic Question**:
+> "Should we get the job description up front so the AI can use the description to ask pointed job-related questions?"
+
+**Approved Architecture: Job-Description-First Conversational Flow**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ NEW FLOW: Job Description → Targeted Questions → Resume    │
+└─────────────────────────────────────────────────────────────┘
+
+Step 1:  Job Description Input (REQUIRED)
+         ↓ AI analyzes JD for skills, experience, keywords
+
+Steps 2-6: 5 JD-Specific Targeted Questions
+         - "Tell me about a time you [specific JD requirement]"
+         - "Describe your experience with [tech stack from JD]"
+         - "How have you demonstrated [soft skill from JD]?"
+
+Steps 7-12: 6 Personality-Revealing Questions
+         - Work style preferences (Big Five model)
+         - Leadership/communication style
+         - Career motivations
+
+Step 13: AI Processing (Background)
+         - Extract personality traits from stories
+         - Map experiences to JD requirements
+         - Identify quantifiable achievements
+
+Step 14: Generate Tailored Resume
+         - Match keywords naturally
+         - Position experiences for target role
+         - Zero iteration required
+```
+
+**Key Design Principles**:
+1. **Dual-Purpose Stories**: Each answer provides BOTH resume content AND personality signals
+2. **JD-Aware Questions**: Every question references specific job requirements
+3. **Comprehensive Upfront Data**: No need for user revisions
+4. **Personality-Informed Positioning**: Tailor tone/style to user's communication style
+5. **ATS + Human Optimization**: Keywords for bots, compelling narrative for humans
+
+**Technical Implementation Plan**:
+- Create `/api/resume/analyze-jd` endpoint (parse JD for requirements)
+- Build conversational UI component (one question per screen)
+- Modify `questionFramework.js` to make questions JD-aware
+- Enhance `buildResumePrompt()` with personality-informed instructions
+- Add progress indicator (11 steps total)
+
+**Expected Outcomes**:
+- 90%+ reduction in user revisions
+- Higher interview callback rates (keyword-optimized)
+- Better cultural fit (personality-matched positioning)
+- Faster time-to-resume (<10 minutes, down from 30+)
+
+### Files Modified (Session 10)
+
+**Backend**:
+- [api/services/geminiServiceVertex.js](api/services/geminiServiceVertex.js) - Gemini 2.x model migration
+- [api/prisma/schema.prisma](api/prisma/schema.prisma) - Fixed Resume model fields
+- [api/routes/resume.js](api/routes/resume.js) - Enhanced resume prompt, fixed database save
+- [api/routes/auth.js](api/routes/auth.js) - Added upgrade-unlimited endpoint
+
+**Frontend**:
+- [src/App.js](src/App.js) - Added upgrade button to user menu
+- ⚠️ [src/contexts/AuthContext.js](src/contexts/AuthContext.js) - Fixed API_BASE (UNCOMMITTED)
+
+**Documentation**:
+- This ROADMAP update
+
+### Deployment History
+| Revision | Changes | Status |
+|----------|---------|--------|
+| 00046-j8f | First Gemini 2.x attempt (1.5-pro-002) | ❌ Model still retired |
+| 00047-8jm | Final model fix (2.5-pro + 2.0-flash) | ✅ Models working |
+| 00048-rbb | Fixed job_title → title | ❌ More schema issues |
+| 00049-hbw | Removed conversation_id | ❌ Still failing |
+| 00050-n7j | Complete schema rewrite | ✅ Database saves working |
+| 00051-fv5 | Enhanced resume prompt | ⚠️ Working but poor quality |
+| 00052-* | Added upgrade system | ✅ Testing infrastructure ready |
+
+### Success Metrics
+- ✅ Resume generation pipeline functional end-to-end
+- ✅ Database schema aligned with PostgreSQL
+- ✅ Gemini 2.x models integrated (stable, non-retiring)
+- ✅ Account upgrade system working (testing enabled)
+- ✅ Token tracking operational (~$0.02 per resume)
+- ✅ Architecture redesigned (Job-Description-First approach)
+- ⏳ Quality goal pending implementation of new conversational flow
+
+**Next Session Priority**: Implement Job-Description-First conversational UI and JD analysis endpoint.
+
+---
+
 **Next Session Priorities** (Session 8 - 6 hours):
 1. **Resume Tracking** (3 hours) - Save resumes to database, enforce limits
 2. **Profile Persistence** (2 hours) - Save user data, auto-fill on return
