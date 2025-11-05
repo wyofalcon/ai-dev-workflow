@@ -9,4 +9,7 @@ module.exports = {
     '!**/coverage/**',
     '!**/tests/**',
   ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(uuid)/)'
+  ],
 };

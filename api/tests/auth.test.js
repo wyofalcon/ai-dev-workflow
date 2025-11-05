@@ -56,19 +56,7 @@ jest.mock('@google-cloud/secret-manager', () => ({
   }))
 }));
 
-// Mock Firebase Admin
-const mockVerifyIdToken = jest.fn();
-const mockAuth = { verifyIdToken: mockVerifyIdToken };
-const mockApp = { auth: jest.fn(() => mockAuth) };
-
-jest.mock('firebase-admin', () => ({
-  apps: [],
-  app: jest.fn(() => mockApp),
-  initializeApp: jest.fn(() => mockApp),
-  credential: { cert: jest.fn() },
-  auth: jest.fn(() => mockAuth),
-}));
-
+// Use global Firebase mock from setup.js (no need to mock again)
 const request = require('supertest');
 const admin = require('firebase-admin');
 
@@ -92,14 +80,14 @@ describe('Authentication Endpoints', () => {
       },
     };
 
-    // Configure Firebase mock
-    mockVerifyIdToken.mockResolvedValue(mockFirebaseUser);
     validToken = 'mock-firebase-token-12345';
   });
 
   beforeEach(() => {
     // Reset mock call counts before each test
     jest.clearAllMocks();
+    // Reconfigure Firebase mock after clearing
+    global.mockVerifyIdToken.mockResolvedValue(mockFirebaseUser);
   });
 
   describe('POST /api/auth/register', () => {

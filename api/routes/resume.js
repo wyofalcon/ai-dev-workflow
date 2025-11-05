@@ -335,6 +335,45 @@ router.post('/validate-answer', verifyFirebaseToken, async (req, res, next) => {
 });
 
 /**
+ * GET /api/resume/list
+ * Get all resumes for current user
+ * IMPORTANT: Must be BEFORE /:id route to avoid matching "list" as an id
+ */
+router.get('/list', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { user } = req;
+
+    // Look up user to get their database ID
+    const userRecord = await prisma.user.findUnique({
+      where: { firebaseUid: user.firebaseUid },
+      select: { id: true }
+    });
+
+    if (!userRecord) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const resumes = await prisma.resume.findMany({
+      where: { userId: userRecord.id },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        targetCompany: true,
+        status: true,
+        createdAt: true,
+        downloadedAt: true,
+        tokensUsed: true
+      },
+    });
+
+    return res.json({ resumes, total: resumes.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/resume/:id
  * Get resume by ID
  * Requires valid Firebase token
@@ -374,34 +413,6 @@ router.get('/:id', verifyFirebaseToken, async (req, res, next) => {
     res.status(200).json({
       resume,
     });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * GET /api/resume/list
- * Get all resumes for current user
- */
-router.get('/list', verifyFirebaseToken, async (req, res, next) => {
-  try {
-    const { user } = req;
-
-    const resumes = await prisma.resume.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        targetCompany: true,
-        status: true,
-        createdAt: true,
-        downloadedAt: true,
-        tokensUsed: true
-      },
-    });
-
-    return res.json({ resumes, total: resumes.length });
   } catch (error) {
     next(error);
   }
