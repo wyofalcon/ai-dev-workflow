@@ -4,6 +4,8 @@ const prisma = require('../config/database');
 const { verifyFirebaseToken, checkResumeLimit } = require('../middleware/authMiddleware');
 const geminiServiceVertex = require('../services/geminiServiceVertex');
 const { inferPersonality } = require('../services/personalityInference');
+const JobDescriptionAnalyzer = require('../services/jobDescriptionAnalyzer');
+const { buildFullConversation, validateAnswer } = require('../services/personalityQuestions');
 
 // Helper: Build personality-enhanced Gemini prompt
 function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality }) {
@@ -219,6 +221,115 @@ router.post('/generate', verifyFirebaseToken, async (req, res, next) => {
 
   } catch (error) {
     console.error('Resume generation error:', error);
+    next(error);
+  }
+});
+
+/**
+ * POST /api/resume/analyze-jd
+ * Analyze job description and generate targeted questions
+ */
+router.post('/analyze-jd', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { jobDescription } = req.body;
+
+    if (!jobDescription) {
+      return res.status(400).json({ error: 'Job description is required' });
+    }
+
+    // Validate job description
+    const analyzer = new JobDescriptionAnalyzer(geminiServiceVertex);
+    const validation = analyzer.validateJobDescription(jobDescription);
+
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.reason });
+    }
+
+    console.log('Analyzing job description...');
+
+    // Perform analysis
+    const analysis = await analyzer.analyze(jobDescription);
+
+    console.log('✅ JD analysis complete:', {
+      jobTitle: analysis.analysis.jobTitle,
+      experienceLevel: analysis.analysis.experienceLevel,
+      technicalSkills: analysis.analysis.requiredSkills.technical.length,
+      questionsGenerated: analysis.questions.length
+    });
+
+    res.json({
+      success: true,
+      analysis: analysis.analysis,
+      questions: analysis.questions,
+      metadata: {
+        analyzedAt: analysis.analyzedAt,
+        questionCount: analysis.questions.length
+      }
+    });
+
+  } catch (error) {
+    console.error('JD analysis error:', error);
+    next(error);
+  }
+});
+
+/**
+ * POST /api/resume/conversation-flow
+ * Get full conversation flow (11 questions) after JD analysis
+ */
+router.post('/conversation-flow', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { jdAnalysis } = req.body;
+
+    if (!jdAnalysis || !jdAnalysis.questions) {
+      return res.status(400).json({
+        error: 'JD analysis required. Call /api/resume/analyze-jd first.'
+      });
+    }
+
+    // Build full 13-step conversation
+    const conversationFlow = buildFullConversation(jdAnalysis.questions);
+
+    res.json({
+      success: true,
+      totalSteps: conversationFlow.length,
+      steps: conversationFlow,
+      metadata: {
+        jdQuestions: 5,
+        personalityQuestions: 6,
+        processingSteps: 1,
+        estimatedTimeMinutes: 10
+      }
+    });
+
+  } catch (error) {
+    console.error('Conversation flow error:', error);
+    next(error);
+  }
+});
+
+/**
+ * POST /api/resume/validate-answer
+ * Validate a single conversation answer
+ */
+router.post('/validate-answer', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { questionId, answer } = req.body;
+
+    if (!questionId || !answer) {
+      return res.status(400).json({ error: 'questionId and answer are required' });
+    }
+
+    const validation = validateAnswer(questionId, answer);
+
+    res.json({
+      success: true,
+      valid: validation.valid,
+      error: validation.error || null
+    });
+
+  } catch (error) {
+    console.error('Answer validation error:', error);
     next(error);
   }
 });
