@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Container, Typography, Paper, Button, Alert } from '@mui/material';
-import ConversationalWizard from './ConversationalWizard';
+import ConversationalWizard from './ConversationalWizard.js';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DownloadIcon from '@mui/icons-material/Download';
 

@@ -24,3 +24,4 @@ yarn-error.log*
 .vercel
 /logs 
 generated_resumes/ 
+api/coverage/

@@ -57,7 +57,7 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER:-cvstomize_user}:${POSTGRES_PASSWORD:-changeme}@database:5432/${POSTGRES_DB:-cvstomize}?schema=public
       - REDIS_URL=redis://redis:6379
-      - PORT=3001
+      - PORT=${API_PORT:-3001}
       - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/firebase-admin-key.json
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
@@ -65,14 +65,14 @@ services:
       - ./api/logs:/app/logs
       - ./secrets:/app/secrets:ro
     ports:
-      - "${API_PORT:-3001}:3001"
+      - "${API_PORT:-3001}:${API_PORT:-3001}"
     depends_on:
       database:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "sh", "-c", "node -e \"require('http').get('http://localhost:'+(process.env.PORT || 3001)+'/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\""]
       interval: 30s
       timeout: 10s
       retries: 3

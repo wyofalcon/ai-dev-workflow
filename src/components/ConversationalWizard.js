@@ -16,7 +16,7 @@ import {
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { auth } from '../firebase';
+import { auth } from '../firebase/index.js';
 
 /**
  * Conversational Wizard Component
