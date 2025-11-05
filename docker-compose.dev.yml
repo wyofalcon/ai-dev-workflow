@@ -1,0 +1,106 @@
+# CVstomize - Development Docker Compose Configuration
+# Hot-reload enabled for local development
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:15-alpine
+    container_name: cvstomize-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cvstomize_dev
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cvstomize-dev-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: cvstomize-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cvstomize-dev-network
+
+  # Backend API (Development mode with hot reload)
+  backend:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_ENV: development
+    container_name: cvstomize-api-dev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://dev_user:dev_password@database:5432/cvstomize_dev?schema=public
+      - REDIS_URL=redis://redis:6379
+      - PORT=3001
+      - JWT_SECRET=dev-secret-key-not-for-production
+      - CORS_ORIGIN=http://localhost:3000
+    volumes:
+      - ./api:/app  # Mount source code for hot reload
+      - /app/node_modules  # Prevent overwriting node_modules
+      - ./api/logs:/app/logs
+    ports:
+      - "3001:3001"
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cvstomize-dev-network
+    command: npm run dev  # Using nodemon for hot reload
+
+  # Frontend (Development mode with hot reload)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        REACT_APP_API_URL: http://localhost:3001
+    container_name: cvstomize-frontend-dev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:3001
+      - CHOKIDAR_USEPOLLING=true  # Enable hot reload in Docker
+    volumes:
+      - .:/app  # Mount source code for hot reload
+      - /app/node_modules  # Prevent overwriting node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - cvstomize-dev-network
+    stdin_open: true
+    tty: true
+    command: npm start
+
+volumes:
+  postgres_dev_data:
+    driver: local
+
+networks:
+  cvstomize-dev-network:
+    driver: bridge
