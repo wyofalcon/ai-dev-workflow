@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.36% </span>
+                <span class="strong">86.6% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>95/110</span>
+                <span class='fraction'>97/112</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">81.15% </span>
+                <span class="strong">80.28% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>56/69</span>
+                <span class='fraction'>57/71</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>9/9</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">87.15% </span>
+                <span class="strong">87.38% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>95/109</span>
+                <span class='fraction'>97/111</span>
             </div>
         
             
@@ -516,7 +516,13 @@
 <a name='L451'></a><a href='#L451'>451</a>
 <a name='L452'></a><a href='#L452'>452</a>
 <a name='L453'></a><a href='#L453'>453</a>
-<a name='L454'></a><a href='#L454'>454</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
+<a name='L454'></a><a href='#L454'>454</a>
+<a name='L455'></a><a href='#L455'>455</a>
+<a name='L456'></a><a href='#L456'>456</a>
+<a name='L457'></a><a href='#L457'>457</a>
+<a name='L458'></a><a href='#L458'>458</a>
+<a name='L459'></a><a href='#L459'>459</a>
+<a name='L460'></a><a href='#L460'>460</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -616,6 +622,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1068,23 +1080,29 @@ Generate a compelling, professional resume now:`;
  * Generate a new resume with Gemini + personality insights
  * Replaces the old Vercel function with full tracking
  */
-router.post('/generate', verifyFirebaseToken, async (req, res, next) =&gt; {
-  try {
-    const { user } = req;
+const { bypassResumeLimit, isDevUnlimitedEnabled } = require('../middleware/devTools');
 &nbsp;
-    // Check resume limit
-    const userRecord = await prisma.user.findUnique({
-      where: { firebaseUid: user.firebaseUid },
-      select: { id: true, resumesGenerated: true, resumesLimit: true, subscriptionTier: true }
-    });
+router.post('/generate',
+  verifyFirebaseToken,
+  // In dev with DEV_UNLIMITED_RESUMES=true, automatically upgrade user to unlimited
+  isDevUnlimitedEnabled() ? <span class="branch-0 cbranch-no" title="branch not covered" >bypassResumeLimit </span>: (req, res, next) =&gt; next(),
+  async (req, res, next) =&gt; {
+    try {
+      const { user } = req;
 &nbsp;
-    if (userRecord.resumesGenerated &gt;= userRecord.resumesLimit) {
-      return res.status(403).json({
-        error: 'Resume limit reached',
-        message: `You've used ${userRecord.resumesGenerated}/${userRecord.resumesLimit} resumes. Upgrade for unlimited.`,
-        upgradeUrl: '/pricing'
+      // Check resume limit
+      const userRecord = await prisma.user.findUnique({
+        where: { firebaseUid: user.firebaseUid },
+        select: { id: true, resumesGenerated: true, resumesLimit: true, subscriptionTier: true }
       });
-    }
+&nbsp;
+      if (userRecord.resumesGenerated &gt;= userRecord.resumesLimit) {
+        return res.status(403).json({
+          error: 'Resume limit reached',
+          message: `You've used ${userRecord.resumesGenerated}/${userRecord.resumesLimit} resumes. Upgrade for unlimited.`,
+          upgradeUrl: '/pricing'
+        });
+      }
 &nbsp;
     // Extract input
     const { resumeText, personalStories, jobDescription, selectedSections, targetCompany } = req.body;
@@ -1429,7 +1447,7 @@ module.exports = router;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-05T03:59:24.639Z
+                at 2025-11-06T00:54:03.834Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
