@@ -437,6 +437,67 @@ if (profile.openness > 70) {
 
 ---
 
+### Phase 7: Outcome Tracking Foundation (1-2 hours)
+
+**Goal:** Build data moat from Day 1 by tracking resume outcomes WITHOUT scope creep
+
+**Why This Matters** (from MONETIZATION_STRATEGY.md):
+- Data moat = 20-40x valuation multiplier (vs 5-10x without)
+- Foundation for Career Intelligence Platform ($100M+ exit path)
+- "Resumes like yours get 2.3x more interviews" messaging
+- Enables future marketplace/network effects
+- Costs almost nothing now, massive value later
+
+**Database Schema Changes (30 minutes):**
+```sql
+-- Add outcome tracking to resumes table
+ALTER TABLE resumes ADD COLUMN interview_received BOOLEAN DEFAULT NULL;
+ALTER TABLE resumes ADD COLUMN interview_received_at TIMESTAMP;
+ALTER TABLE resumes ADD COLUMN job_offer_received BOOLEAN DEFAULT NULL;
+ALTER TABLE resumes ADD COLUMN job_offer_received_at TIMESTAMP;
+ALTER TABLE resumes ADD COLUMN salary_offered DECIMAL(10,2);
+ALTER TABLE resumes ADD COLUMN outcome_reported_at TIMESTAMP;
+ALTER TABLE resumes ADD COLUMN outcome_notes TEXT;
+
+-- Track engagement metrics
+ALTER TABLE resumes ADD COLUMN viewed_count INTEGER DEFAULT 0;
+ALTER TABLE resumes ADD COLUMN shared_count INTEGER DEFAULT 0;
+ALTER TABLE resumes ADD COLUMN last_viewed_at TIMESTAMP;
+```
+
+**API Endpoint (1 hour):**
+- `POST /api/resume/:id/report-outcome` - User reports interview/offer
+- `GET /api/resume/:id/outcome` - View reported outcome
+- Simple, non-intrusive tracking
+
+**Frontend Integration (30 minutes):**
+- "Did you get an interview?" prompt 7 days after download
+- Optional salary input (for market data)
+- Incentive: "Help us help others" + unlock outcome insights
+
+**What This Enables (Future Sessions):**
+- Phase 8: Outcome analytics ("Your resume type gets 2.3x more callbacks")
+- Phase 9: Personality → Outcome correlation
+- Phase 10: Salary insights ("People with your profile earn $120K-150K")
+- Year 2-3: Marketplace with proven outcome data
+
+**Metrics to Track:**
+- Interview callback rate by personality type
+- Salary ranges by role + location
+- ATS score → Interview rate correlation
+- Resume template → Outcome correlation
+
+**Long-Term Strategy:**
+After 10K resumes with outcome data, we have:
+- Unbeatable competitive moat (competitors can't replicate data)
+- Premium pricing justification ("Proven 2.3x better results")
+- Network effects (more data → better predictions)
+- B2B licensing opportunity (sell insights to researchers)
+
+**Phase 7 is OPTIONAL for launch but CRITICAL for $100M+ exit path.**
+
+---
+
 ### 🎯 Session 16 Deliverables
 
 **Must Have:**

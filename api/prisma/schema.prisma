@@ -126,6 +126,20 @@ model Resume {
   downloadedAt          DateTime? @map("downloaded_at")
   sharedAt              DateTime? @map("shared_at")
 
+  // Phase 7: Outcome Tracking (Data Moat Foundation)
+  interviewReceived     Boolean?  @map("interview_received")
+  interviewReceivedAt   DateTime? @map("interview_received_at")
+  jobOfferReceived      Boolean?  @map("job_offer_received")
+  jobOfferReceivedAt    DateTime? @map("job_offer_received_at")
+  salaryOffered         Decimal?  @map("salary_offered") @db.Decimal(10, 2)
+  outcomeReportedAt     DateTime? @map("outcome_reported_at")
+  outcomeNotes          String?   @map("outcome_notes")
+
+  // Engagement Metrics
+  viewedCount           Int       @default(0) @map("viewed_count")
+  sharedCount           Int       @default(0) @map("shared_count")
+  lastViewedAt          DateTime? @map("last_viewed_at")
+
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   socialShares          SocialShare[]
 

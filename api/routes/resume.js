@@ -616,7 +616,7 @@ router.get('/:id/pdf', verifyFirebaseToken, async (req, res, next) => {
 
         console.log(`✅ PDF uploaded to Cloud Storage: ${uploadResult.gsPath}`);
 
-        // Update resume with Cloud Storage info
+        // Update resume with Cloud Storage info + engagement tracking
         await prisma.resume.update({
           where: { id },
           data: {
@@ -624,7 +624,9 @@ router.get('/:id/pdf', verifyFirebaseToken, async (req, res, next) => {
             pdfTemplate: template,
             pdfUrl: signedUrl,
             pdfBucket: uploadResult.bucket,
-            pdfPath: uploadResult.gsPath
+            pdfPath: uploadResult.gsPath,
+            viewedCount: { increment: 1 },
+            lastViewedAt: new Date()
           }
         });
 
@@ -633,12 +635,14 @@ router.get('/:id/pdf', verifyFirebaseToken, async (req, res, next) => {
         // Continue with direct download even if upload fails
       }
     } else {
-      // Mark as downloaded (no Cloud Storage)
+      // Mark as downloaded (no Cloud Storage) + engagement tracking
       await prisma.resume.update({
         where: { id },
         data: {
           downloadedAt: new Date(),
-          pdfTemplate: template
+          pdfTemplate: template,
+          viewedCount: { increment: 1 },
+          lastViewedAt: new Date()
         }
       });
     }
@@ -748,6 +752,147 @@ router.get('/:id/cloud-url', verifyFirebaseToken, async (req, res, next) => {
 });
 
 /**
+ * POST /api/resume/:id/report-outcome
+ * Report resume outcome (interview, offer, salary) - Phase 7: Data Moat
+ */
+router.post('/:id/report-outcome', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { user } = req;
+    const { id } = req.params;
+    const {
+      interviewReceived,
+      interviewReceivedAt,
+      jobOfferReceived,
+      jobOfferReceivedAt,
+      salaryOffered,
+      outcomeNotes
+    } = req.body;
+
+    // Get user ID
+    const userRecord = await prisma.user.findUnique({
+      where: { firebaseUid: user.firebaseUid },
+      select: { id: true }
+    });
+
+    // Verify resume ownership
+    const resume = await prisma.resume.findFirst({
+      where: { id, userId: userRecord.id },
+      select: { id: true, title: true }
+    });
+
+    if (!resume) {
+      return res.status(404).json({ error: 'Resume not found' });
+    }
+
+    // Update outcome data
+    const updateData = {
+      outcomeReportedAt: new Date()
+    };
+
+    if (interviewReceived !== undefined) {
+      updateData.interviewReceived = interviewReceived;
+      if (interviewReceived && interviewReceivedAt) {
+        updateData.interviewReceivedAt = new Date(interviewReceivedAt);
+      }
+    }
+
+    if (jobOfferReceived !== undefined) {
+      updateData.jobOfferReceived = jobOfferReceived;
+      if (jobOfferReceived && jobOfferReceivedAt) {
+        updateData.jobOfferReceivedAt = new Date(jobOfferReceivedAt);
+      }
+      if (jobOfferReceived && salaryOffered) {
+        updateData.salaryOffered = salaryOffered;
+      }
+    }
+
+    if (outcomeNotes) {
+      updateData.outcomeNotes = outcomeNotes;
+    }
+
+    const updated = await prisma.resume.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        title: true,
+        interviewReceived: true,
+        interviewReceivedAt: true,
+        jobOfferReceived: true,
+        jobOfferReceivedAt: true,
+        salaryOffered: true,
+        outcomeReportedAt: true,
+        outcomeNotes: true
+      }
+    });
+
+    console.log(`✅ Outcome reported for resume ${id}: interview=${interviewReceived}, offer=${jobOfferReceived}`);
+
+    return res.json({
+      success: true,
+      message: 'Thank you for helping us improve! Your data helps others succeed.',
+      outcome: updated
+    });
+
+  } catch (error) {
+    console.error('Report outcome error:', error);
+    next(error);
+  }
+});
+
+/**
+ * GET /api/resume/:id/outcome
+ * Get reported outcome for a resume - Phase 7: Data Moat
+ */
+router.get('/:id/outcome', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { user } = req;
+    const { id } = req.params;
+
+    // Get user ID
+    const userRecord = await prisma.user.findUnique({
+      where: { firebaseUid: user.firebaseUid },
+      select: { id: true }
+    });
+
+    const resume = await prisma.resume.findFirst({
+      where: { id, userId: userRecord.id },
+      select: {
+        id: true,
+        title: true,
+        targetCompany: true,
+        createdAt: true,
+        downloadedAt: true,
+        interviewReceived: true,
+        interviewReceivedAt: true,
+        jobOfferReceived: true,
+        jobOfferReceivedAt: true,
+        salaryOffered: true,
+        outcomeReportedAt: true,
+        outcomeNotes: true,
+        viewedCount: true,
+        sharedCount: true,
+        lastViewedAt: true
+      }
+    });
+
+    if (!resume) {
+      return res.status(404).json({ error: 'Resume not found' });
+    }
+
+    return res.json({
+      success: true,
+      resume,
+      hasOutcome: resume.outcomeReportedAt !== null
+    });
+
+  } catch (error) {
+    console.error('Get outcome error:', error);
+    next(error);
+  }
+});
+
+/**
  * GET /api/resume/:id/download
  * Download resume markdown (legacy endpoint for backwards compatibility)
  */
@@ -770,10 +915,14 @@ router.get('/:id/download', verifyFirebaseToken, async (req, res, next) => {
       return res.status(404).json({ error: 'Resume not found' });
     }
 
-    // Mark as downloaded
+    // Mark as downloaded + increment view count
     await prisma.resume.update({
       where: { id },
-      data: { downloadedAt: new Date() }
+      data: {
+        downloadedAt: new Date(),
+        viewedCount: { increment: 1 },
+        lastViewedAt: new Date()
+      }
     });
 
     return res.json({
