@@ -8,6 +8,7 @@ const JobDescriptionAnalyzer = require('../services/jobDescriptionAnalyzer');
 const { buildFullConversation, validateAnswer } = require('../services/personalityQuestions');
 const atsOptimizer = require('../services/atsOptimizer');
 const pdfGenerator = require('../services/pdfGenerator');
+const cloudStorageService = require('../services/cloudStorage');
 
 // Helper: Build personality-enhanced Gemini prompt
 function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality }) {
@@ -586,25 +587,72 @@ router.get('/:id/pdf', verifyFirebaseToken, async (req, res, next) => {
 
     console.log(`PDF generated in ${generationTime}ms, size: ${(pdfBuffer.length / 1024).toFixed(2)}KB`);
 
-    // Mark as downloaded
-    await prisma.resume.update({
-      where: { id },
-      data: {
-        downloadedAt: new Date(),
-        pdfTemplate: template
-      }
-    });
-
     // Generate filename
     const filename = resume.targetCompany
       ? `Resume-${resume.targetCompany.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
       : `Resume-${new Date().toISOString().split('T')[0]}.pdf`;
+
+    // Upload to Cloud Storage (if enabled in production)
+    let cloudStorageInfo = null;
+    if (process.env.ENABLE_CLOUD_STORAGE === 'true') {
+      try {
+        console.log('Uploading PDF to Cloud Storage...');
+        const uploadResult = await cloudStorageService.uploadPDF(
+          pdfBuffer,
+          userRecord.id,
+          id,
+          filename
+        );
+
+        // Generate signed URL (7-day expiry)
+        const signedUrl = await cloudStorageService.generateSignedUrl(uploadResult.gsPath, 168);
+
+        cloudStorageInfo = {
+          gsPath: uploadResult.gsPath,
+          bucket: uploadResult.bucket,
+          signedUrl,
+          expiresAt: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000))
+        };
+
+        console.log(`✅ PDF uploaded to Cloud Storage: ${uploadResult.gsPath}`);
+
+        // Update resume with Cloud Storage info
+        await prisma.resume.update({
+          where: { id },
+          data: {
+            downloadedAt: new Date(),
+            pdfTemplate: template,
+            pdfUrl: signedUrl,
+            pdfBucket: uploadResult.bucket,
+            pdfPath: uploadResult.gsPath
+          }
+        });
+
+      } catch (error) {
+        console.error('Cloud Storage upload failed (non-blocking):', error);
+        // Continue with direct download even if upload fails
+      }
+    } else {
+      // Mark as downloaded (no Cloud Storage)
+      await prisma.resume.update({
+        where: { id },
+        data: {
+          downloadedAt: new Date(),
+          pdfTemplate: template
+        }
+      });
+    }
 
     // Set headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', pdfBuffer.length);
     res.setHeader('X-Generation-Time-Ms', generationTime);
+
+    if (cloudStorageInfo) {
+      res.setHeader('X-Cloud-Storage-Path', cloudStorageInfo.gsPath);
+      res.setHeader('X-Signed-Url', cloudStorageInfo.signedUrl);
+    }
 
     return res.send(pdfBuffer);
 
@@ -625,6 +673,78 @@ router.get('/templates/list', verifyFirebaseToken, (req, res) => {
     templates,
     count: templates.length
   });
+});
+
+/**
+ * GET /api/resume/:id/cloud-url
+ * Get Cloud Storage signed URL for a resume PDF
+ * Query params: expiryHours (default 168 = 7 days)
+ */
+router.get('/:id/cloud-url', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { user } = req;
+    const { id } = req.params;
+    const { expiryHours = 168 } = req.query;
+
+    // Get user ID
+    const userRecord = await prisma.user.findUnique({
+      where: { firebaseUid: user.firebaseUid },
+      select: { id: true }
+    });
+
+    const resume = await prisma.resume.findFirst({
+      where: { id, userId: userRecord.id },
+      select: {
+        pdfPath: true,
+        pdfBucket: true,
+        pdfUrl: true,
+        title: true
+      }
+    });
+
+    if (!resume) {
+      return res.status(404).json({ error: 'Resume not found' });
+    }
+
+    if (!resume.pdfPath) {
+      return res.status(404).json({
+        error: 'PDF not found in Cloud Storage',
+        message: 'Generate PDF with Cloud Storage enabled first'
+      });
+    }
+
+    // Check if existing URL is still valid
+    if (resume.pdfUrl) {
+      // Extract expiry from existing signed URL (simplified check)
+      // In production, you'd parse the 'Expires' query param
+      console.log('Existing signed URL found, regenerating for fresh expiry...');
+    }
+
+    // Generate new signed URL
+    const signedUrl = await cloudStorageService.generateSignedUrl(
+      resume.pdfPath,
+      parseInt(expiryHours, 10)
+    );
+
+    // Update resume with new signed URL
+    await prisma.resume.update({
+      where: { id },
+      data: { pdfUrl: signedUrl }
+    });
+
+    return res.json({
+      success: true,
+      signedUrl,
+      expiresIn: `${expiryHours} hours`,
+      expiresAt: new Date(Date.now() + (parseInt(expiryHours, 10) * 60 * 60 * 1000)),
+      bucket: resume.pdfBucket,
+      path: resume.pdfPath
+    });
+
+  } catch (error) {
+    console.error('Signed URL generation error:', error);
+    next(error);
+  }
 });
 
 /**
