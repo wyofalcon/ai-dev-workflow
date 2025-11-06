@@ -95,7 +95,8 @@ Respond ONLY with valid JSON (no markdown formatting).`;
     try {
       const model = this.gemini.getFlashModel(); // Fast model for analysis
       const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
+      const response = await result.response;
+      const responseText = response.text();
 
       // Parse JSON response
       let cleanedResponse = responseText.trim();
