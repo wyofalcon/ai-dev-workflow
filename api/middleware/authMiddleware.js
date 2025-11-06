@@ -1,13 +1,17 @@
-const { initializeFirebase, getFirebaseAdmin } = require('../config/firebase');
+const { getFirebaseAdmin } = require('../config/firebase');
+const prisma = require('../config/database');
 
 /**
  * Middleware to verify Firebase ID token
  * Extracts user information and attaches to req.user
+ *
+ * PRODUCTION NOTE: Firebase must be initialized at server startup,
+ * not per-request. See api/index.js for initialization.
  */
 async function verifyFirebaseToken(req, res, next) {
   try {
-    // Ensure Firebase is initialized (will reuse if already exists)
-    const app = await initializeFirebase();
+    // Get Firebase Admin instance (already initialized at startup)
+    const admin = getFirebaseAdmin();
 
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
@@ -20,8 +24,8 @@ async function verifyFirebaseToken(req, res, next) {
 
     const token = authHeader.split('Bearer ')[1];
 
-    // Verify the token with Firebase - USE APP INSTANCE NOT GLOBAL
-    const decodedToken = await app.auth().verifyIdToken(token);
+    // Verify the token with Firebase
+    const decodedToken = await admin.auth().verifyIdToken(token);
 
     // Attach user info to request
     req.user = {
@@ -58,13 +62,11 @@ async function verifyFirebaseToken(req, res, next) {
 
 /**
  * Middleware to check if user has a specific subscription tier
+ * Uses singleton Prisma instance to prevent connection leaks
  */
 function requireSubscription(...allowedTiers) {
   return async (req, res, next) => {
     try {
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
-
       const user = await prisma.user.findUnique({
         where: { firebaseUid: req.user.firebaseUid },
         select: { subscriptionTier: true },
@@ -95,12 +97,10 @@ function requireSubscription(...allowedTiers) {
 
 /**
  * Middleware to check if user has reached their resume generation limit
+ * Uses singleton Prisma instance to prevent connection leaks
  */
 async function checkResumeLimit(req, res, next) {
   try {
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
-
     const user = await prisma.user.findUnique({
       where: { firebaseUid: req.user.firebaseUid },
       select: {
