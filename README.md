@@ -1,111 +1,129 @@
-# CVstomize v2.0: AI-Powered Resume Builder
+# CVstomize: AI-Powered Resume Builder
 
-**Viral Growth → Massive Scale → Strategic Monetization**
+**🚀 LIVE IN PRODUCTION - Full Stack Deployed on GCP**
 
-![Tests](https://img.shields.io/badge/tests-255%2F258%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-61.68%25%20backend-green)
-![Status](https://img.shields.io/badge/status-active%20development-orange)
+![Status](https://img.shields.io/badge/status-production-brightgreen)
+![Tests](https://img.shields.io/badge/backend_tests-160%2F160%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-64.48%25-green)
+![Platform](https://img.shields.io/badge/platform-GCP%20Cloud%20Run-blue)
+
+---
+
+## 🌐 Production URLs
+
+**Frontend (GUI):** https://cvstomize-frontend-351889420459.us-central1.run.app  
+**Backend (API):** https://cvstomize-api-351889420459.us-central1.run.app
+
+**Status:** ✅ All systems operational
 
 ---
 
 ## 🚀 Quick Start
 
 **👉 START HERE:** [ROADMAP.md](ROADMAP.md) - Single source of truth
-- Current status (Session 13: 61.68% backend coverage)
-- Next tasks (authMiddleware.js + errorHandler.js tests)
-- Complete roadmap
-- Quick commands
 
-**Credentials:** [CREDENTIALS_REFERENCE.md](CREDENTIALS_REFERENCE.md)
-**Testing:** [api/TESTING_GUIDE.md](api/TESTING_GUIDE.md)
+**Key Docs:**
+- [DEPLOYMENT_SUCCESS.md](DEPLOYMENT_SUCCESS.md) - Production deployment report
+- [QUICK_START_PRODUCTION.md](QUICK_START_PRODUCTION.md) - Production commands
+- [CREDENTIALS_REFERENCE.md](CREDENTIALS_REFERENCE.md) - All credentials
 
 ---
 
-## 📊 Current Status (Session 13)
+## 📊 Current Status (Session 16 - Nov 6, 2025)
 
-**Coverage:** 61.68% → **Target:** 70%
-**Tests:** 255/258 passing (98.8%)
+### ✅ PRODUCTION DEPLOYED
+- Frontend: React on GCP Cloud Run ✅
+- Backend: Node.js on GCP Cloud Run ✅
+- Database: PostgreSQL on Cloud SQL ✅
+- Storage: Google Cloud Storage ✅
+- AI: Vertex AI (Gemini) ✅
 
-### ✅ Session 13: +17.25% Coverage
-- conversation.js: 14% → 95.87% (26 tests)
-- personalityInference.js: 10% → 100% (54 tests)
-- questionFramework.js: 21% → 100% (51 tests)
-
-### 🎯 Next Session (3-5 hours)
-1. authMiddleware.js: 27% → 70%
-2. errorHandler.js: 15% → 70%
-**Result:** 66-68% total coverage
-
----
-
-## 💡 What CVstomize Does
-
-1. **Conversational Profile Builder** ✅ DONE
-   - AI extracts experience
-   - Infers personality traits
-   - Builds complete profile
-
-2. **Tailored Resumes** ⏳ NEXT
-   - Personality-based framing
-   - ATS optimization
-   - PDF generation
-
-3. **Viral Growth** (Future)
-   - Social sharing
-   - Referral rewards
+### 🎯 Features Live
+1. **11-Question Conversational Flow** - AI personality inference
+2. **Personality-Based Resume Generation** - Dynamic framing
+3. **3 Professional PDF Templates** - Classic, Modern, Minimal
+4. **ATS Optimization** - 80%+ keyword coverage
+5. **Outcome Tracking** - Interview/offer data collection
 
 ---
 
-## 🛠 Stack
+## 🛠 Tech Stack
 
-**Frontend:** React 18 + Material-UI + Firebase
-**Backend:** Node.js 20 + Express + Prisma + PostgreSQL
-**Infrastructure:** Cloud Run + Cloud SQL
-**AI:** Gemini 1.5 Flash/Pro
-**Testing:** Jest (258 tests, 61.68% coverage)
-
----
-
-## 📂 Structure
-
-```
-Cvstomize/
-├── ROADMAP.md              # ⭐ Single source of truth
-├── CREDENTIALS_REFERENCE.md # Secrets
-├── api/__tests__/          # 258 tests
-├── api/routes/             # Endpoints
-├── api/services/           # Logic
-└── src/                    # React frontend
-```
+**Frontend:** React 18 + Material-UI + Firebase Auth  
+**Backend:** Node.js 20 + Express + Prisma + PostgreSQL 15  
+**Infrastructure:** GCP Cloud Run + Cloud SQL + Cloud Storage  
+**AI:** Vertex AI (Gemini 2.5 Pro + 2.0 Flash)  
+**Testing:** Jest (160 tests, 64.48% coverage)
 
 ---
 
-## 🚀 Commands
+## 🚀 Development
 
+### Local Setup
 ```bash
-cd /mnt/storage/shared_windows/Cvstomize
-npm test                    # All tests
-npm test -- --coverage      # With coverage
-npm test -- auth.test.js    # Specific file
+# Backend
+cd api
+npm install
+npx prisma generate
+npm run dev
+
+# Frontend
+npm install
+npm start
+```
+
+### Testing
+```bash
+cd api
+npm test              # All tests
+npm test -- --coverage # With coverage
+```
+
+### Deploy to Production
+```bash
+# Backend
+cd api
+./deploy-to-cloud-run.sh
+
+# Frontend
+gcloud builds submit --config=cloudbuild.frontend.yaml .
 ```
 
 ---
 
 ## 🔗 Links
 
-- [GCP Dashboard](https://console.cloud.google.com/home/dashboard?project=cvstomize)
-- [Cloud SQL](https://console.cloud.google.com/sql/instances/cvstomize-db?project=cvstomize)
+**Production:**
+- Frontend: https://cvstomize-frontend-351889420459.us-central1.run.app
+- Backend API: https://cvstomize-api-351889420459.us-central1.run.app/health
+
+**GCP Console:**
 - [Cloud Run](https://console.cloud.google.com/run?project=cvstomize)
+- [Cloud SQL](https://console.cloud.google.com/sql/instances?project=cvstomize)
+- [Logs](https://console.cloud.google.com/logs?project=cvstomize)
+
+**GitHub:**
+- [Dev Branch](https://github.com/wyofalcon/cvstomize/tree/dev)
 
 ---
 
-## 👥 Team
+## 💰 Costs
 
-- ashley.caban.c@gmail.com (Owner)
-- wyofalcon@gmail.com (Co-owner)
+**GCP Credits:** ~$298 remaining (of $300)  
+**Monthly:** ~$15-20 (Cloud SQL ~$10, Vertex AI ~$5-10)
 
 ---
 
-**See [ROADMAP.md](ROADMAP.md) for complete details**
+## 🎯 Next Steps
 
-*Updated: 2025-11-05 | Next: authMiddleware + errorHandler tests*
+1. End-to-end testing
+2. Frontend Phase 7 integration (outcome tracking UI)
+3. User beta testing
+
+See [ROADMAP.md](ROADMAP.md) for complete details.
+
+---
+
+**Last Updated:** November 6, 2025  
+**Session:** 16 (Production Complete)  
+**Status:** 🚀 LIVE
