@@ -324,38 +324,52 @@ router.get('/me', verifyFirebaseToken, async (req, res, next) => {
 });
 
 /**
- * POST /api/auth/upgrade-unlimited
- * Upgrade current user to unlimited resumes (for testing/admin)
+ * POST /api/auth/dev/upgrade-unlimited
+ * Upgrade current user to unlimited resumes
+ *
+ * SECURITY: Development/testing only - requires DEV_ADMIN_MODE=true
+ * In production, this endpoint returns 403
  */
-router.post('/upgrade-unlimited', verifyFirebaseToken, async (req, res, next) => {
-  try {
-    const { firebaseUid } = req.user;
+const { requireDevAdmin, resetResumeCount } = require('../middleware/devTools');
 
-    const updated = await prisma.user.update({
-      where: { firebaseUid },
-      data: {
-        resumesGenerated: 0,
-        resumesLimit: 999999,
-        subscriptionTier: 'unlimited'
-      },
-      select: {
-        email: true,
-        resumesGenerated: true,
-        resumesLimit: true,
-        subscriptionTier: true
-      }
-    });
+router.post('/dev/upgrade-unlimited',
+  verifyFirebaseToken,
+  requireDevAdmin,  // ✅ SECURITY: Only works in dev with DEV_ADMIN_MODE=true
+  resetResumeCount
+);
 
-    console.log('✅ User upgraded to unlimited:', updated.email);
+/**
+ * POST /api/auth/dev/reset-resumes
+ * Reset resume count to 0 (keeps unlimited status)
+ *
+ * SECURITY: Development/testing only
+ */
+router.post('/dev/reset-resumes',
+  verifyFirebaseToken,
+  requireDevAdmin,
+  async (req, res, next) => {
+    try {
+      const { firebaseUid } = req.user;
 
-    res.json({
-      message: 'Account upgraded to unlimited resumes',
-      user: updated
-    });
-  } catch (error) {
-    console.error('❌ Upgrade failed:', error);
-    next(error);
+      const updated = await prisma.user.update({
+        where: { firebaseUid },
+        data: { resumesGenerated: 0 },
+        select: {
+          email: true,
+          resumesGenerated: true,
+          resumesLimit: true,
+          subscriptionTier: true,
+        },
+      });
+
+      res.json({
+        message: 'Resume count reset (dev mode only)',
+        user: updated,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 module.exports = router;

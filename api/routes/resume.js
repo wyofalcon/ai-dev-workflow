@@ -97,23 +97,29 @@ Generate a compelling, professional resume now:`;
  * Generate a new resume with Gemini + personality insights
  * Replaces the old Vercel function with full tracking
  */
-router.post('/generate', verifyFirebaseToken, async (req, res, next) => {
-  try {
-    const { user } = req;
+const { bypassResumeLimit, isDevUnlimitedEnabled } = require('../middleware/devTools');
 
-    // Check resume limit
-    const userRecord = await prisma.user.findUnique({
-      where: { firebaseUid: user.firebaseUid },
-      select: { id: true, resumesGenerated: true, resumesLimit: true, subscriptionTier: true }
-    });
+router.post('/generate',
+  verifyFirebaseToken,
+  // In dev with DEV_UNLIMITED_RESUMES=true, automatically upgrade user to unlimited
+  isDevUnlimitedEnabled() ? bypassResumeLimit : (req, res, next) => next(),
+  async (req, res, next) => {
+    try {
+      const { user } = req;
 
-    if (userRecord.resumesGenerated >= userRecord.resumesLimit) {
-      return res.status(403).json({
-        error: 'Resume limit reached',
-        message: `You've used ${userRecord.resumesGenerated}/${userRecord.resumesLimit} resumes. Upgrade for unlimited.`,
-        upgradeUrl: '/pricing'
+      // Check resume limit
+      const userRecord = await prisma.user.findUnique({
+        where: { firebaseUid: user.firebaseUid },
+        select: { id: true, resumesGenerated: true, resumesLimit: true, subscriptionTier: true }
       });
-    }
+
+      if (userRecord.resumesGenerated >= userRecord.resumesLimit) {
+        return res.status(403).json({
+          error: 'Resume limit reached',
+          message: `You've used ${userRecord.resumesGenerated}/${userRecord.resumesLimit} resumes. Upgrade for unlimited.`,
+          upgradeUrl: '/pricing'
+        });
+      }
 
     // Extract input
     const { resumeText, personalStories, jobDescription, selectedSections, targetCompany } = req.body;

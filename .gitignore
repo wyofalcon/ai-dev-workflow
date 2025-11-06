@@ -11,17 +11,30 @@
 # production
 /build
 
-# misc
-.DS_Store
+# Environment variables - NEVER commit these!
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+api/.env
+api/.env.local
+api/.env.production
+
+# Firebase credentials
+**/firebase-admin-key.json
+**/firebase-service-account.json
+secrets/
+.secrets/
+
+# misc
+.DS_Store
 
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .vercel
-/logs 
-generated_resumes/ 
+/logs
+generated_resumes/
 api/coverage/
