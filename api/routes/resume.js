@@ -7,6 +7,7 @@ const { inferPersonality } = require('../services/personalityInference');
 const JobDescriptionAnalyzer = require('../services/jobDescriptionAnalyzer');
 const { buildFullConversation, validateAnswer } = require('../services/personalityQuestions');
 const atsOptimizer = require('../services/atsOptimizer');
+const pdfGenerator = require('../services/pdfGenerator');
 
 // Helper: Build personality-enhanced Gemini prompt
 function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality }) {
@@ -539,16 +540,110 @@ function _calculateATSGrade(coverage, mustHaveCoverage, formattingScore) {
 }
 
 /**
+ * GET /api/resume/:id/pdf
+ * Generate and download resume as PDF
+ * Query params: template (classic|modern|minimal)
+ */
+router.get('/:id/pdf', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { user } = req;
+    const { id } = req.params;
+    const { template = 'classic' } = req.query;
+
+    // Validate template
+    if (!pdfGenerator.isValidTemplate(template)) {
+      return res.status(400).json({
+        error: 'Invalid template',
+        message: `Template must be one of: ${pdfGenerator.getAvailableTemplates().map(t => t.name).join(', ')}`
+      });
+    }
+
+    // Get user ID
+    const userRecord = await prisma.user.findUnique({
+      where: { firebaseUid: user.firebaseUid },
+      select: { id: true }
+    });
+
+    const resume = await prisma.resume.findFirst({
+      where: { id, userId: userRecord.id },
+      select: {
+        resumeMarkdown: true,
+        title: true,
+        targetCompany: true
+      }
+    });
+
+    if (!resume) {
+      return res.status(404).json({ error: 'Resume not found' });
+    }
+
+    console.log(`Generating PDF for resume ${id} with template: ${template}`);
+
+    // Generate PDF
+    const startTime = Date.now();
+    const pdfBuffer = await pdfGenerator.generatePDF(resume.resumeMarkdown, template);
+    const generationTime = Date.now() - startTime;
+
+    console.log(`PDF generated in ${generationTime}ms, size: ${(pdfBuffer.length / 1024).toFixed(2)}KB`);
+
+    // Mark as downloaded
+    await prisma.resume.update({
+      where: { id },
+      data: {
+        downloadedAt: new Date(),
+        pdfTemplate: template
+      }
+    });
+
+    // Generate filename
+    const filename = resume.targetCompany
+      ? `Resume-${resume.targetCompany.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+      : `Resume-${new Date().toISOString().split('T')[0]}.pdf`;
+
+    // Set headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('X-Generation-Time-Ms', generationTime);
+
+    return res.send(pdfBuffer);
+
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    next(error);
+  }
+});
+
+/**
+ * GET /api/resume/templates/list
+ * Get available PDF templates with descriptions
+ */
+router.get('/templates/list', verifyFirebaseToken, (req, res) => {
+  const templates = pdfGenerator.getAvailableTemplates();
+  res.json({
+    success: true,
+    templates,
+    count: templates.length
+  });
+});
+
+/**
  * GET /api/resume/:id/download
- * Download resume markdown for PDF conversion
+ * Download resume markdown (legacy endpoint for backwards compatibility)
  */
 router.get('/:id/download', verifyFirebaseToken, async (req, res, next) => {
   try {
     const { user } = req;
     const { id } = req.params;
 
+    // Get user ID
+    const userRecord = await prisma.user.findUnique({
+      where: { firebaseUid: user.firebaseUid },
+      select: { id: true }
+    });
+
     const resume = await prisma.resume.findFirst({
-      where: { id, userId: user.id }
+      where: { id, userId: userRecord.id }
     });
 
     if (!resume) {

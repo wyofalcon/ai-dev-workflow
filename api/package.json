@@ -37,7 +37,9 @@
     "firebase-admin": "^13.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "marked": "^16.4.1",
     "prisma": "^6.18.0",
+    "puppeteer": "^24.29.0",
     "uuid": "^13.0.0",
     "winston": "^3.18.3"
   },

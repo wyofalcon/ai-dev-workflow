@@ -114,6 +114,7 @@ model Resume {
   pdfUrl                String?   @map("pdf_url")
   pdfBucket             String?   @map("pdf_bucket")
   pdfPath               String?   @map("pdf_path")
+  pdfTemplate           String?   @default("classic") @map("pdf_template")
   modelUsed             String?   @map("model_used")
   tokensUsed            Int?      @map("tokens_used")
   generationTimeMs      Int?      @map("generation_time_ms")
