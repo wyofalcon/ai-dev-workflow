@@ -1,0 +1,65 @@
+=============================================================================
+CVSTOMIZE PRODUCTION DEPLOYMENT - WINDOWS COMMANDS
+=============================================================================
+
+STEP 1: Grant Service Account Permissions (PowerShell/CMD - ONE LINE EACH)
+-----------------------------------------------------------------------------
+Copy/paste these 4 commands:
+
+gcloud projects add-iam-policy-binding cvstomize --member="serviceAccount:cvstomize-deployer@cvstomize.iam.gserviceaccount.com" --role="roles/cloudsql.client"
+
+gcloud projects add-iam-policy-binding cvstomize --member="serviceAccount:cvstomize-deployer@cvstomize.iam.gserviceaccount.com" --role="roles/cloudsql.admin"
+
+gcloud projects add-iam-policy-binding cvstomize --member="serviceAccount:cvstomize-deployer@cvstomize.iam.gserviceaccount.com" --role="roles/secretmanager.secretAccessor"
+
+gcloud projects add-iam-policy-binding cvstomize --member="serviceAccount:cvstomize-deployer@cvstomize.iam.gserviceaccount.com" --role="roles/logging.viewer"
+
+
+STEP 2: Connect to Database
+-----------------------------------------------------------------------------
+gcloud sql connect cvstomize-db --user=postgres --database=cvstomize_production --project=cvstomize
+
+
+STEP 3: Run SQL Commands (Inside psql prompt)
+-----------------------------------------------------------------------------
+ALTER TABLE resumes OWNER TO cvstomize_app;
+ALTER TABLE users OWNER TO cvstomize_app;
+ALTER TABLE personality_traits OWNER TO cvstomize_app;
+ALTER TABLE conversations OWNER TO cvstomize_app;
+ALTER TABLE conversation_turns OWNER TO cvstomize_app;
+
+SELECT tablename, tableowner FROM pg_tables WHERE schemaname = 'public';
+
+\q
+
+
+STEP 4: Run Migration Job
+-----------------------------------------------------------------------------
+gcloud run jobs execute cvstomize-migrate --region us-central1 --project cvstomize
+
+
+STEP 5: Check Migration Logs (after 30 seconds)
+-----------------------------------------------------------------------------
+gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=cvstomize-migrate" --limit 20 --project cvstomize --format="value(textPayload)"
+
+
+STEP 6: Verify Backend Health
+-----------------------------------------------------------------------------
+curl https://cvstomize-api-351889420459.us-central1.run.app/health
+
+
+=============================================================================
+SUCCESS INDICATORS
+=============================================================================
+
+You should see in the logs:
+✅ Migration complete: add_pdf_template.sql
+✅ Migration complete: add_outcome_tracking.sql
+✅ Schema verification complete!
+
+=============================================================================
+PRODUCTION URL
+=============================================================================
+https://cvstomize-api-351889420459.us-central1.run.app
+
+=============================================================================
