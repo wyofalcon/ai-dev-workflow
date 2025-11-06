@@ -6,6 +6,7 @@ const geminiServiceVertex = require('../services/geminiServiceVertex');
 const { inferPersonality } = require('../services/personalityInference');
 const JobDescriptionAnalyzer = require('../services/jobDescriptionAnalyzer');
 const { buildFullConversation, validateAnswer } = require('../services/personalityQuestions');
+const atsOptimizer = require('../services/atsOptimizer');
 
 // Helper: Build personality-enhanced Gemini prompt
 function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality }) {
@@ -185,6 +186,20 @@ router.post('/generate',
     const tokensUsed = response.usageMetadata?.totalTokenCount || 0;
     const generationTime = Date.now() - startTime;
 
+    // ATS Optimization: Extract keywords and calculate coverage
+    console.log('Analyzing ATS keyword coverage...');
+    const jobKeywords = atsOptimizer.extractKeywords(jobDescription);
+    const atsAnalysis = atsOptimizer.calculateCoverage(jobKeywords, resumeMarkdown);
+    const atsFormatting = atsOptimizer.validateATSFormatting(resumeMarkdown);
+    const optimizations = atsOptimizer.suggestOptimizations(jobKeywords, atsAnalysis);
+
+    console.log('ATS Analysis:', {
+      coverage: `${atsAnalysis.coveragePercentage}%`,
+      mustHaveCoverage: `${atsAnalysis.mustHaveCoverage}%`,
+      atsScore: atsFormatting.score,
+      isATSFriendly: atsFormatting.isATSFriendly
+    });
+
     // Save to database
     const resume = await prisma.resume.create({
       data: {
@@ -217,12 +232,26 @@ router.post('/generate',
         markdown: resumeMarkdown,
         createdAt: resume.createdAt
       },
+      atsAnalysis: {
+        coverage: atsAnalysis.coveragePercentage,
+        mustHaveCoverage: atsAnalysis.mustHaveCoverage,
+        score: atsFormatting.score,
+        isATSFriendly: atsFormatting.isATSFriendly,
+        matchedKeywords: atsAnalysis.matchedKeywords.length,
+        missingKeywords: atsAnalysis.missingKeywords.length,
+        optimizations: optimizations.filter(o => o.priority === 'HIGH' || o.priority === 'CRITICAL')
+      },
       usage: {
         resumesGenerated: userRecord.resumesGenerated + 1,
         resumesLimit: userRecord.resumesLimit,
         remaining: Math.max(0, userRecord.resumesLimit - userRecord.resumesGenerated - 1)
       },
-      metadata: { tokensUsed, generationTimeMs: generationTime, personalityUsed: !!personality }
+      metadata: {
+        tokensUsed,
+        generationTimeMs: generationTime,
+        personalityUsed: !!personality,
+        atsOptimized: true
+      }
     });
 
   } catch (error) {
@@ -423,6 +452,91 @@ router.get('/:id', verifyFirebaseToken, async (req, res, next) => {
     next(error);
   }
 });
+
+/**
+ * GET /api/resume/:id/ats-analysis
+ * Get detailed ATS analysis for a resume
+ */
+router.get('/:id/ats-analysis', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { user } = req;
+    const { id } = req.params;
+
+    // Get user ID
+    const userRecord = await prisma.user.findUnique({
+      where: { firebaseUid: user.firebaseUid },
+      select: { id: true }
+    });
+
+    const resume = await prisma.resume.findFirst({
+      where: { id, userId: userRecord.id },
+      select: {
+        resumeMarkdown: true,
+        jobDescription: true,
+        title: true
+      }
+    });
+
+    if (!resume) {
+      return res.status(404).json({ error: 'Resume not found' });
+    }
+
+    // Perform ATS analysis
+    const jobKeywords = atsOptimizer.extractKeywords(resume.jobDescription);
+    const coverage = atsOptimizer.calculateCoverage(jobKeywords, resume.resumeMarkdown);
+    const formatting = atsOptimizer.validateATSFormatting(resume.resumeMarkdown);
+    const optimizations = atsOptimizer.suggestOptimizations(jobKeywords, coverage);
+
+    return res.json({
+      success: true,
+      resumeTitle: resume.title,
+      analysis: {
+        keywords: {
+          total: jobKeywords.allKeywords.length,
+          skills: jobKeywords.skills.length,
+          responsibilities: jobKeywords.responsibilities.length,
+          qualifications: jobKeywords.qualifications.length,
+          mustHave: jobKeywords.mustHave.length,
+          niceToHave: jobKeywords.niceToHave.length
+        },
+        coverage: {
+          overall: coverage.coveragePercentage,
+          mustHave: coverage.mustHaveCoverage,
+          matched: coverage.matchedKeywords.length,
+          missing: coverage.missingKeywords.length,
+          matchedKeywords: coverage.matchedKeywords.slice(0, 20), // Top 20
+          missingKeywords: coverage.missingKeywords.slice(0, 10), // Top 10 missing
+          suggestions: coverage.suggestions.slice(0, 5) // Top 5 suggestions
+        },
+        formatting: {
+          isATSFriendly: formatting.isATSFriendly,
+          score: formatting.score,
+          issues: formatting.issues,
+          warnings: formatting.warnings
+        },
+        optimizations: optimizations,
+        grade: this._calculateATSGrade(coverage.coveragePercentage, coverage.mustHaveCoverage, formatting.score)
+      }
+    });
+
+  } catch (error) {
+    console.error('ATS analysis error:', error);
+    next(error);
+  }
+});
+
+// Helper: Calculate ATS grade
+function _calculateATSGrade(coverage, mustHaveCoverage, formattingScore) {
+  const avgScore = (coverage + mustHaveCoverage + formattingScore) / 3;
+
+  if (avgScore >= 90) return { grade: 'A+', color: 'success', message: 'Excellent ATS optimization' };
+  if (avgScore >= 85) return { grade: 'A', color: 'success', message: 'Very strong ATS compatibility' };
+  if (avgScore >= 80) return { grade: 'B+', color: 'info', message: 'Good ATS compatibility' };
+  if (avgScore >= 75) return { grade: 'B', color: 'info', message: 'Acceptable ATS compatibility' };
+  if (avgScore >= 70) return { grade: 'C+', color: 'warning', message: 'Needs improvement' };
+  if (avgScore >= 65) return { grade: 'C', color: 'warning', message: 'Significant improvements needed' };
+  return { grade: 'D', color: 'error', message: 'Poor ATS compatibility - major revisions required' };
+}
 
 /**
  * GET /api/resume/:id/download
