@@ -144,15 +144,242 @@
 Now that infrastructure and tests are solid, implement core feature:
 
 ### Week 4: Resume Generation ⏳ READY TO START
-- [ ] Gemini 1.5 Pro integration
-- [ ] ATS keyword optimization
-- [ ] Personality-based framing
-- [ ] PDF generation (Puppeteer)
-- [ ] Cloud Storage integration
-- [ ] Download endpoint
-- [ ] Test with real job descriptions
 
-**Expected Outcome:** End-to-end resume generation working
+**Gemini Model Strategy (Production-Ready):**
+
+We have **two Gemini service implementations** ready to use:
+
+1. **geminiService.js** - Direct API (Deprecated 1.5 models)
+   - Uses: `gemini-1.5-flash` and `gemini-1.5-pro`
+   - Auth: GEMINI_API_KEY
+   - Status: ⚠️ Legacy - will be phased out
+   - Keep for: Local dev/testing if Vertex fails
+
+2. **geminiServiceVertex.js** - Vertex AI (Production) ✅
+   - Uses: `gemini-2.0-flash-001` and `gemini-2.5-pro`
+   - Auth: GCP Service Account (already configured)
+   - Status: ✅ **PRIMARY** - Production-ready
+   - Benefits: Better integration, no API key rotation, GCP billing
+
+**Current Implementation:**
+- ✅ **Conversations:** Using `gemini-2.0-flash-001` via Vertex AI
+- ✅ **Resume Generation:** Using `gemini-2.5-pro` via Vertex AI
+- ✅ Both services already integrated in routes
+
+**Model Selection Rationale:**
+- **Gemini 2.0 Flash** for conversations:
+  - Fast response time (~500ms)
+  - Cheap (~$0.075 per 1M tokens)
+  - Perfect for 6-question personality framework
+
+- **Gemini 2.5 Pro** for resume generation:
+  - Superior quality for complex reasoning
+  - Better ATS keyword optimization
+  - Worth the cost (~$1.25 per 1M tokens) for final output
+
+**Week 4 Tasks:**
+- [x] ✅ Gemini integration (ALREADY DONE via Vertex AI)
+- [ ] Enhance resume prompt with personality framing
+- [ ] Add ATS keyword extraction from job description
+- [ ] Implement achievement quantification logic
+- [ ] PDF generation (Puppeteer)
+- [ ] Cloud Storage upload
+- [ ] Download endpoint
+- [ ] Test with 5+ real job descriptions
+- [ ] Add resume quality scoring
+
+**Expected Outcome:** End-to-end resume generation with personality-based framing
+
+---
+
+## 📋 Week 4 Implementation Plan (Detailed)
+
+### Phase 1: Enhanced Resume Prompt (2-3 hours)
+
+**Goal:** Upgrade `buildResumePrompt()` to use personality framework
+
+**Tasks:**
+1. Read personality profile from database
+2. Map Big Five traits to resume writing style:
+   - **Openness:** Creative language vs traditional
+   - **Conscientiousness:** Detail level and structure
+   - **Extraversion:** First-person tone vs third-person
+   - **Agreeableness:** Team-focused vs individual achievements
+   - **Neuroticism:** Conservative claims vs bold statements
+
+3. Add personality-specific prompt sections:
+```javascript
+// Example personality mapping
+if (profile.openness > 70) {
+  prompt += "Use creative, forward-thinking language. Highlight innovation.";
+} else {
+  prompt += "Use traditional, proven terminology. Highlight reliability.";
+}
+```
+
+4. Test with 3 different personality profiles on same job
+
+**Files to Modify:**
+- `api/services/geminiServiceVertex.js` - Enhance `buildResumePrompt()`
+- `api/routes/resume.js` - Pass personality data to service
+
+---
+
+### Phase 2: ATS Keyword Optimization (2 hours)
+
+**Goal:** Extract job description keywords and ensure resume includes them
+
+**Tasks:**
+1. Create `extractATSKeywords()` function:
+   - Parse job description for skills, tools, certifications
+   - Weight keywords by frequency and position
+   - Return top 20 keywords with priorities
+
+2. Enhance resume prompt to include:
+   - "CRITICAL KEYWORDS TO INCLUDE NATURALLY: [list]"
+   - "These keywords must appear at least once in relevant sections"
+
+3. Add post-generation keyword verification:
+   - Check if critical keywords are present
+   - Generate warning if <80% keyword match
+
+**New File:**
+- `api/services/atsOptimizer.js` (150-200 lines)
+
+**Files to Modify:**
+- `api/routes/resume.js` - Call ATS optimizer before generation
+
+---
+
+### Phase 3: PDF Generation (3-4 hours)
+
+**Goal:** Convert Markdown resume to professional PDF
+
+**Tasks:**
+1. Create `pdfGenerator.js` service:
+   - Use Puppeteer to render HTML
+   - Apply professional CSS template
+   - Support 3 templates: Classic, Modern, Minimal
+
+2. Markdown → HTML conversion:
+   - Parse Markdown sections
+   - Apply template styling
+   - Handle special formatting (bold, italic, lists)
+
+3. PDF optimization:
+   - Single page preferred (compact layout)
+   - ATS-friendly fonts (Arial, Calibri)
+   - No images/graphics (breaks ATS parsing)
+   - Export as both PDF and plain text
+
+**New Files:**
+- `api/services/pdfGenerator.js` (300-400 lines)
+- `api/templates/resume-classic.html` (150 lines)
+- `api/templates/resume-modern.html` (150 lines)
+
+**Dependencies Already Installed:**
+- ✅ puppeteer (v24.24.0)
+
+---
+
+### Phase 4: Cloud Storage Integration (1-2 hours)
+
+**Goal:** Upload generated PDFs to Cloud Storage
+
+**Tasks:**
+1. Configure Cloud Storage bucket permissions:
+   - Create `resumes-prod` bucket (if not exists)
+   - Set lifecycle: Delete after 90 days
+   - Enable signed URLs for downloads
+
+2. Create `storageService.js`:
+   - Upload PDF to `resumes/{userId}/{resumeId}.pdf`
+   - Generate signed URL (expires in 7 days)
+   - Return URL to frontend
+
+3. Update database schema:
+   - Add `pdfUrl` field to resumes table
+   - Add `expiresAt` timestamp
+
+**Files to Create:**
+- `api/services/storageService.js` (100-150 lines)
+
+**Files to Modify:**
+- `database/schema.sql` - Add pdfUrl column
+- `api/routes/resume.js` - Upload after generation
+
+---
+
+### Phase 5: Download Endpoint (1 hour)
+
+**Goal:** Allow users to download generated resumes
+
+**Tasks:**
+1. Create `GET /api/resume/:resumeId/download` endpoint:
+   - Verify user owns resume
+   - Stream PDF from Cloud Storage
+   - Set proper Content-Type headers
+   - Track download count
+
+2. Add resume history page:
+   - List all user's resumes
+   - Show creation date, job title, download link
+   - Allow re-download within 7 days
+
+**Files to Modify:**
+- `api/routes/resume.js` - Add download endpoint
+
+---
+
+### Phase 6: Testing & Quality (2-3 hours)
+
+**Goal:** Validate resume quality across different inputs
+
+**Test Matrix:**
+| Job Type | Personality | Expected Output |
+|----------|-------------|-----------------|
+| Software Engineer | High Openness | Creative, innovation-focused |
+| Accountant | High Conscientiousness | Detail-oriented, traditional |
+| Sales Manager | High Extraversion | Results-driven, people-focused |
+| Data Analyst | Low Extraversion | Technical, data-focused |
+| Teacher | High Agreeableness | Collaborative, student-focused |
+
+**Tasks:**
+1. Test with 5 real job descriptions from LinkedIn
+2. Verify ATS keyword coverage (>80%)
+3. Check PDF formatting on different devices
+4. Test download flow end-to-end
+5. Load test: 10 concurrent resume generations
+
+**Quality Metrics:**
+- Resume generation time: <10 seconds
+- PDF size: <500KB
+- ATS keyword match: >80%
+- User satisfaction survey: >4/5 stars
+
+---
+
+### 🎯 Session 16 Deliverables
+
+**Must Have:**
+- ✅ Personality-based resume prompt working
+- ✅ ATS keyword extraction functional
+- ✅ PDF generation with 2 templates
+- ✅ Cloud Storage upload working
+- ✅ Download endpoint functional
+- ✅ Tested with 3+ real jobs
+
+**Nice to Have:**
+- Resume quality scoring algorithm
+- Multiple template options (Classic, Modern, Minimal)
+- Resume editing capability
+- Version history (save multiple iterations)
+
+**Success Criteria:**
+- User can complete full flow: Register → Conversation → Job Description → Resume → Download
+- Generated resumes pass ATS parsing (tested with Jobscan.co)
+- Resume reflects personality framework
+- Production-ready for launch
 
 ---
 
