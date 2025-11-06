@@ -153,9 +153,6 @@ function MainLayout() {
                 <MenuItem onClick={() => { handleMenuClose(); navigate('/resume'); }}>
                   My Resumes
                 </MenuItem>
-                <MenuItem onClick={handleUpgrade} sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-                  🚀 Upgrade to Unlimited
-                </MenuItem>
                 <MenuItem onClick={handleLogout}>
                   Logout
                 </MenuItem>
