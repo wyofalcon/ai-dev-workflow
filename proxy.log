@@ -1,0 +1,13 @@
+2025/11/07 06:44:21 Authorizing with Application Default Credentials
+2025/11/07 06:44:21 [cvstomize:us-central1:cvstomize-db] Listening on 127.0.0.1:5435
+2025/11/07 06:44:21 The proxy has started successfully and is ready for new connections!
+2025/11/07 06:46:56 [cvstomize:us-central1:cvstomize-db] Accepted connection from 127.0.0.1:60852
+2025/11/07 06:46:56 [cvstomize:us-central1:cvstomize-db] client closed the connection
+2025/11/07 06:51:23 [cvstomize:us-central1:cvstomize-db] Accepted connection from 127.0.0.1:54404
+2025/11/07 06:51:23 [cvstomize:us-central1:cvstomize-db] client closed the connection
+2025/11/07 21:46:38 [cvstomize:us-central1:cvstomize-db] Accepted connection from 127.0.0.1:55734
+2025/11/07 21:46:39 [cvstomize:us-central1:cvstomize-db] client closed the connection
+2025/11/07 21:58:09 [cvstomize:us-central1:cvstomize-db] Accepted connection from 127.0.0.1:59398
+2025/11/07 21:58:09 [cvstomize:us-central1:cvstomize-db] client closed the connection
+2025/11/07 21:58:32 [cvstomize:us-central1:cvstomize-db] Accepted connection from 127.0.0.1:33246
+2025/11/07 21:58:33 [cvstomize:us-central1:cvstomize-db] client closed the connection
