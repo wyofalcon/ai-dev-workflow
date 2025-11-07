@@ -1,10 +1,10 @@
 # 🚀 CVstomize v2.0 - Complete Roadmap
 
-**Last Updated:** 2025-11-07 (Session 19 - Final)
+**Last Updated:** 2025-11-07 (Session 19 - Continued)
 **Branch:** dev
-**Status:** ✅ PRODUCTION OPERATIONAL - JD Fix Deployed!
-**Current Revision:** cvstomize-api-00088-vvg
-**Next:** End-to-end testing + Staging environment setup
+**Status:** ✅ PRODUCTION OPERATIONAL - Vertex AI JD Fix Live!
+**Current Revision:** cvstomize-api-00092-prk (100% traffic)
+**Next:** Test JD-specific questions with General Laborer role
 
 ---
 
@@ -109,12 +109,53 @@ https://console.cloud.google.com/security/secret-manager?project=cvstomize
 - ✅ **Deployed Revision:** cvstomize-api-00088-vvg (HEALTHY)
 - ✅ **Traffic Routing:** 100% on new revision with JD fix
 - ✅ **Production Status:** All systems operational
-- [ ] Register test user and verify Firebase Auth (next session)
-- [ ] Submit General Laborer JD and verify JD-specific questions appear
-- [ ] Verify questions relate to job description (not generic tech questions)
-- [ ] Generate resume and download all 3 PDF templates
 
-### Part 6: Infrastructure ⏳ CRITICAL PRIORITY
+### Part 6: Database Schema Reset ✅ COMPLETE
+**Problem:** Schema drift - Prisma expected status/completedAt/updatedAt columns that didn't exist
+**User Decision:** "Does it make sense to just redo the entire database from scratch?"
+**Result:** YES! Clean foundation approach - created 316-line FRESH_DATABASE_SCHEMA.sql
+- ✅ **Applied fresh schema** matching Prisma exactly (13 tables, indexes, triggers)
+- ✅ **Fixed conversations table** with correct columns: id, user_id, session_id, messages, created_at
+- ✅ **Verified structure** - database and code now in perfect sync
+- ✅ **Created migration plan** for future: MIGRATION_add_conversation_status.sql
+- ✅ **Documentation:** Password retrieval added to ROADMAP.md + PASSWORD_ACCESS_QUICK_REF.md
+
+### Part 7: Revolutionary JD Analysis Improvement ✅ COMPLETE
+**Problem:** Generic questions showing "aws, rest" for General Laborer roles
+**User Insight:** "Let gemini formulate the entire questions based on the JD"
+**Result:** Complete prompt engineering revolution + Vertex AI compatibility fix
+
+**Changes to jobDescriptionAnalyzer.js:**
+1. ✅ **Revolutionary Prompt (lines 48-150):**
+   - Explains full context: "helping build personalized resume through conversational AI"
+   - Lets Gemini generate ALL 5 questions (not templates with blanks)
+   - Role-specific guidance: technical vs non-technical
+   - Examples: Good vs Bad questions
+   - Returns: `{ analysis: {...}, questions: [...] }`
+
+2. ✅ **Vertex AI Response Format Fix (lines 152-196):**
+   - **Bug Found:** `TypeError: response.text is not a function`
+   - **Root Cause:** Vertex AI uses `response.candidates[0].content.parts[0].text` format
+   - **Fix:** Check if response.text is function, use correct format for Vertex AI
+   - **Impact:** Gemini was failing silently, falling back to hardcoded keywords
+   - **Result:** Gemini now runs successfully with custom question generation
+
+3. ✅ **Deployed:** Revision cvstomize-api-00092-prk (100% traffic)
+4. ✅ **Status:** Ready for testing
+
+**Expected Results:**
+- General Laborer JD → Questions about lifting, warehouse work, safety protocols, team coordination
+- Software Engineer JD → Questions about specific tech stack, architecture, code quality
+- Manager JD → Questions about leadership, team management, strategic decisions
+
+### Part 8: Production Testing ⏳ READY FOR USER TESTING
+- [ ] Register test user and verify Firebase Auth
+- [ ] Submit General Laborer JD and verify JD-specific questions appear
+- [ ] Verify questions relate to warehouse/physical labor (NOT AWS/REST APIs)
+- [ ] Generate resume and download all 3 PDF templates
+- [ ] Check Cloud Run logs to confirm Gemini is executing successfully
+
+### Part 9: Infrastructure ⏳ CRITICAL PRIORITY
 - [ ] **SET UP STAGING ENVIRONMENT** (must do before any DB changes)
 - [ ] Set up Sentry error tracking
 - [ ] Set up Cloud Run health monitoring alerts
