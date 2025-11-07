@@ -122,35 +122,25 @@ This should take about 5-10 minutes. You can save and continue later anytime.
 
 Ready to get started?`;
 
-    // Store welcome message in database
+    // Store conversation in database (messages as JSON array)
     await prisma.conversation.create({
       data: {
         userId: user.id,
-        sessionId,
-        messageRole: 'assistant',
-        messageContent: welcomeMessage,
-        messageOrder: 0,
-        questionId: null,
-        questionCategory: null,
-        modelUsed: null,
-        tokensUsed: 0,
-        responseTimeMs: 0,
-      },
-    });
-
-    // Store first question
-    await prisma.conversation.create({
-      data: {
-        userId: user.id,
-        sessionId,
-        messageRole: 'assistant',
-        messageContent: firstQuestion.questionText,
-        messageOrder: 1,
-        questionId: firstQuestion.id,
-        questionCategory: firstQuestion.category,
-        modelUsed: jdAnalysis ? 'gemini-2.0-flash' : null,
-        tokensUsed: 0,
-        responseTimeMs: 0,
+        messages: [
+          {
+            role: 'assistant',
+            content: welcomeMessage,
+            timestamp: new Date().toISOString(),
+          },
+          {
+            role: 'assistant',
+            content: firstQuestion.questionText,
+            questionId: firstQuestion.id,
+            questionCategory: firstQuestion.category,
+            timestamp: new Date().toISOString(),
+          }
+        ],
+        status: 'active',
       },
     });
 
@@ -210,21 +200,26 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
 
     const startTime = Date.now();
 
-    // Get conversation history for this session
-    const history = await prisma.conversation.findMany({
+    // Get conversation for this session
+    // Note: We're using sessionId from jdSessions Map, not from DB
+    // The DB stores messages as JSON array in one row
+    const conversations = await prisma.conversation.findMany({
       where: {
         userId: user.id,
-        sessionId,
       },
-      orderBy: { messageOrder: 'asc' },
+      orderBy: { createdAt: 'desc' },
+      take: 1,
     });
 
-    if (history.length === 0) {
+    if (conversations.length === 0) {
       return res.status(404).json({
         error: 'Session Not Found',
         message: 'Conversation session not found',
       });
     }
+
+    const conversation = conversations[0];
+    const history = conversation.messages || [];
 
     // Check if this is a JD-specific session
     const jdSession = jdSessions.get(sessionId);
@@ -247,21 +242,17 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
       totalQuestions = getTotalQuestions();
     }
 
-    // Store user's response
-    await prisma.conversation.create({
-      data: {
-        userId: user.id,
-        sessionId,
-        messageRole: 'user',
-        messageContent: message,
-        messageOrder: history.length,
+    // Store user's response in messages array
+    const updatedMessages = [
+      ...history,
+      {
+        role: 'user',
+        content: message,
         questionId: currentQuestionId,
         questionCategory: currentQuestion?.category || currentQuestion?.type || null,
-        modelUsed: null,
-        tokensUsed: 0,
-        responseTimeMs: 0,
-      },
-    });
+        timestamp: new Date().toISOString(),
+      }
+    ];
 
     // Check if there's a follow-up question
     let nextMessageContent = null;
@@ -319,19 +310,26 @@ Your profile is being saved. Next, you'll be able to generate tailored resumes f
       }
     }
 
-    // Store assistant's response (next question or completion message)
-    await prisma.conversation.create({
-      data: {
-        userId: user.id,
-        sessionId,
-        messageRole: 'assistant',
-        messageContent: nextMessageContent,
-        messageOrder: history.length + 1,
+    // Add assistant's response to messages array
+    if (nextMessageContent) {
+      updatedMessages.push({
+        role: 'assistant',
+        content: nextMessageContent,
         questionId: nextQuestionData?.id || null,
         questionCategory: nextQuestionData?.category || nextQuestionData?.type || null,
         modelUsed: isJDSession ? 'gemini-2.0-flash' : 'gemini-1.5-flash',
-        tokensUsed: 0, // Will add actual token tracking when Gemini is enabled
         responseTimeMs: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Update conversation with new messages
+    await prisma.conversation.update({
+      where: { id: conversation.id },
+      data: {
+        messages: updatedMessages,
+        status: nextQuestionData ? 'active' : 'completed',
+        completedAt: nextQuestionData ? null : new Date(),
       },
     });
 
