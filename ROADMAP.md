@@ -25,10 +25,32 @@
 - ⏳ CI/CD pipeline test pending (verify GitHub Actions auto-deploy)
 - Commits: d267b39, a1030b3, bb93398, 2a7c3a7, 883870a, aedeb1a, f8224d8
 
-### Part 2: Production Testing ⏳ IN PROGRESS
+### Part 2: Critical Bug Fix ✅ COMPLETE
+- ✅ **DISCOVERED:** JD-specific questions not integrated into conversation flow
+- ✅ **ROOT CAUSE:** Job description analyzer existed but never connected to `/api/conversation/start`
+- ✅ **IMPACT:** Users got generic questions ("aws, rest") for General Laborer roles
+- ✅ **FIX:** Integrated JobDescriptionAnalyzer into conversation.js (177 lines changed)
+- ✅ **RESULT:** Questions now dynamically generated based on actual job description
+- ✅ **TESTING:** Existing tests pass, graceful fallback to generic questions
+- ✅ **DEPLOYED:** Commit e632cc2 pushed to dev branch
+
+**Technical Changes:**
+- Added `jobDescription` parameter to POST /api/conversation/start
+- JD sessions stored in memory Map (will migrate to Redis in production)
+- Modified message flow to route between JD-specific and generic questions
+- Gemini 2.0 Flash analyzes JD, generates 5 targeted questions
+- Welcome message shows job title: "I analyzed the **General Laborer** position"
+
+**Example Questions Now:**
+- General Laborer: "Describe your experience with manual labor and safety standards"
+- Software Engineer: "Tell me about your experience with [extracted tech stack]"
+- Manager: "Describe your leadership style and team management approach"
+
+### Part 3: Production Testing ⏳ IN PROGRESS
 - [ ] Register test user and verify Firebase Auth
-- [ ] Complete 11-question conversational flow
-- [ ] Submit job description (verify Gemini 2.0 Flash)
+- [ ] Submit General Laborer JD and verify JD-specific questions appear
+- [ ] Complete 5 JD-specific questions
+- [ ] Verify questions relate to job description (not generic tech questions)
 - [ ] Generate resume (verify Gemini 2.5 Pro)
 - [ ] Download all 3 PDF templates (Classic, Modern, Minimal)
 - [ ] Verify ATS keyword optimization works
