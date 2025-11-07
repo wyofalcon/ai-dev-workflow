@@ -84,6 +84,9 @@ function ConversationalWizard({ onComplete }) {
       setJobTitle(data.jobTitle);
       setQuestionsType(data.questionsType);
 
+      // Clear the input field so user can type their answer
+      setCurrentAnswer('');
+
     } catch (err) {
       console.error('❌ Start conversation error:', err);
       setError(err.message);
