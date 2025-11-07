@@ -19,407 +19,347 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { auth } from '../firebase/index.js';
 
 /**
- * Conversational Wizard Component
+ * Conversational Wizard Component (FIXED - Session 18)
  *
  * Job-Description-First conversational resume builder.
  * Flow:
- * 1. Paste JD → AI analyzes
- * 2. Answer 5 JD-specific questions
- * 3. Answer 6 personality questions
- * 4. AI generates resume (zero iteration)
+ * 1. Paste JD → NEW: POST /api/conversation/start with jobDescription
+ * 2. Answer JD-specific questions (Gemini-generated based on actual JD)
+ * 3. POST /api/conversation/message for each answer
+ * 4. Complete conversation → Generate resume
  */
 function ConversationalWizard({ onComplete }) {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [conversationFlow, setConversationFlow] = useState(null);
-  const [answers, setAnswers] = useState({});
+  const [sessionId, setSessionId] = useState(null);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
   const [currentAnswer, setCurrentAnswer] = useState('');
-  const [jdAnalysis, setJdAnalysis] = useState(null);
+  const [jobDescription, setJobDescription] = useState('');
+  const [progress, setProgress] = useState({ current: 0, total: 0, percentage: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [validationError, setValidationError] = useState(null);
+  const [isComplete, setIsComplete] = useState(false);
+  const [jobTitle, setJobTitle] = useState(null);
+  const [questionsType, setQuestionsType] = useState('generic');
 
   const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
 
-  // Step 1: Analyze JD when user submits
-  const analyzeJobDescription = async (jobDescription) => {
+  // Step 1: Start conversation with JD
+  const startConversation = async (jd) => {
     setLoading(true);
     setError(null);
 
     try {
       const token = await auth.currentUser.getIdToken();
-      const response = await fetch(`${API_BASE}/api/resume/analyze-jd`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ jobDescription })
-      });
 
-      const data = await response.json();
+      console.log('🚀 Starting conversation with JD...');
+      console.log('JD Length:', jd.length);
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to analyze job description');
-      }
-
-      console.log('✅ JD Analysis:', data.analysis);
-
-      // Save analysis and get conversation flow
-      setJdAnalysis(data);
-      await getConversationFlow(data);
-
-      // Save JD as first answer
-      setAnswers({ step_1: jobDescription });
-      setCurrentStep(1); // Move to first question
-
-    } catch (err) {
-      console.error('JD Analysis error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Get full conversation flow (11 questions)
-  const getConversationFlow = async (jdAnalysis) => {
-    try {
-      const token = await auth.currentUser.getIdToken();
-      const response = await fetch(`${API_BASE}/api/resume/conversation-flow`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ jdAnalysis })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to get conversation flow');
-      }
-
-      console.log('✅ Conversation flow loaded:', data.totalSteps, 'steps');
-      setConversationFlow(data);
-
-    } catch (err) {
-      console.error('Conversation flow error:', err);
-      throw err;
-    }
-  };
-
-  // Validate answer before proceeding
-  const validateCurrentAnswer = async () => {
-    if (currentStep === 0) return true; // JD step validated by backend
-
-    const step = conversationFlow?.steps[currentStep];
-    if (!step || !step.questionId) return true;
-
-    // Check minimum length
-    const wordCount = currentAnswer.trim().split(/\s+/).length;
-    if (wordCount < (step.minWords || 20)) {
-      setValidationError(`Please provide more detail (at least ${step.minWords || 20} words). You wrote ${wordCount} words.`);
-      return false;
-    }
-
-    try {
-      const token = await auth.currentUser.getIdToken();
-      const response = await fetch(`${API_BASE}/api/resume/validate-answer`, {
+      const response = await fetch(`${API_BASE}/api/conversation/start`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          questionId: step.questionId,
-          answer: currentAnswer
+          jobDescription: jd  // NEW: Pass JD to conversation start
         })
-      });
-
-      const data = await response.json();
-
-      if (data.valid) {
-        setValidationError(null);
-        return true;
-      } else {
-        setValidationError(data.error);
-        return false;
-      }
-
-    } catch (err) {
-      console.error('Validation error:', err);
-      // Don't block user on validation API failure
-      return true;
-    }
-  };
-
-  // Handle next button
-  const handleNext = async () => {
-    if (currentStep === 0) {
-      // First step: Analyze JD
-      if (!currentAnswer.trim()) {
-        setError('Please paste a job description');
-        return;
-      }
-      await analyzeJobDescription(currentAnswer);
-      setCurrentAnswer(''); // Clear for next question
-    } else {
-      // Subsequent steps: Validate and save answer
-      const isValid = await validateCurrentAnswer();
-      if (!isValid) return;
-
-      setAnswers({ ...answers, [`step_${currentStep}`]: currentAnswer });
-      setCurrentAnswer('');
-      setValidationError(null);
-
-      // Check if we're done with questions
-      if (currentStep === conversationFlow.totalSteps - 2) {
-        // Last question answered - generate resume
-        await generateResume();
-      } else {
-        // Move to next question
-        setCurrentStep(currentStep + 1);
-      }
-    }
-  };
-
-  // Handle back button
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-      // Restore previous answer
-      setCurrentAnswer(answers[`step_${currentStep - 1}`] || '');
-      setValidationError(null);
-    }
-  };
-
-  // Generate resume from conversation
-  const generateResume = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const token = await auth.currentUser.getIdToken();
-
-      // Compile all answers into personal stories
-      const allAnswers = Object.entries(answers)
-        .filter(([key]) => key !== 'step_1') // Exclude JD itself
-        .map(([key, answer]) => {
-          const stepNum = parseInt(key.split('_')[1]);
-          const step = conversationFlow.steps[stepNum];
-          return `**${step?.title || 'Experience'}:**\n${answer}`;
-        })
-        .join('\n\n');
-
-      const requestBody = {
-        jobDescription: answers.step_1,
-        personalStories: allAnswers,
-        targetCompany: jdAnalysis.analysis.company || 'Target Company',
-        selectedSections: 'Summary,Experience,Skills,Education',
-        resumeText: '' // We're using conversation answers instead
-      };
-
-      console.log('Generating resume from conversation...');
-
-      const response = await fetch(`${API_BASE}/api/resume/generate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Resume generation failed');
+        throw new Error(data.error || data.message || 'Failed to start conversation');
       }
 
-      console.log('✅ Resume generated:', data.resumeId);
+      console.log('✅ Conversation started:', {
+        sessionId: data.sessionId,
+        questionsType: data.questionsType,
+        jobTitle: data.jobTitle,
+        totalQuestions: data.progress.total
+      });
 
-      // Call completion handler
-      if (onComplete) {
-        onComplete(data);
-      }
+      // Save session data
+      setSessionId(data.sessionId);
+      setCurrentQuestion(data.currentQuestion);
+      setProgress(data.progress);
+      setJobTitle(data.jobTitle);
+      setQuestionsType(data.questionsType);
 
     } catch (err) {
-      console.error('Resume generation error:', err);
+      console.error('❌ Start conversation error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate progress percentage
-  const progressPercent = conversationFlow
-    ? (currentStep / (conversationFlow.totalSteps - 1)) * 100
-    : 0;
+  // Step 2: Submit answer and get next question
+  const submitAnswer = async (answer) => {
+    setLoading(true);
+    setError(null);
 
-  // Get current step data
-  const currentStepData = conversationFlow?.steps[currentStep];
+    try {
+      const token = await auth.currentUser.getIdToken();
 
-  // Word count helper
-  const wordCount = currentAnswer.trim().split(/\s+/).filter(w => w.length > 0).length;
-  const minWords = currentStepData?.minWords || 20;
-  const wordCountColor = wordCount >= minWords ? 'success' : 'warning';
+      console.log('💬 Submitting answer for question:', currentQuestion.id);
 
-  return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
-      {/* Progress Bar */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Step {currentStep + 1} of {conversationFlow?.totalSteps || 13}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {Math.round(progressPercent)}% Complete
-          </Typography>
-        </Box>
-        <LinearProgress
-          variant="determinate"
-          value={progressPercent}
-          sx={{ height: 8, borderRadius: 4 }}
-        />
-      </Box>
+      const response = await fetch(`${API_BASE}/api/conversation/message`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sessionId,
+          message: answer,
+          currentQuestionId: currentQuestion.id
+        })
+      });
 
-      {/* Error Alert */}
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Failed to submit answer');
+      }
+
+      console.log('✅ Answer submitted, progress:', data.progress.percentage + '%');
+
+      // Update state
+      setProgress(data.progress);
+      setCurrentAnswer('');
+
+      if (data.isComplete) {
+        console.log('🎉 Conversation complete!');
+        setIsComplete(true);
+        await completeConversation();
+      } else {
+        setCurrentQuestion(data.nextQuestion);
+      }
+
+    } catch (err) {
+      console.error('❌ Submit answer error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3: Complete conversation and generate resume
+  const completeConversation = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = await auth.currentUser.getIdToken();
+
+      console.log('🏁 Completing conversation...');
+
+      // First, complete the conversation (saves personality traits)
+      const completeResponse = await fetch(`${API_BASE}/api/conversation/complete`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sessionId })
+      });
+
+      const completeData = await completeResponse.json();
+
+      if (!completeResponse.ok) {
+        throw new Error(completeData.error || 'Failed to complete conversation');
+      }
+
+      console.log('✅ Conversation completed, personality inferred:', completeData.personality);
+
+      // Now generate resume using conversation data
+      console.log('📝 Generating resume...');
+
+      const resumeResponse = await fetch(`${API_BASE}/api/resume/generate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          jobDescription,
+          sessionId,  // Pass session ID to use conversation data
+          targetCompany: jobTitle || 'Target Company',
+          selectedSections: 'Summary,Experience,Skills,Education'
+        })
+      });
+
+      const resumeData = await resumeResponse.json();
+
+      if (!resumeResponse.ok) {
+        throw new Error(resumeData.error || 'Resume generation failed');
+      }
+
+      console.log('✅ Resume generated:', resumeData.resumeId);
+
+      // Call completion handler
+      if (onComplete) {
+        onComplete(resumeData);
+      }
+
+    } catch (err) {
+      console.error('❌ Complete conversation error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle next button
+  const handleNext = async () => {
+    if (!sessionId) {
+      // First step: Start conversation with JD
+      if (!currentAnswer.trim() || currentAnswer.trim().length < 50) {
+        setError('Please paste a job description (minimum 50 characters)');
+        return;
+      }
+      setJobDescription(currentAnswer);
+      await startConversation(currentAnswer);
+    } else {
+      // Subsequent steps: Submit answer
+      if (!currentAnswer.trim() || currentAnswer.trim().split(/\s+/).length < 10) {
+        setError('Please provide more detail (at least 10 words)');
+        return;
+      }
+      await submitAnswer(currentAnswer);
+    }
+  };
+
+  // Render JD input step
+  const renderJDInput = () => (
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        Step 1: Paste the Job Description
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        I'll analyze the job requirements and ask you targeted questions about your experience.
+      </Typography>
+
+      <TextField
+        fullWidth
+        multiline
+        rows={12}
+        value={currentAnswer}
+        onChange={(e) => setCurrentAnswer(e.target.value)}
+        placeholder="Paste the full job description here...&#10;&#10;Example:&#10;Software Engineer - Full Stack&#10;Requirements:&#10;- 3+ years experience with React and Node.js&#10;- Strong problem-solving skills&#10;- Experience with AWS deployment&#10;..."
+        variant="outlined"
+        sx={{ mb: 2 }}
+      />
+
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
 
-      {/* Current Question */}
-      <Paper elevation={3} sx={{ p: 4, mb: 3 }}>
-        {currentStep === 0 ? (
-          // Step 1: Job Description Input
-          <>
-            <Typography variant="h5" gutterBottom fontWeight="bold">
-              Let's Start with the Job Description
+      <Button
+        variant="contained"
+        size="large"
+        onClick={handleNext}
+        disabled={loading || !currentAnswer.trim()}
+        endIcon={loading ? <CircularProgress size={20} /> : <ArrowForwardIcon />}
+        fullWidth
+      >
+        {loading ? 'Analyzing Job Description...' : 'Analyze & Continue'}
+      </Button>
+    </Box>
+  );
+
+  // Render question step
+  const renderQuestion = () => {
+    if (!currentQuestion) return null;
+
+    return (
+      <Box>
+        {/* Progress indicator */}
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              Question {progress.current + 1} of {progress.total}
             </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
-              Paste the full job description for the position you're targeting. Our AI will analyze it
-              and ask you specific questions to craft a perfectly tailored resume.
-            </Typography>
-            <TextField
-              fullWidth
-              multiline
-              rows={12}
-              variant="outlined"
-              placeholder="Paste the complete job description here..."
-              value={currentAnswer}
-              onChange={(e) => setCurrentAnswer(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <Typography variant="caption" color="text.secondary">
-              Include the job title, responsibilities, required skills, and qualifications.
-            </Typography>
-          </>
-        ) : currentStepData?.type === 'processing' ? (
-          // Step 13: Processing
-          <Box textAlign="center" py={4}>
-            <CircularProgress size={60} sx={{ mb: 2 }} />
-            <Typography variant="h5" gutterBottom>
-              {currentStepData.title}
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              {currentStepData.instruction}
+            <Typography variant="body2" color="text.secondary">
+              {progress.percentage}% Complete
             </Typography>
           </Box>
-        ) : (
-          // Steps 2-12: Questions
-          <>
-            <Chip
-              label={currentStepData?.type === 'personality' ? 'Personality Insight' : 'Job-Specific'}
-              color={currentStepData?.type === 'personality' ? 'secondary' : 'primary'}
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <Typography variant="h6" gutterBottom fontWeight="bold">
-              {currentStepData?.title}
-            </Typography>
-            <Typography variant="body1" paragraph sx={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
-              {currentStepData?.question}
-            </Typography>
-
-            {currentStepData?.hint && (
-              <Alert severity="info" sx={{ mb: 2 }}>
-                <Typography variant="body2">
-                  💡 {currentStepData.hint}
-                </Typography>
-              </Alert>
-            )}
-
-            <TextField
-              fullWidth
-              multiline
-              rows={8}
-              variant="outlined"
-              placeholder="Share your experience with specific details and examples..."
-              value={currentAnswer}
-              onChange={(e) => {
-                setCurrentAnswer(e.target.value);
-                setValidationError(null);
-              }}
-              error={!!validationError}
-              helperText={validationError}
-              sx={{ mb: 2 }}
-            />
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" color={wordCountColor}>
-                {wordCount} words {wordCount < minWords && `(minimum ${minWords})`}
-              </Typography>
-              {currentStepData?.followUp && (
-                <Typography variant="caption" color="text.secondary" fontStyle="italic">
-                  Follow-up: {currentStepData.followUp}
-                </Typography>
-              )}
-            </Box>
-          </>
-        )}
-      </Paper>
-
-      {/* Navigation Buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
-          onClick={handleBack}
-          disabled={currentStep === 0 || loading}
-        >
-          Back
-        </Button>
-
-        <Button
-          variant="contained"
-          endIcon={loading ? <CircularProgress size={20} color="inherit" /> : <ArrowForwardIcon />}
-          onClick={handleNext}
-          disabled={loading || !currentAnswer.trim()}
-          size="large"
-        >
-          {currentStep === 0 ? 'Analyze Job Description' :
-           currentStep === conversationFlow?.totalSteps - 2 ? 'Generate My Resume' :
-           'Next Question'}
-        </Button>
-      </Box>
-
-      {/* Stepper (optional - for larger screens) */}
-      {conversationFlow && (
-        <Box sx={{ mt: 4, display: { xs: 'none', md: 'block' } }}>
-          <Stepper activeStep={currentStep} alternativeLabel>
-            {conversationFlow.steps.slice(0, -1).map((step, index) => (
-              <Step key={index} completed={index < currentStep}>
-                <StepLabel>
-                  {index === 0 ? 'JD' : index <= 5 ? `Q${index}` : index <= 11 ? `P${index - 5}` : '✓'}
-                </StepLabel>
-              </Step>
-            ))}
-          </Stepper>
+          <LinearProgress variant="determinate" value={progress.percentage} sx={{ height: 8, borderRadius: 4 }} />
         </Box>
-      )}
+
+        {/* Job title badge (if JD-specific questions) */}
+        {jobTitle && questionsType === 'jd-specific' && (
+          <Chip
+            label={`Tailored for: ${jobTitle}`}
+            color="primary"
+            size="small"
+            sx={{ mb: 2 }}
+          />
+        )}
+
+        {/* Question */}
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 500 }}>
+          {currentQuestion.text}
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Category: {currentQuestion.category}
+        </Typography>
+
+        {/* Answer input */}
+        <TextField
+          fullWidth
+          multiline
+          rows={8}
+          value={currentAnswer}
+          onChange={(e) => setCurrentAnswer(e.target.value)}
+          placeholder="Share your experience in detail... (minimum 10 words)"
+          variant="outlined"
+          sx={{ mb: 2 }}
+        />
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Navigation buttons */}
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={handleNext}
+            disabled={loading || !currentAnswer.trim()}
+            endIcon={loading ? <CircularProgress size={20} /> : <ArrowForwardIcon />}
+            fullWidth
+          >
+            {loading ? 'Submitting...' : progress.current === progress.total - 1 ? 'Complete & Generate Resume' : 'Next Question'}
+          </Button>
+        </Box>
+      </Box>
+    );
+  };
+
+  // Render completion message
+  const renderComplete = () => (
+    <Box sx={{ textAlign: 'center', py: 4 }}>
+      <CheckCircleIcon sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
+      <Typography variant="h4" gutterBottom>
+        Profile Complete! 🎉
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        Generating your tailored resume...
+      </Typography>
+      <CircularProgress />
     </Box>
+  );
+
+  return (
+    <Paper elevation={3} sx={{ p: 4, maxWidth: 800, mx: 'auto', my: 4 }}>
+      {!sessionId ? renderJDInput() : isComplete ? renderComplete() : renderQuestion()}
+    </Paper>
   );
 }
 
