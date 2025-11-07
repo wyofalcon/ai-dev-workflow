@@ -8,6 +8,46 @@
 
 ---
 
+## 🔐 HOW TO RETRIEVE PASSWORDS (READ THIS FIRST!)
+
+**⚠️ NO PASSWORDS ARE STORED IN GIT** - All credentials are in Google Cloud Secret Manager.
+
+### Quick Access Commands:
+
+```bash
+# Get database password
+cd /mnt/storage/shared_windows/Cvstomize
+./scripts/manage-secrets.sh get DATABASE_URL
+
+# List all secrets
+./scripts/manage-secrets.sh list
+
+# Get specific secrets
+./scripts/manage-secrets.sh get JWT_SECRET
+./scripts/manage-secrets.sh get FIREBASE_PRIVATE_KEY
+./scripts/manage-secrets.sh get GCS_BUCKET_NAME
+
+# Generate new secure password
+./scripts/manage-secrets.sh generate
+
+# Export all for local dev
+./scripts/manage-secrets.sh export .env.local
+```
+
+### Current Production Password Info:
+- **Version:** 8 (Secret Manager)
+- **Set:** 2025-11-07 21:58 UTC
+- **Next Rotation:** 2026-02-05 (90 days)
+- **Retrieve:** `./scripts/manage-secrets.sh get DATABASE_URL`
+- **Format:** `postgresql://cvstomize_app:PASSWORD@localhost/cvstomize_production?host=/cloudsql/cvstomize:us-central1:cvstomize-db`
+
+### Web Console Access:
+https://console.cloud.google.com/security/secret-manager?project=cvstomize
+
+**📖 Full Documentation:** See [CREDENTIALS_SECURE.md](CREDENTIALS_SECURE.md)
+
+---
+
 ## 🎯 MILESTONE: Sessions 18-19 (2025-02-02 to 2025-11-07) - INCIDENT RECOVERY ✅ COMPLETE
 
 ### ⚠️ Critical Incident & Recovery
