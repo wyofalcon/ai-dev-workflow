@@ -11,17 +11,23 @@ const {
   getProgress,
 } = require('../services/questionFramework');
 const { inferPersonality } = require('../services/personalityInference');
+const JobDescriptionAnalyzer = require('../services/jobDescriptionAnalyzer');
 const { v4: uuidv4 } = require('uuid');
 
 const prisma = new PrismaClient();
 
+// Store JD-specific question sessions in memory (will be replaced with Redis in production)
+const jdSessions = new Map();
+
 /**
  * POST /api/conversation/start
  * Start a new conversational profile building session
+ * NOW SUPPORTS: jobDescription parameter for JD-specific questions
  */
 router.post('/start', verifyFirebaseToken, async (req, res, next) => {
   try {
     const { firebaseUid } = req.user;
+    const { jobDescription } = req.body; // NEW: Accept job description
 
     const user = await prisma.user.findUnique({
       where: { firebaseUid },
@@ -38,8 +44,62 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
     // Create new session ID
     const sessionId = uuidv4();
 
-    // Get first question
-    const firstQuestion = getNextQuestion(-1); // -1 to get question at index 0
+    let firstQuestion;
+    let jdAnalysis = null;
+    let questionsToUse = 'generic';
+
+    // If job description provided, analyze it and use JD-specific questions
+    if (jobDescription && jobDescription.trim().length >= 50) {
+      try {
+        console.log('📋 Analyzing job description for targeted questions...');
+
+        const analyzer = new JobDescriptionAnalyzer(geminiService);
+        const validation = analyzer.validateJobDescription(jobDescription);
+
+        if (validation.valid) {
+          const analysis = await analyzer.analyze(jobDescription);
+          jdAnalysis = analysis;
+
+          // Store JD analysis and questions for this session
+          jdSessions.set(sessionId, {
+            analysis: analysis.analysis,
+            questions: analysis.questions,
+            currentQuestionIndex: 0,
+            jobDescription
+          });
+
+          // Use first JD-specific question
+          firstQuestion = {
+            id: analysis.questions[0].id,
+            questionText: analysis.questions[0].question,
+            category: analysis.questions[0].type,
+            order: 1,
+            purpose: analysis.questions[0].purpose,
+            keywords: analysis.questions[0].keywords,
+            followUp: analysis.questions[0].followUp
+          };
+
+          questionsToUse = 'jd-specific';
+
+          console.log('✅ JD analysis complete:', {
+            jobTitle: analysis.analysis.jobTitle,
+            experienceLevel: analysis.analysis.experienceLevel,
+            questionsGenerated: analysis.questions.length
+          });
+        } else {
+          console.warn('⚠️ JD validation failed:', validation.reason);
+          // Fall back to generic questions
+          firstQuestion = getNextQuestion(-1);
+        }
+      } catch (error) {
+        console.error('❌ JD analysis failed, falling back to generic questions:', error);
+        // Fall back to generic questions
+        firstQuestion = getNextQuestion(-1);
+      }
+    } else {
+      // No JD provided or too short - use generic personality questions
+      firstQuestion = getNextQuestion(-1);
+    }
 
     if (!firstQuestion) {
       return res.status(500).json({
@@ -53,7 +113,12 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
 
 I'm here to help you build an amazing resume that showcases your unique strengths and personality.
 
-I'll ask you about 16 questions covering your experience, achievements, and work style. This should take about 5-10 minutes. You can save and continue later anytime.
+${jdAnalysis
+  ? `Great news! I analyzed the **${jdAnalysis.analysis.jobTitle}** position and will ask you ${jdAnalysis.questions.length} targeted questions specifically about this role.`
+  : 'I\'ll ask you about 16 questions covering your experience, achievements, and work style.'
+}
+
+This should take about 5-10 minutes. You can save and continue later anytime.
 
 Ready to get started?`;
 
@@ -83,15 +148,19 @@ Ready to get started?`;
         messageOrder: 1,
         questionId: firstQuestion.id,
         questionCategory: firstQuestion.category,
-        modelUsed: null,
+        modelUsed: jdAnalysis ? 'gemini-2.0-flash' : null,
         tokensUsed: 0,
         responseTimeMs: 0,
       },
     });
 
+    const totalQuestions = jdAnalysis ? jdAnalysis.questions.length : getTotalQuestions();
+
     res.status(201).json({
       message: 'Conversation started successfully',
       sessionId,
+      questionsType: questionsToUse,
+      jobTitle: jdAnalysis?.analysis?.jobTitle || null,
       currentQuestion: {
         id: firstQuestion.id,
         text: firstQuestion.questionText,
@@ -100,7 +169,7 @@ Ready to get started?`;
       },
       progress: {
         current: 0,
-        total: getTotalQuestions(),
+        total: totalQuestions,
         percentage: 0,
       },
     });
@@ -113,6 +182,7 @@ Ready to get started?`;
 /**
  * POST /api/conversation/message
  * Process user's response and get next question
+ * NOW SUPPORTS: JD-specific question flow
  */
 router.post('/message', verifyFirebaseToken, async (req, res, next) => {
   try {
@@ -156,9 +226,26 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
       });
     }
 
-    // Get current question details
-    const currentQuestion = currentQuestionId ? getQuestionById(currentQuestionId) : null;
-    const currentQuestionIndex = currentQuestion ? currentQuestion.order - 1 : 0;
+    // Check if this is a JD-specific session
+    const jdSession = jdSessions.get(sessionId);
+    const isJDSession = !!jdSession;
+
+    let currentQuestion;
+    let currentQuestionIndex;
+    let totalQuestions;
+
+    if (isJDSession) {
+      // Use JD-specific questions
+      currentQuestionIndex = jdSession.currentQuestionIndex;
+      const jdQuestions = jdSession.questions;
+      currentQuestion = jdQuestions[currentQuestionIndex];
+      totalQuestions = jdQuestions.length;
+    } else {
+      // Use generic personality questions
+      currentQuestion = currentQuestionId ? getQuestionById(currentQuestionId) : null;
+      currentQuestionIndex = currentQuestion ? currentQuestion.order - 1 : 0;
+      totalQuestions = getTotalQuestions();
+    }
 
     // Store user's response
     await prisma.conversation.create({
@@ -169,7 +256,7 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
         messageContent: message,
         messageOrder: history.length,
         questionId: currentQuestionId,
-        questionCategory: currentQuestion?.category || null,
+        questionCategory: currentQuestion?.category || currentQuestion?.type || null,
         modelUsed: null,
         tokensUsed: 0,
         responseTimeMs: 0,
@@ -186,19 +273,49 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
       nextQuestionData = currentQuestion; // Same question, just follow-up
     } else {
       // Get next question
-      const nextQuestion = getNextQuestion(currentQuestionIndex);
+      if (isJDSession) {
+        const nextIndex = currentQuestionIndex + 1;
+        jdSession.currentQuestionIndex = nextIndex;
 
-      if (nextQuestion) {
-        nextMessageContent = nextQuestion.questionText;
-        nextQuestionData = nextQuestion;
+        if (nextIndex < jdSession.questions.length) {
+          const nextQ = jdSession.questions[nextIndex];
+          nextQuestionData = {
+            id: nextQ.id,
+            questionText: nextQ.question,
+            category: nextQ.type,
+            order: nextIndex + 1,
+            purpose: nextQ.purpose,
+            keywords: nextQ.keywords,
+            followUp: nextQ.followUp
+          };
+          nextMessageContent = nextQ.question;
+        } else {
+          // All JD questions complete!
+          nextMessageContent = `Amazing! 🎉 We've completed your profile for the **${jdSession.analysis.jobTitle}** position.
+
+I now have a great understanding of how your experience aligns with this role.
+
+Your profile is being saved. Next, you'll be able to generate a tailored resume for this specific job!`;
+          nextQuestionData = null;
+
+          // Clean up session
+          jdSessions.delete(sessionId);
+        }
       } else {
-        // All questions complete!
-        nextMessageContent = `Amazing! 🎉 We've completed your profile.
+        const nextQuestion = getNextQuestion(currentQuestionIndex);
+
+        if (nextQuestion) {
+          nextMessageContent = nextQuestion.questionText;
+          nextQuestionData = nextQuestion;
+        } else {
+          // All questions complete!
+          nextMessageContent = `Amazing! 🎉 We've completed your profile.
 
 I now have a great understanding of your experience, achievements, and work style.
 
 Your profile is being saved. Next, you'll be able to generate tailored resumes for specific job openings!`;
-        nextQuestionData = null;
+          nextQuestionData = null;
+        }
       }
     }
 
@@ -211,15 +328,15 @@ Your profile is being saved. Next, you'll be able to generate tailored resumes f
         messageContent: nextMessageContent,
         messageOrder: history.length + 1,
         questionId: nextQuestionData?.id || null,
-        questionCategory: nextQuestionData?.category || null,
-        modelUsed: 'gemini-1.5-flash',
+        questionCategory: nextQuestionData?.category || nextQuestionData?.type || null,
+        modelUsed: isJDSession ? 'gemini-2.0-flash' : 'gemini-1.5-flash',
         tokensUsed: 0, // Will add actual token tracking when Gemini is enabled
         responseTimeMs: Date.now() - startTime,
       },
     });
 
     const isComplete = !nextQuestionData;
-    const progress = getProgress(currentQuestionIndex);
+    const progress = Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100);
 
     res.status(200).json({
       message: 'Message processed successfully',
@@ -227,14 +344,14 @@ Your profile is being saved. Next, you'll be able to generate tailored resumes f
       nextQuestion: nextQuestionData
         ? {
             id: nextQuestionData.id,
-            text: nextQuestionData.questionText,
-            category: nextQuestionData.category,
-            order: nextQuestionData.order,
+            text: nextQuestionData.questionText || nextQuestionData.question,
+            category: nextQuestionData.category || nextQuestionData.type,
+            order: nextQuestionData.order || (currentQuestionIndex + 2),
           }
         : null,
       progress: {
         current: currentQuestionIndex + 1,
-        total: getTotalQuestions(),
+        total: totalQuestions,
         percentage: progress,
       },
       isComplete,
@@ -290,16 +407,33 @@ router.get('/history/:sessionId', verifyFirebaseToken, async (req, res, next) =>
       });
     }
 
+    // Check if this is a JD-specific session
+    const jdSession = jdSessions.get(sessionId);
+    const isJDSession = !!jdSession;
+
     // Find last assistant message to determine current question
     const lastAssistantMessage = [...history]
       .reverse()
       .find((msg) => msg.messageRole === 'assistant');
 
-    const currentQuestion = lastAssistantMessage?.questionId
-      ? getQuestionById(lastAssistantMessage.questionId)
-      : null;
+    let currentQuestion;
+    let currentQuestionIndex;
+    let totalQuestions;
 
-    const currentQuestionIndex = currentQuestion ? currentQuestion.order - 1 : history.length;
+    if (isJDSession) {
+      currentQuestionIndex = jdSession.currentQuestionIndex;
+      const jdQuestions = jdSession.questions;
+      currentQuestion = jdQuestions[currentQuestionIndex];
+      totalQuestions = jdQuestions.length;
+    } else {
+      currentQuestion = lastAssistantMessage?.questionId
+        ? getQuestionById(lastAssistantMessage.questionId)
+        : null;
+      currentQuestionIndex = currentQuestion ? currentQuestion.order - 1 : history.length;
+      totalQuestions = getTotalQuestions();
+    }
+
+    const progress = Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100);
 
     res.status(200).json({
       sessionId,
@@ -307,15 +441,15 @@ router.get('/history/:sessionId', verifyFirebaseToken, async (req, res, next) =>
       currentQuestion: currentQuestion
         ? {
             id: currentQuestion.id,
-            text: currentQuestion.questionText,
-            category: currentQuestion.category,
-            order: currentQuestion.order,
+            text: currentQuestion.questionText || currentQuestion.question,
+            category: currentQuestion.category || currentQuestion.type,
+            order: currentQuestion.order || (currentQuestionIndex + 1),
           }
         : null,
       progress: {
         current: currentQuestionIndex,
-        total: getTotalQuestions(),
-        percentage: getProgress(currentQuestionIndex),
+        total: totalQuestions,
+        percentage: progress,
       },
     });
   } catch (error) {
@@ -373,7 +507,16 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
 
     // Calculate profile completeness based on answered questions
     const userMessages = history.filter((msg) => msg.messageRole === 'user');
-    const profileCompleteness = Math.round((userMessages.length / getTotalQuestions()) * 100);
+
+    // Check if this was a JD session
+    const jdSession = jdSessions.get(sessionId);
+    const totalQuestions = jdSession ? jdSession.questions.length : getTotalQuestions();
+    const profileCompleteness = Math.round((userMessages.length / totalQuestions) * 100);
+
+    // Clean up JD session if exists
+    if (jdSession) {
+      jdSessions.delete(sessionId);
+    }
 
     // Update or create user profile (basic for now, will extract more data with Gemini later)
     await prisma.userProfile.upsert({
