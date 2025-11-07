@@ -126,6 +126,7 @@ Ready to get started?`;
     await prisma.conversation.create({
       data: {
         userId: user.id,
+        sessionId: sessionId,
         messages: [
           {
             role: 'assistant',
@@ -140,7 +141,7 @@ Ready to get started?`;
             timestamp: new Date().toISOString(),
           }
         ],
-        status: 'active',
+        // status: 'active', // Removed - column doesn't exist yet
       },
     });
 
@@ -328,8 +329,8 @@ Your profile is being saved. Next, you'll be able to generate tailored resumes f
       where: { id: conversation.id },
       data: {
         messages: updatedMessages,
-        status: nextQuestionData ? 'active' : 'completed',
-        completedAt: nextQuestionData ? null : new Date(),
+        // status: nextQuestionData ? 'active' : 'completed', // Removed - column doesn't exist yet
+        // completedAt: nextQuestionData ? null : new Date(), // Removed - column doesn't exist yet
       },
     });
 
