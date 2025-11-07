@@ -7,11 +7,11 @@
 
 ---
 
-## 🎯 MILESTONE: Session 18 (2025-02-02) - IN PROGRESS
+## 🎯 MILESTONE: Sessions 18-19 (2025-02-02 to 2025-11-07) - INCIDENT RECOVERY
 
-### ✅ Production Validation & Mobile Strategy
+### ⚠️ Critical Incident & Recovery
 
-**Status:** 🚀 Session 18 Active - Validating Production + Planning Mobile
+**Status:** ✅ Production RESTORED - JD fix pending deployment (Cloud SQL password propagation)
 
 **Goals:**
 1. **Validate Production:** End-to-end testing of resume generation
@@ -46,21 +46,34 @@
 - Software Engineer: "Tell me about your experience with [extracted tech stack]"
 - Manager: "Describe your leadership style and team management approach"
 
-### Part 3: Production Testing ⏳ IN PROGRESS
+### Part 3: Deployment Incident (Session 18) ⚠️ INCIDENT
+- ❌ **Attempted deployment** resulted in 60+ minute production outage
+- ❌ **Root cause:** Database schema mismatch + multiple password resets
+- ❌ **Issue 1:** Code expected `messages` JSON array, database had old schema
+- ❌ **Issue 2:** Multiple Cloud SQL password resets caused propagation delays
+- ⚠️ **Impact:** Production down from 04:30 UTC to end of session
+- ✅ **Documentation:** Complete incident report in SESSION_18_CRITICAL_INCIDENT.md
+
+### Part 4: Password Recovery (Session 19) ✅ COMPLETE
+- ✅ **Diagnosed password issue:** Multiple resets created corrupted state
+- ✅ **Reset password:** `CVst0mize_App_2025!` working via Cloud SQL Proxy
+- ✅ **Updated Secret Manager:** Version 7 with correct connection string
+- ✅ **Restored production:** Routed traffic to old working revision 00008-fev
+- ✅ **Status:** Production UP and stable (200 OK health check)
+- ⏳ **Pending:** JD fix deployment waiting for Cloud Run auth propagation (60+ min)
+
+### Part 5: Production Testing ⏳ BLOCKED
+- [ ] Deploy latest code with JD fix (waiting for password propagation)
 - [ ] Register test user and verify Firebase Auth
 - [ ] Submit General Laborer JD and verify JD-specific questions appear
-- [ ] Complete 5 JD-specific questions
 - [ ] Verify questions relate to job description (not generic tech questions)
-- [ ] Generate resume (verify Gemini 2.5 Pro)
-- [ ] Download all 3 PDF templates (Classic, Modern, Minimal)
-- [ ] Verify ATS keyword optimization works
-- [ ] Test Cloud Storage signed URLs
+- [ ] Generate resume and download all 3 PDF templates
 
-### Part 3: Monitoring & Infrastructure ⏳ PENDING
-- [ ] Set up Sentry error tracking (30 min)
-- [ ] Create staging database (optional, 1 hour)
-- [ ] Verify health check endpoints working
-- [ ] Test rate limiting and security middleware
+### Part 6: Infrastructure ⏳ CRITICAL PRIORITY
+- [ ] **SET UP STAGING ENVIRONMENT** (must do before any DB changes)
+- [ ] Set up Sentry error tracking
+- [ ] Set up Cloud Run health monitoring alerts
+- [ ] Document password management procedures
 
 ### Part 4: Mobile Strategy Added to Roadmap ⏳ IN PROGRESS
 - ✅ Analyzed backend readiness for mobile (9.5/10 - excellent)
