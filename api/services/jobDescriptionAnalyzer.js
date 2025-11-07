@@ -152,8 +152,21 @@ Respond ONLY with valid JSON (no markdown, no code blocks).`;
     try {
       const model = this.gemini.getFlashModel(); // Fast model for analysis
       const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const responseText = response.text();
+      const response = result.response;
+
+      // Vertex AI response format: response.candidates[0].content.parts[0].text
+      let responseText;
+      if (typeof response.text === 'function') {
+        // Old format
+        responseText = response.text();
+      } else if (response.candidates && response.candidates[0]) {
+        // Vertex AI format
+        responseText = response.candidates[0].content.parts[0].text;
+      } else {
+        throw new Error('Unexpected response format from Gemini');
+      }
+
+      console.log('🤖 Gemini raw response (first 200 chars):', responseText.substring(0, 200));
 
       // Parse JSON response
       let cleanedResponse = responseText.trim();
@@ -165,17 +178,19 @@ Respond ONLY with valid JSON (no markdown, no code blocks).`;
       // NEW FORMAT: Gemini returns { analysis: {...}, questions: [...] }
       // Validate required fields
       if (!parsedResponse.analysis || !parsedResponse.questions || parsedResponse.questions.length !== 5) {
+        console.warn('⚠️  AI response missing required fields, using fallback');
         throw new Error('AI response missing required fields or wrong format');
       }
 
-      // Return the complete response (analysis + questions)
+      console.log('✅ Gemini generated', parsedResponse.questions.length, 'custom questions');
       return parsedResponse;
 
     } catch (error) {
       console.error('AI analysis failed:', error);
-      console.error('Response text:', error.message);
+      console.error('Error details:', error.message);
 
       // Fallback: Basic keyword extraction
+      console.log('⚠️  Using fallback analysis (regex-based)');
       return this.fallbackAnalysis(jobDescription);
     }
   }
