@@ -1,10 +1,128 @@
 # 🚀 CVstomize v2.0 - Complete Roadmap
 
-**Last Updated:** 2025-11-07 (Session 19 - Continued)
+**Last Updated:** 2025-11-07 (Session 19 - Complete)
 **Branch:** dev
-**Status:** ✅ PRODUCTION OPERATIONAL - Vertex AI JD Fix Live!
+**Status:** ✅ CORE SYSTEM COMPLETE - Ready for End-to-End Testing
 **Current Revision:** cvstomize-api-00092-prk (100% traffic)
-**Next:** Test JD-specific questions with General Laborer role
+
+---
+
+## 📍 CURRENT STATUS & IMMEDIATE NEXT STEPS
+
+### ✅ What's Working (Session 19 Achievements)
+
+**Core Conversation Flow:**
+- ✅ JD-specific questions (Gemini generates 5 custom questions per job)
+- ✅ Duplicate question bug fixed (followUp logic removed)
+- ✅ Vertex AI compatibility (response format fixed)
+- ✅ Input field UX (auto-clears after JD submission)
+- ✅ Security fix (localhost fallback removed - no more privacy prompts)
+
+**AI-Powered Personality System:**
+- ✅ Gemini-based Big 5 inference (replaced keyword matching)
+- ✅ Personality saved to database after conversation
+- ✅ Profile reuse strategy (ask once, use for 6 months)
+
+**Resume Generation Integration:**
+- ✅ sessionId parameter pulls conversation answers from DB
+- ✅ Personality profile loaded and passed to resume prompt
+- ✅ Complete flow: Questions → Answers → Personality → Resume
+
+### 🎯 IMMEDIATE PRIORITIES (Next Session)
+
+**1. END-TO-END TESTING (CRITICAL - DO FIRST)**
+```
+Goal: Validate complete user journey works as designed
+Steps:
+  1. Start fresh conversation with General Laborer JD
+  2. Answer all 5 questions
+  3. Verify Gemini Big 5 analysis completes
+  4. Generate resume with sessionId
+  5. VERIFY: User's specific examples appear in resume
+  6. VERIFY: Personality framing visible in language/tone
+  7. Download all 3 PDF templates
+```
+
+**2. FRONTEND sessionId INTEGRATION**
+- ConversationalWizard.js needs to pass `sessionId` to resume generation
+- Currently: Frontend may not be passing sessionId parameter
+- Fix: Update completeConversation() to include sessionId in resume API call
+
+**3. STAGING ENVIRONMENT SETUP (CRITICAL INFRASTRUCTURE)**
+- **WHY:** Prevents production incidents like Session 18 database outage
+- **WHAT:** Separate GCP project/Cloud Run services for testing
+- **PRIORITY:** Must complete before ANY future database changes
+
+**4. MONITORING & OBSERVABILITY**
+- Set up Sentry error tracking
+- Cloud Run health check alerts
+- Log-based metrics for Gemini failures
+
+### 📋 Key Architectural Decisions (Session 19)
+
+**Decision 1: Gemini-Generated Questions Over Templates**
+- **Context:** Generic questions showed "aws, rest" for General Laborer roles
+- **Decision:** Let Gemini generate ALL 5 questions custom per JD
+- **Rationale:** Hyper-relevant questions extract better resume content
+- **Implementation:** jobDescriptionAnalyzer.js lines 48-150
+
+**Decision 2: Gemini-Based Personality Inference Over Keywords**
+- **Context:** Keyword matching (count "creative", "organized") too primitive
+- **Decision:** Send answers to Gemini with expert psychology prompt
+- **Rationale:** AI understands nuance, context, behavioral patterns
+- **Implementation:** personalityInferenceGemini.js (new file)
+- **Fallback:** If Gemini fails, use keyword method
+
+**Decision 3: Personality Profile Persistence & Reuse**
+- **Context:** Should we ask personality questions every resume generation?
+- **Decision:** Ask once, save to DB, reuse for 6-12 months
+- **Rationale:** Personality relatively stable, improves UX
+- **Implementation:** personality_traits table, staleness check in future
+
+**Decision 4: Conversation Answers → Resume Integration**
+- **Context:** Resume generation ignored user's conversation answers
+- **Decision:** Add sessionId parameter, pull answers from database
+- **Rationale:** User's specific examples (warehouse, PCs) must appear in resume
+- **Implementation:** resume.js lines 139-183
+
+**Decision 5: Fresh Database Over Patching Schema Drift**
+- **Context:** Prisma schema mismatched database (status columns missing)
+- **Decision:** Recreate database from scratch with FRESH_DATABASE_SCHEMA.sql
+- **Rationale:** Clean foundation faster than debugging drift, no production data to lose
+- **Implementation:** 316-line SQL file applied via postgres user
+
+**Decision 6: Production URL Fallback (Never Localhost)**
+- **Context:** Browser showed "connect to local network" permission prompt
+- **Decision:** Change AuthContext.js fallback from localhost to Cloud Run URL
+- **Rationale:** Major privacy concern, turns users away
+- **Implementation:** AuthContext.js line 32 + deployment script with build env var
+
+### 🔗 Critical File References
+
+**Conversation Flow:**
+- [conversation.js](api/routes/conversation.js) - POST /start, /message, /complete endpoints
+- [jobDescriptionAnalyzer.js](api/services/jobDescriptionAnalyzer.js) - Gemini question generation
+
+**Personality System:**
+- [personalityInferenceGemini.js](api/services/personalityInferenceGemini.js) - NEW: AI-based Big 5
+- [personalityInference.js](api/services/personalityInference.js) - OLD: Keyword fallback
+- [questionFramework.js](api/services/questionFramework.js) - 16 generic personality questions
+
+**Resume Generation:**
+- [resume.js](api/routes/resume.js) - POST /generate (now accepts sessionId)
+- [buildResumePrompt](api/routes/resume.js#L14-L96) - Gemini prompt with personality framing
+
+**Frontend:**
+- [ConversationalWizard.js](src/components/ConversationalWizard.js) - Conversation UI
+- [AuthContext.js](src/contexts/AuthContext.js) - API connection (fixed localhost issue)
+
+**Database:**
+- [FRESH_DATABASE_SCHEMA.sql](FRESH_DATABASE_SCHEMA.sql) - Complete schema reset
+- Schema: conversations (messages JSONB), personality_traits (Big 5), resumes
+
+**Documentation:**
+- [PERSONALITY_SYSTEM_ANALYSIS.md](PERSONALITY_SYSTEM_ANALYSIS.md) - Complete system audit
+- [PASSWORD_ACCESS_QUICK_REF.md](PASSWORD_ACCESS_QUICK_REF.md) - Credential access
 
 ---
 
