@@ -10,6 +10,6 @@ module.exports = {
     '!**/__tests__/**',
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(uuid)/)'
+    'node_modules/(?!(uuid|marked)/)'
   ],
 };

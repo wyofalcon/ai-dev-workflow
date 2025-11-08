@@ -58,7 +58,7 @@ const mockPrismaClient = {
   $disconnect: jest.fn(),
 };
 
-jest.mock('../config/database', () => mockPrismaClient);
+jest.mock('../../config/database', () => mockPrismaClient);
 
 // Mock Gemini Service
 const mockGeminiResponse = {
@@ -72,14 +72,14 @@ const mockGeminiResponse = {
   }
 };
 
-jest.mock('../services/geminiServiceVertex', () => ({
+jest.mock('../../services/geminiServiceVertex', () => ({
   getProModel: jest.fn(() => ({
     generateContent: jest.fn().mockResolvedValue(mockGeminiResponse)
   }))
 }));
 
 // Mock Personality Inference
-jest.mock('../services/personalityInference', () => ({
+jest.mock('../../services/personalityInference', () => ({
   inferPersonality: jest.fn(() => ({
     openness: 75,
     conscientiousness: 80,
@@ -96,9 +96,52 @@ jest.mock('../services/personalityInference', () => ({
   }))
 }));
 
+// Mock pdf-parse
+jest.mock('pdf-parse', () => {
+  return jest.fn((buffer) => Promise.resolve({
+    text: 'JOHN DOE\nSoftware Engineer\n\nEXPERIENCE\nSenior Developer at Tech Corp\n2020-2024'
+  }));
+});
+
+// Mock mammoth
+jest.mock('mammoth', () => ({
+  extractRawText: jest.fn(({ path }) => Promise.resolve({
+    value: 'JANE SMITH\nProduct Manager\n\nEXPERIENCE\nPM at StartupCo\n2018-2024'
+  }))
+}));
+
+// Mock puppeteer
+jest.mock('puppeteer', () => ({
+  launch: jest.fn()
+}));
+
+// Mock marked (ESM module)
+jest.mock('marked', () => ({
+  marked: Object.assign(
+    jest.fn((text) => `<p>${text}</p>`),
+    {
+      setOptions: jest.fn(),
+      parse: jest.fn((text) => `<p>${text}</p>`)
+    }
+  )
+}));
+
+// Mock fs for file operations (keep real fs methods for winston, override for our usage)
+jest.mock('fs', () => {
+  const actualFs = jest.requireActual('fs');
+  return {
+    ...actualFs,
+    writeFileSync: jest.fn(),
+    readFileSync: jest.fn(() => Buffer.from('fake file content')),
+    unlinkSync: jest.fn(),
+    existsSync: jest.fn(() => true),
+  };
+});
+
 // Use global Firebase mock from setup.js (no need to mock again)
 const request = require('supertest');
 const { app } = require('../../index');
+const path = require('path');
 
 describe('Resume API Endpoints', () => {
   let validToken;
@@ -400,6 +443,168 @@ describe('Resume API Endpoints', () => {
           downloadedAt: expect.any(Date)
         })
       });
+    });
+  });
+
+  describe('POST /api/resume/extract-text', () => {
+    it('should return 401 without auth token', async () => {
+      const response = await request(app)
+        .post('/api/resume/extract-text')
+        .expect(401);
+
+      expect(response.body.error).toBe('Unauthorized');
+    });
+
+    it('should return 400 if no files uploaded', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/api/resume/extract-text')
+        .set('Authorization', `Bearer ${validToken}`)
+        .expect(400);
+
+      expect(response.body.error).toContain('No files uploaded');
+    });
+
+    it('should extract text from single PDF file', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/api/resume/extract-text')
+        .set('Authorization', `Bearer ${validToken}`)
+        .attach('resumes', Buffer.from('fake pdf content'), 'resume.pdf');
+
+      if (response.status !== 200) {
+        console.log('PDF Test Error Response:', response.body);
+      }
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.text).toContain('JOHN DOE');
+      expect(response.body.text).toContain('Software Engineer');
+      expect(response.body.files).toHaveLength(1);
+      expect(response.body.files[0].filename).toBe('resume.pdf');
+      expect(response.body.totalLength).toBeGreaterThan(0);
+    });
+
+    it('should extract text from single DOCX file', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/api/resume/extract-text')
+        .set('Authorization', `Bearer ${validToken}`)
+        .attach('resumes', Buffer.from('fake docx content'), {
+          filename: 'resume.docx',
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.text).toContain('JANE SMITH');
+      expect(response.body.text).toContain('Product Manager');
+      expect(response.body.files).toHaveLength(1);
+      expect(response.body.files[0].filename).toBe('resume.docx');
+    });
+
+    it('should extract text from plain text file', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+
+      const plainText = 'BOB JOHNSON\nData Scientist\n\nEXPERIENCE\nML Engineer at DataCorp';
+
+      const response = await request(app)
+        .post('/api/resume/extract-text')
+        .set('Authorization', `Bearer ${validToken}`)
+        .attach('resumes', Buffer.from(plainText), {
+          filename: 'resume.txt',
+          contentType: 'text/plain'
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.text).toBe(plainText);
+      expect(response.body.files).toHaveLength(1);
+      expect(response.body.files[0].filename).toBe('resume.txt');
+      expect(response.body.totalLength).toBe(plainText.length);
+    });
+
+    it('should merge text from multiple files with separators', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/api/resume/extract-text')
+        .set('Authorization', `Bearer ${validToken}`)
+        .attach('resumes', Buffer.from('fake pdf'), 'resume1.pdf')
+        .attach('resumes', Buffer.from('fake docx'), {
+          filename: 'resume2.docx',
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.files).toHaveLength(2);
+      expect(response.body.text).toContain('=== Resume 1: resume1.pdf ===');
+      expect(response.body.text).toContain('=== Resume 2: resume2.docx ===');
+      expect(response.body.text).toContain('JOHN DOE'); // PDF content
+      expect(response.body.text).toContain('JANE SMITH'); // DOCX content
+    });
+
+    it('should reject unsupported file types', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/api/resume/extract-text')
+        .set('Authorization', `Bearer ${validToken}`)
+        .attach('resumes', Buffer.from('fake image'), {
+          filename: 'photo.jpg',
+          contentType: 'image/jpeg'
+        });
+
+      // Multer will reject before reaching the endpoint
+      expect(response.status).not.toBe(200);
+    });
+
+    it('should handle up to 5 files', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/api/resume/extract-text')
+        .set('Authorization', `Bearer ${validToken}`)
+        .attach('resumes', Buffer.from('resume 1'), 'r1.txt')
+        .attach('resumes', Buffer.from('resume 2'), 'r2.txt')
+        .attach('resumes', Buffer.from('resume 3'), 'r3.txt')
+        .attach('resumes', Buffer.from('resume 4'), 'r4.txt')
+        .attach('resumes', Buffer.from('resume 5'), 'r5.txt')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.files).toHaveLength(5);
+    });
+
+    it('should include character counts for each file', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/api/resume/extract-text')
+        .set('Authorization', `Bearer ${validToken}`)
+        .attach('resumes', Buffer.from('fake pdf'), 'resume.pdf')
+        .expect(200);
+
+      expect(response.body.files[0]).toHaveProperty('length');
+      expect(response.body.files[0].length).toBeGreaterThan(0);
+      expect(response.body.totalLength).toBeGreaterThan(0);
+    });
+
+    it('should provide success message with file count', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/api/resume/extract-text')
+        .set('Authorization', `Bearer ${validToken}`)
+        .attach('resumes', Buffer.from('test'), 'r1.txt')
+        .attach('resumes', Buffer.from('test'), 'r2.txt')
+        .expect(200);
+
+      expect(response.body.message).toContain('Successfully extracted text from 2 file(s)');
     });
   });
 });
