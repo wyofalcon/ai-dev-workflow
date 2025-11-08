@@ -28,8 +28,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // API base URL
-  const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+  // API base URL - SECURITY: Never default to localhost in production
+  const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
   const API_URL = `${API_BASE}/api`;
 
   // Get Firebase ID token
