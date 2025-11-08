@@ -170,15 +170,68 @@ https://console.cloud.google.com/security/secret-manager?project=cvstomize
 **Files Changed:**
 - [AuthContext.js:32](src/contexts/AuthContext.js#L32) - Production URL fallback instead of localhost
 
-### Part 10: Production Testing ⏳ IN PROGRESS - First Success!
-- ✅ **Gemini Question Verified:** "The job description mentions opportunities in warehouse settings, including loading and unloading goods and managing inventory. Can you describe a time you performed these tasks?"
-- ✅ **JD-Specific Analysis Working:** Questions tailored to General Laborer role (warehouse, not AWS!)
-- ✅ **Vertex AI Fix Confirmed:** Gemini successfully generating custom questions
-- [ ] Complete conversation flow and generate resume
-- [ ] Download and verify all 3 PDF templates
-- [ ] Check Cloud Run logs for any errors
+### Part 10: Gemini-Powered Big 5 Personality + Resume Integration ✅ COMPLETE
+**Problem:** System had 3 critical gaps preventing CV generation from working
+**User Insight:** "We need to use answers and send them to Gemini with proper prompt to determine Big 5, then store that profile and use it in every CV prompt"
 
-### Part 11: Infrastructure ⏳ CRITICAL PRIORITY
+**Gaps Fixed:**
+1. ❌ Resume generation ignored conversation answers (no sessionId integration)
+2. ❌ Personality inference used primitive keyword matching instead of AI
+3. ❌ Big 5 profile not persisted or reused across resume generations
+
+**Solution - Complete System Overhaul:**
+
+**1. NEW: Gemini-Based Big 5 Analysis (personalityInferenceGemini.js)**
+- Sends user answers to Gemini with expert psychology prompt
+- Returns Big 5 traits (0-100 scale): Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism
+- Derives work preferences: Work style, leadership style, communication style, motivation type, decision-making style
+- Includes reasoning and key insights for transparency
+- Confidence scoring based on answer depth
+- Fallback to keyword method if Gemini fails
+
+**2. UPDATED: Conversation Complete Endpoint**
+- Triggers Gemini personality inference after user completes questions
+- Fixed schema query (messages as JSONB array, not separate rows)
+- Saves Big 5 profile to `personality_traits` table
+- Returns personality insights to frontend
+
+**3. UPDATED: Resume Generation Endpoint**
+- Added `sessionId` parameter (optional)
+- Pulls conversation answers from database if sessionId provided
+- Loads personality profile from database
+- Passes both answers + personality to Gemini resume prompt
+
+**Complete Flow Now:**
+```
+1. User answers 5 JD questions (warehouse work, PC handling, safety)
+2. /api/conversation/complete → Gemini analyzes → Big 5 profile saved
+3. /api/resume/generate with sessionId → Pulls answers + personality
+4. Gemini generates resume with:
+   - User's specific examples ("handled server racks, used dolly, safety protocols")
+   - Personality framing (collaborative, detail-oriented, achievement-driven)
+5. Profile reused for future resumes (ask once, use for 6 months)
+```
+
+**Files Changed:**
+- [personalityInferenceGemini.js](api/services/personalityInferenceGemini.js) - NEW: AI-powered Big 5 analysis
+- [conversation.js:507-508](api/routes/conversation.js#L507-L508) - Gemini personality inference in /complete
+- [resume.js:139-183](api/routes/resume.js#L139-L183) - sessionId integration + personality loading
+- [PERSONALITY_SYSTEM_ANALYSIS.md](PERSONALITY_SYSTEM_ANALYSIS.md) - Complete documentation
+
+**Deployed:** API revision cvstomize-api-00092-prk (updated build)
+
+**Next:** Frontend needs to pass `sessionId` to resume generation endpoint
+
+### Part 11: Production Testing ⏳ READY FOR END-TO-END TEST
+- ✅ **Duplicate Question Fix:** Questions 1-5 now unique (removed followUp logic)
+- ✅ **JD-Specific Questions:** Gemini generating warehouse/physical labor questions
+- ✅ **Personality System:** Complete with Gemini-based Big 5 inference
+- ✅ **Resume Integration:** Conversation answers + personality now flow to resume
+- [ ] Test full flow: Answer questions → Generate resume → Verify personality framing
+- [ ] Download and verify all 3 PDF templates
+- [ ] Verify user's specific examples appear in resume
+
+### Part 12: Infrastructure ⏳ CRITICAL PRIORITY
 - [ ] **SET UP STAGING ENVIRONMENT** (must do before any DB changes)
 - [ ] Set up Sentry error tracking
 - [ ] Set up Cloud Run health monitoring alerts
