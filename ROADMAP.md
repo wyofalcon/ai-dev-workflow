@@ -30,35 +30,213 @@
 
 ### 🎯 IMMEDIATE PRIORITIES (Next Session)
 
-**1. END-TO-END TESTING (CRITICAL - DO FIRST)**
+## 🚀 STRATEGIC PIVOT: Resume-First Gap Analysis
+
+**NEW PRIORITY #1: Implement Resume-First Flow (GAME-CHANGER)**
+
+**Why This Change:**
+- Current flow asks questions about things already in user's resume (redundant)
+- User insight: "Does it make more sense for resume to be uploaded after JD so Gemini can analyze gaps?"
+- **Answer: YES!** This is a competitive advantage most AI resume builders don't have
+
+**Current Flow (Inefficient):**
 ```
-Goal: Validate complete user journey works as designed
-Steps:
-  1. Start fresh conversation with General Laborer JD
-  2. Answer all 5 questions
-  3. Verify Gemini Big 5 analysis completes
-  4. Generate resume with sessionId
-  5. VERIFY: User's specific examples appear in resume
-  6. VERIFY: Personality framing visible in language/tone
-  7. Download all 3 PDF templates
+JD → 5 generic questions → User retypes existing experience → Resume
 ```
+
+**New Flow (Intelligent):**
+```
+JD + Existing Resume → Gap Analysis → 2-5 targeted questions → Enhanced Resume
+Result: Higher ATS match (85-95%), faster UX (5-8 min vs 10-15 min), better quality
+```
+
+### 📋 RESUME-FIRST IMPLEMENTATION PLAN
+
+**PHASE 1: Backend Foundation (Session 20 - Week 1)**
+
+**Step 1.1: Update jobDescriptionAnalyzer.js**
+- [ ] Add `existingResume` parameter to `analyze()` method
+- [ ] Implement new prompt with gap analysis (see RESUME_FIRST_PROMPT.md)
+- [ ] Return `resumeGapAnalysis` section in response
+- [ ] Preserve all existing JSON structure (backwards compatible)
+- **Files:** api/services/jobDescriptionAnalyzer.js
+- **Lines:** ~48-200
+- **Test:** Unit test with resume vs without
+
+**Step 1.2: Update Conversation Start Endpoint**
+- [ ] Add optional `existingResume` parameter to POST /conversation/start
+- [ ] Pass to `JobDescriptionAnalyzer.analyze(jd, existingResume)`
+- [ ] Store resume content in jdSessions Map (for reference during answers)
+- [ ] Adapt question count based on `resumeGapAnalysis.questionCount`
+- **Files:** api/routes/conversation.js
+- **Lines:** ~27-171
+- **Test:** API test with/without resume parameter
+
+**Step 1.3: Enhance Resume Generation**
+- [ ] Update `buildResumePrompt()` to include gap analysis strategy
+- [ ] Add instructions to KEEP strong existing content
+- [ ] Add instructions to ENHANCE weak sections with conversation answers
+- [ ] Add instructions to FILL gaps with new content
+- **Files:** api/routes/resume.js
+- **Lines:** ~14-96
+- **Test:** Compare output with vs without existing resume
+
+**Step 1.4: Deploy & Test Backend**
+- [ ] Deploy to staging environment (if ready) or dev
+- [ ] Test with General Laborer JD + sample resume
+- [ ] Verify gap analysis identifies correct weaknesses
+- [ ] Verify questions are targeted, not redundant
+- [ ] Verify final resume is hybrid (existing + enhanced)
+
+**PHASE 2: Frontend Integration (Session 20 - Week 2)**
+
+**Step 2.1: Add Resume Input Field**
+- [ ] Add textarea for resume paste in ConversationalWizard.js
+- [ ] Show BEFORE "Analyze & Continue" button
+- [ ] Make optional with clear label: "Have a resume? (Optional - helps us ask better questions)"
+- [ ] Character limit: 10,000 chars (reasonable resume length)
+- **Files:** src/components/ConversationalWizard.js
+- **Lines:** ~232-269 (renderJDInput section)
+
+**Step 2.2: Update API Call**
+- [ ] Pass `existingResume` to POST /conversation/start
+- [ ] Handle response with fewer questions (2-5 instead of always 5)
+- [ ] Update progress bar calculation (dynamic total)
+- **Files:** src/components/ConversationalWizard.js
+- **Lines:** ~46-93 (startConversation function)
+
+**Step 2.3: UX Enhancements**
+- [ ] Show resume gap summary after analysis (optional nice-to-have)
+- [ ] "We found X gaps in your resume - let's fill them!"
+- [ ] Progress indicator adjusts to question count
+- **Files:** src/components/ConversationalWizard.js
+
+**Step 2.4: Deploy & User Test**
+- [ ] Deploy frontend to Cloud Run
+- [ ] A/B test: Resume-first vs current flow
+- [ ] Measure: Completion time, question count, user satisfaction
+- [ ] Collect feedback on final resume quality
+
+**PHASE 3: File Upload Support (Session 21 - Week 3)**
+
+**Step 3.1: PDF Text Extraction**
+- [ ] Install pdf-parse or pdfjs-dist package
+- [ ] Create /api/resume/extract-text endpoint
+- [ ] Accept PDF upload, return plain text
+- [ ] Handle multi-page documents
+- **Tech:** pdf-parse npm package
+- **Limit:** 5MB file size
+
+**Step 3.2: DOCX Text Extraction**
+- [ ] Install mammoth.js package
+- [ ] Add DOCX support to extract-text endpoint
+- [ ] Handle formatting preservation (bullets, headings)
+- **Tech:** mammoth npm package
+
+**Step 3.3: Frontend File Upload**
+- [ ] Add file input with drag-and-drop
+- [ ] Support PDF, DOCX, TXT formats
+- [ ] Show extracted text for user review/edit
+- [ ] Fallback to manual paste if parsing fails
+- **Files:** src/components/ConversationalWizard.js
+- **UI Library:** react-dropzone
+
+**Step 3.4: Testing & Validation**
+- [ ] Test with various resume formats (1-page, 2-page, ATS-formatted, creative)
+- [ ] Verify text extraction quality
+- [ ] Handle edge cases (scanned PDFs, complex layouts)
+
+**PHASE 4: Advanced Features (Future)**
+
+**Step 4.1: LinkedIn Import**
+- [ ] OAuth integration with LinkedIn
+- [ ] Map LinkedIn profile to resume format
+- [ ] Structured data extraction (vs plain text)
+- **API:** LinkedIn Profile API
+
+**Step 4.2: Resume Quality Scoring**
+- [ ] Gemini analyzes resume quality (strong/moderate/weak)
+- [ ] Adaptive question count based on quality
+- [ ] Show quality score to user with improvement tips
+
+**Step 4.3: Multi-Resume Management**
+- [ ] Store multiple resume versions per user
+- [ ] "Master resume" concept with tailored versions per job
+- [ ] Version history and comparison
+
+---
+
+### 📊 SUCCESS METRICS
+
+**Technical Metrics:**
+- Question count: Average 3 (down from 5) for users with resumes
+- Completion time: 5-8 minutes (down from 10-15)
+- ATS match score: 85-95% (up from 60-70%)
+
+**User Experience:**
+- Perceived redundancy: <10% (vs ~40% now with "I already wrote this")
+- Resume quality rating: 4.5+/5.0
+- Interview callback rate: Track over time
+
+**Business Metrics:**
+- Completion rate: 80%+ (vs industry average 60%)
+- User retention: 70%+ return for second job application
+- Premium conversion: Track if gap-filling UX improves paid conversions
+
+---
+
+### 🔄 FALLBACK & COMPATIBILITY
+
+**Backwards Compatibility:**
+- If `existingResume` is null/empty → Use current 5-question flow
+- All existing API responses remain valid
+- Frontend can deploy independently of backend
+
+**Graceful Degradation:**
+- If gap analysis fails → Fall back to standard question generation
+- If resume parsing fails → User can paste text manually
+- Preserve all existing functionality
+
+---
+
+### ⏭️ LOWER PRIORITY (After Resume-First)
+
+**1. END-TO-END TESTING**
+- Test resume-first flow end-to-end
+- Verify gap analysis accuracy
+- Validate enhanced resume quality
 
 **2. FRONTEND sessionId INTEGRATION**
-- ConversationalWizard.js needs to pass `sessionId` to resume generation
-- Currently: Frontend may not be passing sessionId parameter
-- Fix: Update completeConversation() to include sessionId in resume API call
+- Ensure sessionId passes correctly with new flow
+- Already part of Phase 2 implementation
 
-**3. STAGING ENVIRONMENT SETUP (CRITICAL INFRASTRUCTURE)**
-- **WHY:** Prevents production incidents like Session 18 database outage
-- **WHAT:** Separate GCP project/Cloud Run services for testing
-- **PRIORITY:** Must complete before ANY future database changes
+**3. STAGING ENVIRONMENT SETUP**
+- Critical for testing resume-first before production
+- Do BEFORE Phase 2 deployment
 
 **4. MONITORING & OBSERVABILITY**
-- Set up Sentry error tracking
-- Cloud Run health check alerts
-- Log-based metrics for Gemini failures
+- Add metrics for gap analysis quality
+- Track resume upload/paste rates
+- Monitor Gemini token usage (may increase with resume analysis)
 
 ### 📋 Key Architectural Decisions (Session 19)
+
+**Decision 0: Resume-First Gap Analysis Over Blind Questioning** ⭐ NEW - STRATEGIC PIVOT
+- **Context:** First question asked about warehouse experience user likely already documented
+- **User Insight:** "Does it make more sense for resume to be uploaded after JD so Gemini can analyze gaps?"
+- **Decision:** YES - Implement resume-first flow where Gemini compares resume to JD, identifies gaps, asks targeted questions
+- **Rationale:**
+  - Eliminates redundant questioning (user retypes existing content)
+  - Increases ATS match rate (keeps proven content, enhances gaps)
+  - Faster UX (2-5 questions vs always 5)
+  - Competitive advantage (consultative vs generative approach)
+- **Implementation:** 4-phase plan (see above)
+  - Phase 1: Backend gap analysis
+  - Phase 2: Frontend resume input (text paste first, then file upload)
+  - Phase 3: PDF/DOCX extraction
+  - Phase 4: LinkedIn import
+- **Impact:** Transforms CVstomize from "generate resume" to "optimize your resume for this job"
+- **Documentation:** RESUME_FIRST_PROMPT.md
 
 **Decision 1: Gemini-Generated Questions Over Templates**
 - **Context:** Generic questions showed "aws, rest" for General Laborer roles
