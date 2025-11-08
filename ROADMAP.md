@@ -148,12 +148,20 @@ https://console.cloud.google.com/security/secret-manager?project=cvstomize
 - Software Engineer JD → Questions about specific tech stack, architecture, code quality
 - Manager JD → Questions about leadership, team management, strategic decisions
 
-### Part 8: Production Testing ⏳ READY FOR USER TESTING
-- [ ] Register test user and verify Firebase Auth
-- [ ] Submit General Laborer JD and verify JD-specific questions appear
-- [ ] Verify questions relate to warehouse/physical labor (NOT AWS/REST APIs)
-- [ ] Generate resume and download all 3 PDF templates
-- [ ] Check Cloud Run logs to confirm Gemini is executing successfully
+### Part 8: UX Polish ✅ COMPLETE
+**Problem:** JD text remained in input field after conversation started
+**User Feedback:** "the JD is still in the text box so I would have to clear it to type in my answer"
+**Fix:** Added `setCurrentAnswer('')` after successful conversation start (line 88)
+- ✅ **Deployed:** Frontend revision cvstomize-frontend-00006-z9k
+- ✅ **Result:** Input field now clears automatically, ready for first answer
+
+### Part 9: Production Testing ⏳ IN PROGRESS - First Success!
+- ✅ **Gemini Question Verified:** "The job description mentions opportunities in warehouse settings, including loading and unloading goods and managing inventory. Can you describe a time you performed these tasks?"
+- ✅ **JD-Specific Analysis Working:** Questions tailored to General Laborer role (warehouse, not AWS!)
+- ✅ **Vertex AI Fix Confirmed:** Gemini successfully generating custom questions
+- [ ] Complete conversation flow and generate resume
+- [ ] Download and verify all 3 PDF templates
+- [ ] Check Cloud Run logs for any errors
 
 ### Part 9: Infrastructure ⏳ CRITICAL PRIORITY
 - [ ] **SET UP STAGING ENVIRONMENT** (must do before any DB changes)
