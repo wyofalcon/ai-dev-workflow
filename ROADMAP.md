@@ -155,7 +155,22 @@ https://console.cloud.google.com/security/secret-manager?project=cvstomize
 - ✅ **Deployed:** Frontend revision cvstomize-frontend-00006-z9k
 - ✅ **Result:** Input field now clears automatically, ready for first answer
 
-### Part 9: Production Testing ⏳ IN PROGRESS - First Success!
+### Part 9: CRITICAL Security Fix ✅ COMPLETE
+**Problem:** Browser showing "wants to look for and connect to devices on your local network" permission
+**User Feedback:** "That would turn people away due to privacy concerns"
+**Root Cause:** AuthContext.js defaulted to `http://localhost:3001` when `REACT_APP_API_URL` not set during build
+**Impact:** MAJOR privacy/security issue - users seeing invasive permission prompts
+
+**Solution:**
+1. ✅ **Changed fallback** in AuthContext.js:32 from localhost to production Cloud Run URL
+2. ✅ **Set build env var** in deployment: `--set-build-env-vars REACT_APP_API_URL=https://cvstomize-api-351889420459.us-central1.run.app`
+3. ✅ **Deployed:** Frontend revision cvstomize-frontend-00007-79t
+4. ✅ **Result:** No more local network permission prompt
+
+**Files Changed:**
+- [AuthContext.js:32](src/contexts/AuthContext.js#L32) - Production URL fallback instead of localhost
+
+### Part 10: Production Testing ⏳ IN PROGRESS - First Success!
 - ✅ **Gemini Question Verified:** "The job description mentions opportunities in warehouse settings, including loading and unloading goods and managing inventory. Can you describe a time you performed these tasks?"
 - ✅ **JD-Specific Analysis Working:** Questions tailored to General Laborer role (warehouse, not AWS!)
 - ✅ **Vertex AI Fix Confirmed:** Gemini successfully generating custom questions
@@ -163,7 +178,7 @@ https://console.cloud.google.com/security/secret-manager?project=cvstomize
 - [ ] Download and verify all 3 PDF templates
 - [ ] Check Cloud Run logs for any errors
 
-### Part 9: Infrastructure ⏳ CRITICAL PRIORITY
+### Part 11: Infrastructure ⏳ CRITICAL PRIORITY
 - [ ] **SET UP STAGING ENVIRONMENT** (must do before any DB changes)
 - [ ] Set up Sentry error tracking
 - [ ] Set up Cloud Run health monitoring alerts
