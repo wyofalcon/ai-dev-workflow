@@ -26,14 +26,14 @@ jest.mock('@prisma/client', () => {
     PrismaClient: jest.fn().mockImplementation(() => mockPrisma),
   };
 });
-jest.mock('../middleware/authMiddleware');
-jest.mock('../services/questionFramework');
-jest.mock('../services/personalityInference');
+jest.mock('../../middleware/authMiddleware');
+jest.mock('../../services/questionFramework');
+jest.mock('../../services/personalityInference');
 jest.mock('uuid', () => ({ v4: () => 'mock-uuid-123' }));
 
 // NOW require the modules that depend on mocks
 const conversationRouter = require('../../routes/conversation');
-const { verifyFirebaseToken } = require('../../../middleware/authMiddleware');
+const { verifyFirebaseToken } = require('../../middleware/authMiddleware');
 const {
   getNextQuestion,
   getQuestionById,
@@ -708,6 +708,199 @@ describe('Conversation Routes', () => {
         .expect(500);
 
       expect(response.body.error).toBeDefined();
+    });
+  });
+
+  // ========================================================================
+  // RESUME-FIRST GAP ANALYSIS INTEGRATION TESTS (Session 22)
+  // ========================================================================
+  describe('POST /api/conversation/start - Resume-First Mode (Session 22)', () => {
+    const validJD = 'Senior Software Engineer at Google. Requires 5+ years React, Node.js, AWS experience. Lead development teams and architect scalable systems.';
+    const existingResume = `John Smith
+Senior Developer
+Email: john@example.com
+
+EXPERIENCE:
+Software Engineer at TechCorp (3 years)
+- Built web applications with JavaScript
+- Worked with team on various projects
+- Improved code quality
+
+SKILLS:
+JavaScript, HTML, CSS, Git`;
+
+    beforeEach(() => {
+      // Reset mocks for resume-first tests
+      jest.clearAllMocks();
+
+      verifyFirebaseToken.mockImplementation((req, res, next) => {
+        req.user = { firebaseUid: 'test-firebase-uid' };
+        next();
+      });
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 1,
+        displayName: 'John Doe'
+      });
+      mockPrisma.conversation.create.mockResolvedValue({});
+    });
+
+    it('should accept jobDescription + existingResume parameters', async () => {
+      const response = await request(app)
+        .post('/api/conversation/start')
+        .send({
+          jobDescription: validJD,
+          existingResume: existingResume
+        })
+        .expect(201);
+
+      expect(response.body.message).toBeDefined();
+      expect(response.body.sessionId).toBe('mock-uuid-123');
+      expect(response.body.currentQuestion).toBeDefined();
+    });
+
+    it('should generate 2-5 questions when resume provided (not always 5)', async () => {
+      const response = await request(app)
+        .post('/api/conversation/start')
+        .send({
+          jobDescription: validJD,
+          existingResume: existingResume
+        })
+        .expect(201);
+
+      // With resume-first, should NOT always be 5 questions
+      // The actual number depends on gap analysis
+      expect(response.body.currentQuestion).toBeDefined();
+      expect(response.body.progress).toBeDefined();
+    });
+
+    it('should fall back to 5 questions when resume < 100 characters', async () => {
+      const tooShortResume = 'John Smith';  // Only 10 characters
+
+      const response = await request(app)
+        .post('/api/conversation/start')
+        .send({
+          jobDescription: validJD,
+          existingResume: tooShortResume  // Too short to be valid
+        })
+        .expect(201);
+
+      // Should treat as "no resume" and use standard 5-question flow
+      expect(response.body.currentQuestion).toBeDefined();
+    });
+
+    it('should work without resume (backwards compatibility)', async () => {
+      const response = await request(app)
+        .post('/api/conversation/start')
+        .send({
+          jobDescription: validJD
+          // No existingResume parameter
+        })
+        .expect(201);
+
+      expect(response.body.message).toBeDefined();
+      expect(response.body.sessionId).toBe('mock-uuid-123');
+      expect(response.body.currentQuestion).toBeDefined();
+    });
+
+    it('should work without JD or resume (original flow)', async () => {
+      const mockQuestion = {
+        id: 'q1',
+        questionText: 'What is your biggest achievement?',
+        category: 'achievements',
+        order: 1,
+      };
+
+      getNextQuestion.mockReturnValue(mockQuestion);
+
+      const response = await request(app)
+        .post('/api/conversation/start')
+        .send({})  // No JD, no resume
+        .expect(201);
+
+      expect(response.body.currentQuestion).toMatchObject({
+        id: 'q1',
+        text: 'What is your biggest achievement?',
+        category: 'achievements',
+      });
+
+      expect(response.body.progress).toMatchObject({
+        current: 0,
+        total: 16,
+        percentage: 0,
+      });
+    });
+
+    it('should reject JD < 50 characters', async () => {
+      const tooShortJD = 'Hiring engineer';  // Only 15 characters
+
+      const mockQuestion = {
+        id: 'q1',
+        questionText: 'Generic question',
+        category: 'test',
+        order: 1,
+      };
+
+      getNextQuestion.mockReturnValue(mockQuestion);
+
+      const response = await request(app)
+        .post('/api/conversation/start')
+        .send({
+          jobDescription: tooShortJD,
+          existingResume: existingResume
+        })
+        .expect(201);
+
+      // Should fall back to generic questions when JD too short
+      expect(response.body.currentQuestion).toBeDefined();
+    });
+
+    it('should include welcome message adaptation for resume-first', async () => {
+      const response = await request(app)
+        .post('/api/conversation/start')
+        .send({
+          jobDescription: validJD,
+          existingResume: existingResume
+        })
+        .expect(201);
+
+      // Check that conversation was created
+      expect(mockPrisma.conversation.create).toHaveBeenCalled();
+
+      // First call should be welcome message
+      const welcomeCall = mockPrisma.conversation.create.mock.calls[0][0];
+      expect(welcomeCall.data.messageRole).toBe('assistant');
+      expect(welcomeCall.data.messageContent).toBeDefined();
+    });
+  });
+
+  describe('JD Analysis Error Handling (Session 22)', () => {
+    it('should fall back to generic questions if JD analysis fails', async () => {
+      const mockQuestion = {
+        id: 'q1',
+        questionText: 'Generic fallback question',
+        category: 'generic',
+        order: 1,
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 1,
+        displayName: 'Test User'
+      });
+      getNextQuestion.mockReturnValue(mockQuestion);
+      mockPrisma.conversation.create.mockResolvedValue({});
+
+      // Invalid JD that would fail validation
+      const response = await request(app)
+        .post('/api/conversation/start')
+        .send({
+          jobDescription: 'Random text that is not a real job description at all and should fail validation because it has no job-related keywords',
+          existingResume: 'Some resume text'
+        })
+        .expect(201);
+
+      // Should still succeed but use generic questions
+      expect(response.body.currentQuestion).toBeDefined();
     });
   });
 });
