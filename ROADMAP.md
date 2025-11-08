@@ -219,6 +219,19 @@ Result: Higher ATS match (85-95%), faster UX (5-8 min vs 10-15 min), better qual
 - Track resume upload/paste rates
 - Monitor Gemini token usage (may increase with resume analysis)
 
+**5. CRITICAL SECURITY FIXES (From Nov 6 Audit)**
+- **Priority:** MUST FIX before Phase 2 deployment
+- [ ] Implement Prisma singleton pattern (8 route files creating new PrismaClient = memory leak)
+- [ ] Add rate limiting to all API endpoints (prevent DDoS)
+- [ ] Implement CORS whitelist (currently allows all origins)
+- [ ] Add SQL injection protection (parameterized queries everywhere)
+- [ ] Remove console.log statements with sensitive data
+- [ ] Add CSP headers (prevent XSS attacks)
+- [ ] Implement request validation middleware (joi/zod)
+- [ ] Add API key rotation mechanism
+- **Reference:** docs/archive/historical/SECURITY_AUDIT.md (Nov 6, 2025)
+- **Impact:** Without these fixes, app is not production-safe for user data
+
 ### 📋 Key Architectural Decisions (Session 19)
 
 **Decision 0: Resume-First Gap Analysis Over Blind Questioning** ⭐ NEW - STRATEGIC PIVOT
