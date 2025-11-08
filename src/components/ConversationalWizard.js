@@ -11,11 +11,18 @@ import {
   StepLabel,
   CircularProgress,
   Alert,
-  Chip
+  Chip,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction
 } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { auth } from '../firebase/index.js';
 
 /**
@@ -34,6 +41,8 @@ function ConversationalWizard({ onComplete }) {
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [existingResume, setExistingResume] = useState(''); // NEW: Resume-first mode
+  const [uploadedFiles, setUploadedFiles] = useState([]); // NEW: Track uploaded resume files
+  const [uploadLoading, setUploadLoading] = useState(false); // NEW: Upload in progress
   const [progress, setProgress] = useState({ current: 0, total: 0, percentage: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -42,6 +51,60 @@ function ConversationalWizard({ onComplete }) {
   const [questionsType, setQuestionsType] = useState('generic');
 
   const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
+
+  // NEW: Handle resume file upload
+  const handleFileUpload = async (files) => {
+    if (!files || files.length === 0) return;
+
+    // Validate file count (max 5)
+    if (files.length > 5) {
+      setError('Maximum 5 resume files allowed');
+      return;
+    }
+
+    setUploadLoading(true);
+    setError(null);
+
+    try {
+      const token = await auth.currentUser.getIdToken();
+
+      // Create FormData and append files
+      const formData = new FormData();
+      Array.from(files).forEach(file => {
+        formData.append('resumes', file);
+      });
+
+      console.log(`📤 Uploading ${files.length} resume file(s)...`);
+
+      const response = await fetch(`${API_BASE}/api/resume/extract-text`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to extract text from resumes');
+      }
+
+      console.log(`✅ Extracted ${data.totalLength} characters from ${data.files.length} file(s)`);
+
+      // Set the extracted text in the resume textarea
+      setExistingResume(data.text);
+
+      // Track uploaded files
+      setUploadedFiles(data.files);
+
+    } catch (err) {
+      console.error('❌ Resume upload error:', err);
+      setError(err.message);
+    } finally {
+      setUploadLoading(false);
+    }
+  };
 
   // Step 1: Start conversation with JD (+ optional existing resume)
   const startConversation = async (jd, resume) => {
@@ -253,8 +316,95 @@ function ConversationalWizard({ onComplete }) {
           Existing Resume (Optional - Highly Recommended)
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          💡 Paste your current resume to skip redundant questions and save 50% of your time (5-8 min vs 10-15 min)
+          💡 Upload or paste your current resume to skip redundant questions and save 50% of your time (5-8 min vs 10-15 min)
         </Typography>
+
+        {/* File Upload Section */}
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 3,
+            mb: 2,
+            textAlign: 'center',
+            backgroundColor: uploadedFiles.length > 0 ? 'success.lighter' : 'grey.50',
+            border: '2px dashed',
+            borderColor: uploadedFiles.length > 0 ? 'success.main' : 'grey.300',
+            cursor: 'pointer',
+            '&:hover': {
+              backgroundColor: 'grey.100',
+              borderColor: 'primary.main'
+            }
+          }}
+          onClick={() => document.getElementById('resume-file-input').click()}
+        >
+          <input
+            id="resume-file-input"
+            type="file"
+            multiple
+            accept=".pdf,.docx,.doc,.txt"
+            style={{ display: 'none' }}
+            onChange={(e) => handleFileUpload(e.target.files)}
+            disabled={uploadLoading}
+          />
+
+          <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
+
+          <Typography variant="body1" gutterBottom>
+            {uploadLoading ? 'Extracting text from files...' : 'Click to upload or drag & drop'}
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary">
+            PDF, DOCX, DOC, or TXT (up to 5 files, 5MB each)
+          </Typography>
+
+          {uploadLoading && (
+            <Box sx={{ mt: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          )}
+        </Paper>
+
+        {/* Uploaded Files List */}
+        {uploadedFiles.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              📎 Uploaded Files:
+            </Typography>
+            <List dense>
+              {uploadedFiles.map((file, index) => (
+                <ListItem key={index}>
+                  <ListItemText
+                    primary={file.filename}
+                    secondary={`${file.length} characters extracted`}
+                  />
+                  <ListItemSecondaryAction>
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      onClick={() => {
+                        setUploadedFiles([]);
+                        setExistingResume('');
+                      }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        )}
+
+        {/* OR Divider */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ flex: 1, height: '1px', backgroundColor: 'grey.300' }} />
+          <Typography variant="body2" color="text.secondary" sx={{ mx: 2 }}>
+            OR
+          </Typography>
+          <Box sx={{ flex: 1, height: '1px', backgroundColor: 'grey.300' }} />
+        </Box>
+
+        {/* Text Paste Section */}
         <TextField
           fullWidth
           multiline
@@ -266,9 +416,10 @@ function ConversationalWizard({ onComplete }) {
           sx={{
             mb: 2,
             '& .MuiOutlinedInput-root': {
-              backgroundColor: existingResume ? 'success.lighter' : 'transparent'
+              backgroundColor: existingResume && !uploadedFiles.length ? 'success.lighter' : 'transparent'
             }
           }}
+          disabled={uploadLoading}
         />
       </Box>
 

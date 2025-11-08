@@ -1005,4 +1005,138 @@ router.get('/:id/download', verifyFirebaseToken, async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/resume/extract-text
+ * Extract text from uploaded resume files (PDF, DOCX, TXT)
+ * Supports up to 5 files for merging multiple resume versions
+ */
+const multer = require('multer');
+const { extractTextFromPdf } = require('../utils/pdf-parser');
+const { extractTextFromDocx } = require('../utils/docx-parser');
+const fs = require('fs');
+const path = require('path');
+
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit per file
+    files: 5 // Maximum 5 files
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+      'application/msword', // DOC
+      'text/plain' // TXT
+    ];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF, DOCX, DOC, and TXT files are allowed.'));
+    }
+  }
+});
+
+router.post('/extract-text', verifyFirebaseToken, upload.array('resumes', 5), async (req, res, next) => {
+  const tempFiles = [];
+
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        error: 'No files uploaded',
+        message: 'Please upload at least one resume file (PDF, DOCX, or TXT)'
+      });
+    }
+
+    console.log(`📄 Extracting text from ${req.files.length} resume file(s)...`);
+
+    const extractedTexts = [];
+
+    for (const file of req.files) {
+      let extractedText = '';
+
+      if (file.mimetype === 'text/plain') {
+        extractedText = file.buffer.toString('utf-8');
+      } else if (file.mimetype === 'application/pdf') {
+        const tempPath = path.join('/tmp', `resume-${Date.now()}-${file.originalname}`);
+        tempFiles.push(tempPath);
+        fs.writeFileSync(tempPath, file.buffer);
+        extractedText = await extractTextFromPdf(tempPath);
+      } else if (
+        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        file.mimetype === 'application/msword'
+      ) {
+        const tempPath = path.join('/tmp', `resume-${Date.now()}-${file.originalname}`);
+        tempFiles.push(tempPath);
+        fs.writeFileSync(tempPath, file.buffer);
+        extractedText = await extractTextFromDocx(tempPath);
+      }
+
+      if (extractedText && extractedText.trim().length > 0) {
+        extractedTexts.push({
+          filename: file.originalname,
+          text: extractedText.trim(),
+          length: extractedText.trim().length
+        });
+      }
+    }
+
+    // Cleanup temp files
+    tempFiles.forEach(filePath => {
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (err) {
+        console.error('Error deleting temp file:', err);
+      }
+    });
+
+    if (extractedTexts.length === 0) {
+      return res.status(400).json({
+        error: 'No text extracted',
+        message: 'Could not extract text from the uploaded files.'
+      });
+    }
+
+    // Merge all extracted texts if multiple files
+    const mergedText = extractedTexts.map((item, index) => {
+      if (extractedTexts.length > 1) {
+        return `\n\n=== Resume ${index + 1}: ${item.filename} ===\n\n${item.text}`;
+      }
+      return item.text;
+    }).join('\n\n');
+
+    console.log(`✅ Successfully extracted ${mergedText.length} characters from ${extractedTexts.length} file(s)`);
+
+    res.status(200).json({
+      success: true,
+      text: mergedText,
+      files: extractedTexts.map(item => ({
+        filename: item.filename,
+        length: item.length
+      })),
+      totalLength: mergedText.length,
+      message: `Successfully extracted text from ${extractedTexts.length} file(s)`
+    });
+
+  } catch (error) {
+    // Cleanup temp files on error
+    tempFiles.forEach(filePath => {
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (err) {
+        console.error('Error deleting temp file:', err);
+      }
+    });
+
+    console.error('❌ Resume text extraction error:', error);
+    next(error);
+  }
+});
+
 module.exports = router;
