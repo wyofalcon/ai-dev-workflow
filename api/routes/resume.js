@@ -1039,6 +1039,7 @@ const upload = multer({
   }
 });
 
+// Resume file upload endpoint - extracts text from PDF/DOCX/TXT files
 router.post('/extract-text', verifyFirebaseToken, upload.array('resumes', 5), async (req, res, next) => {
   const tempFiles = [];
 
