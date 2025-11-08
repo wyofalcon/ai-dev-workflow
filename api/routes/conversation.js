@@ -11,6 +11,7 @@ const {
   getProgress,
 } = require('../services/questionFramework');
 const { inferPersonality } = require('../services/personalityInference');
+const { inferPersonalityWithGemini } = require('../services/personalityInferenceGemini');
 const JobDescriptionAnalyzer = require('../services/jobDescriptionAnalyzer');
 const { v4: uuidv4 } = require('uuid');
 
@@ -477,27 +478,37 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
       });
     }
 
-    // Get conversation history
-    const history = await prisma.conversation.findMany({
+    // Get conversation history (NEW SCHEMA: messages as JSONB array)
+    const conversation = await prisma.conversation.findFirst({
       where: {
         userId: user.id,
         sessionId,
       },
-      orderBy: { messageOrder: 'asc' },
+      select: { id: true, messages: true },
     });
 
-    if (history.length === 0) {
+    if (!conversation) {
       return res.status(404).json({
         error: 'Session Not Found',
         message: 'Conversation session not found',
       });
     }
 
-    // Infer personality traits from conversation
-    const personality = inferPersonality(history);
+    const messages = conversation.messages || [];
+
+    if (messages.length === 0) {
+      return res.status(400).json({
+        error: 'Empty Conversation',
+        message: 'No messages found in conversation',
+      });
+    }
+
+    // Infer personality traits from conversation using Gemini
+    console.log('🧠 Starting Gemini-based personality inference...');
+    const personality = await inferPersonalityWithGemini(messages);
 
     // Calculate profile completeness based on answered questions
-    const userMessages = history.filter((msg) => msg.messageRole === 'user');
+    const userMessages = messages.filter((msg) => msg.role === 'user');
 
     // Check if this was a JD session
     const jdSession = jdSessions.get(sessionId);

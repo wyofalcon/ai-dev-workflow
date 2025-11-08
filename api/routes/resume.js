@@ -125,7 +125,7 @@ router.post('/generate',
       }
 
     // Extract input
-    const { resumeText, personalStories, jobDescription, selectedSections, targetCompany } = req.body;
+    const { resumeText, personalStories, jobDescription, selectedSections, targetCompany, sessionId } = req.body;
 
     if (!jobDescription || !selectedSections || selectedSections.length === 0) {
       return res.status(400).json({ error: 'Job description and sections required' });
@@ -133,7 +133,33 @@ router.post('/generate',
 
     const startTime = Date.now();
 
-    // Load or infer personality
+    // NEW: If sessionId provided, extract conversation answers from database
+    let conversationAnswers = personalStories; // Fallback to old way if no sessionId
+
+    if (sessionId) {
+      console.log(`📋 Loading conversation answers from sessionId: ${sessionId}`);
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          userId: userRecord.id,
+          sessionId
+        },
+        select: { messages: true }
+      });
+
+      if (conversation && conversation.messages) {
+        // Extract user answers and format as personal stories
+        conversationAnswers = conversation.messages
+          .filter(msg => msg.role === 'user')
+          .map((msg, idx) => `Q${idx + 1}: ${msg.content}`)
+          .join('\n\n');
+
+        console.log(`✅ Loaded ${conversation.messages.filter(m => m.role === 'user').length} answers from conversation`);
+      } else {
+        console.warn('⚠️ SessionId provided but no conversation found, using personalStories fallback');
+      }
+    }
+
+    // Load personality (should already exist from /conversation/complete)
     let personality = await prisma.personalityTraits.findUnique({
       where: { userId: userRecord.id },
       select: {
@@ -144,34 +170,23 @@ router.post('/generate',
         agreeableness: true,
         neuroticism: true,
         workStyle: true,
-        communicationStyle: true
+        leadershipStyle: true,
+        communicationStyle: true,
+        motivationType: true,
+        decisionMaking: true,
+        inferenceConfidence: true
       }
     });
 
-    if (!personality && personalStories) {
-      console.log('Inferring personality from stories...');
-      const inferredTraits = inferPersonality([{ messageRole: 'user', messageContent: personalStories }]);
-
-      // Only include fields that exist in database schema
-      const { openness, conscientiousness, extraversion, agreeableness, neuroticism, workStyle, communicationStyle } = inferredTraits;
-
-      personality = await prisma.personalityTraits.create({
-        data: {
-          userId: userRecord.id,
-          openness,
-          conscientiousness,
-          extraversion,
-          agreeableness,
-          neuroticism,
-          workStyle,
-          communicationStyle
-        }
-      });
+    if (!personality) {
+      console.warn('⚠️ No personality profile found - resume will lack personality framing');
     }
 
-    // Build prompt
+    // Build prompt (use conversation answers if available)
     const prompt = buildResumePrompt({
-      resumeText, personalStories, jobDescription,
+      resumeText,
+      personalStories: conversationAnswers, // Now uses conversation answers if sessionId provided
+      jobDescription,
       selectedSections: Array.isArray(selectedSections) ? selectedSections : selectedSections.split(','),
       personality
     });
