@@ -1,8 +1,8 @@
 # Use Node.js 20 LTS Alpine for smaller image size
 FROM node:20-alpine
 
-# Cache bust: 2025-11-07-04:12:00 - Prisma schema fix deployment
-ARG CACHEBUST=1
+# Cache bust: 2025-11-08-23:35:00 - Resume upload endpoint deployment
+ARG CACHEBUST=2
 
 # Set working directory
 WORKDIR /app
