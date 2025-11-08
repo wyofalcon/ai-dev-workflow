@@ -33,6 +33,7 @@ function ConversationalWizard({ onComplete }) {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [jobDescription, setJobDescription] = useState('');
+  const [existingResume, setExistingResume] = useState(''); // NEW: Resume-first mode
   const [progress, setProgress] = useState({ current: 0, total: 0, percentage: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -42,16 +43,19 @@ function ConversationalWizard({ onComplete }) {
 
   const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
 
-  // Step 1: Start conversation with JD
-  const startConversation = async (jd) => {
+  // Step 1: Start conversation with JD (+ optional existing resume)
+  const startConversation = async (jd, resume) => {
     setLoading(true);
     setError(null);
 
     try {
       const token = await auth.currentUser.getIdToken();
 
+      const hasResume = resume && resume.trim().length >= 100;
+
       console.log('🚀 Starting conversation with JD...');
       console.log('JD Length:', jd.length);
+      console.log('Resume provided:', hasResume ? 'Yes (gap analysis mode)' : 'No');
 
       const response = await fetch(`${API_BASE}/api/conversation/start`, {
         method: 'POST',
@@ -60,7 +64,8 @@ function ConversationalWizard({ onComplete }) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          jobDescription: jd  // NEW: Pass JD to conversation start
+          jobDescription: jd,
+          existingResume: hasResume ? resume : null  // NEW: Pass resume for gap analysis
         })
       });
 
@@ -215,13 +220,13 @@ function ConversationalWizard({ onComplete }) {
   // Handle next button
   const handleNext = async () => {
     if (!sessionId) {
-      // First step: Start conversation with JD
+      // First step: Start conversation with JD (+ optional resume)
       if (!currentAnswer.trim() || currentAnswer.trim().length < 50) {
         setError('Please paste a job description (minimum 50 characters)');
         return;
       }
       setJobDescription(currentAnswer);
-      await startConversation(currentAnswer);
+      await startConversation(currentAnswer, existingResume); // Pass resume for gap analysis
     } else {
       // Subsequent steps: Submit answer
       if (!currentAnswer.trim() || currentAnswer.trim().split(/\s+/).length < 10) {
@@ -236,26 +241,63 @@ function ConversationalWizard({ onComplete }) {
   const renderJDInput = () => (
     <Box>
       <Typography variant="h5" gutterBottom>
-        Step 1: Paste the Job Description
+        Step 1: Job Description & Resume (Optional)
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        I'll analyze the job requirements and ask you targeted questions about your experience.
+        I'll analyze the job requirements and ask you targeted questions. If you have an existing resume, I'll identify gaps and only ask about what's missing!
       </Typography>
 
-      <TextField
-        fullWidth
-        multiline
-        rows={12}
-        value={currentAnswer}
-        onChange={(e) => setCurrentAnswer(e.target.value)}
-        placeholder="Paste the full job description here...&#10;&#10;Example:&#10;Software Engineer - Full Stack&#10;Requirements:&#10;- 3+ years experience with React and Node.js&#10;- Strong problem-solving skills&#10;- Experience with AWS deployment&#10;..."
-        variant="outlined"
-        sx={{ mb: 2 }}
-      />
+      {/* NEW: Existing Resume Input (Optional) */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
+          Existing Resume (Optional - Highly Recommended)
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          💡 Paste your current resume to skip redundant questions and save 50% of your time (5-8 min vs 10-15 min)
+        </Typography>
+        <TextField
+          fullWidth
+          multiline
+          rows={6}
+          value={existingResume}
+          onChange={(e) => setExistingResume(e.target.value)}
+          placeholder="Paste your existing resume here (optional)...&#10;&#10;I'll keep what's good, enhance what's weak, and only ask about gaps!"
+          variant="outlined"
+          sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: existingResume ? 'success.lighter' : 'transparent'
+            }
+          }}
+        />
+      </Box>
+
+      {/* Job Description Input */}
+      <Box>
+        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
+          Job Description (Required)
+        </Typography>
+        <TextField
+          fullWidth
+          multiline
+          rows={8}
+          value={currentAnswer}
+          onChange={(e) => setCurrentAnswer(e.target.value)}
+          placeholder="Paste the full job description here...&#10;&#10;Example:&#10;Software Engineer - Full Stack&#10;Requirements:&#10;- 3+ years experience with React and Node.js&#10;- Strong problem-solving skills&#10;- Experience with AWS deployment&#10;..."
+          variant="outlined"
+          sx={{ mb: 2 }}
+        />
+      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
+        </Alert>
+      )}
+
+      {existingResume && existingResume.length >= 100 && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          ✅ Resume detected! I'll analyze gaps and ask 2-5 targeted questions (faster than the usual 5 questions)
         </Alert>
       )}
 
@@ -267,7 +309,7 @@ function ConversationalWizard({ onComplete }) {
         endIcon={loading ? <CircularProgress size={20} /> : <ArrowForwardIcon />}
         fullWidth
       >
-        {loading ? 'Analyzing Job Description...' : 'Analyze & Continue'}
+        {loading ? 'Analyzing Job Description & Resume...' : 'Analyze & Continue'}
       </Button>
     </Box>
   );
