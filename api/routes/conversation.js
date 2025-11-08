@@ -255,59 +255,51 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
       }
     ];
 
-    // Check if there's a follow-up question
+    // Get next question (removed followUp logic that was causing duplicates)
     let nextMessageContent = null;
     let nextQuestionData = null;
 
-    if (currentQuestion?.followUp) {
-      // Send follow-up question
-      nextMessageContent = currentQuestion.followUp;
-      nextQuestionData = currentQuestion; // Same question, just follow-up
-    } else {
-      // Get next question
-      if (isJDSession) {
-        const nextIndex = currentQuestionIndex + 1;
-        jdSession.currentQuestionIndex = nextIndex;
+    if (isJDSession) {
+      const nextIndex = currentQuestionIndex + 1;
+      jdSession.currentQuestionIndex = nextIndex;
 
-        if (nextIndex < jdSession.questions.length) {
-          const nextQ = jdSession.questions[nextIndex];
-          nextQuestionData = {
-            id: nextQ.id,
-            questionText: nextQ.question,
-            category: nextQ.type,
-            order: nextIndex + 1,
-            purpose: nextQ.purpose,
-            keywords: nextQ.keywords,
-            followUp: nextQ.followUp
-          };
-          nextMessageContent = nextQ.question;
-        } else {
-          // All JD questions complete!
-          nextMessageContent = `Amazing! 🎉 We've completed your profile for the **${jdSession.analysis.jobTitle}** position.
+      if (nextIndex < jdSession.questions.length) {
+        const nextQ = jdSession.questions[nextIndex];
+        nextQuestionData = {
+          id: nextQ.id,
+          questionText: nextQ.question,
+          category: nextQ.type,
+          order: nextIndex + 1,
+          purpose: nextQ.purpose,
+          keywords: nextQ.keywords
+        };
+        nextMessageContent = nextQ.question;
+      } else {
+        // All JD questions complete!
+        nextMessageContent = `Amazing! 🎉 We've completed your profile for the **${jdSession.analysis.jobTitle}** position.
 
 I now have a great understanding of how your experience aligns with this role.
 
 Your profile is being saved. Next, you'll be able to generate a tailored resume for this specific job!`;
-          nextQuestionData = null;
+        nextQuestionData = null;
 
-          // Clean up session
-          jdSessions.delete(sessionId);
-        }
+        // Clean up session
+        jdSessions.delete(sessionId);
+      }
+    } else {
+      const nextQuestion = getNextQuestion(currentQuestionIndex);
+
+      if (nextQuestion) {
+        nextMessageContent = nextQuestion.questionText;
+        nextQuestionData = nextQuestion;
       } else {
-        const nextQuestion = getNextQuestion(currentQuestionIndex);
-
-        if (nextQuestion) {
-          nextMessageContent = nextQuestion.questionText;
-          nextQuestionData = nextQuestion;
-        } else {
-          // All questions complete!
-          nextMessageContent = `Amazing! 🎉 We've completed your profile.
+        // All questions complete!
+        nextMessageContent = `Amazing! 🎉 We've completed your profile.
 
 I now have a great understanding of your experience, achievements, and work style.
 
 Your profile is being saved. Next, you'll be able to generate tailored resumes for specific job openings!`;
-          nextQuestionData = null;
-        }
+        nextQuestionData = null;
       }
     }
 
