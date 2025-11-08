@@ -1,0 +1,25 @@
+steps:
+  # Build the frontend Docker image with staging API URL
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/cvstomize-frontend-staging:latest'
+      - '--build-arg'
+      - 'REACT_APP_API_URL=https://cvstomize-api-staging-j7hztys6ba-uc.a.run.app'
+      - '-f'
+      - 'Dockerfile.frontend'
+      - '.'
+
+  # Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/cvstomize-frontend-staging:latest'
+
+images:
+  - 'gcr.io/$PROJECT_ID/cvstomize-frontend-staging:latest'
+
+timeout: '900s'  # 15 minutes
+options:
+  machineType: 'N1_HIGHCPU_8'

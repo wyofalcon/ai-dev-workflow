@@ -18,10 +18,10 @@
 **Backend (API):** https://cvstomize-api-351889420459.us-central1.run.app
 **Status:** ✅ STABLE (cvstomize-api-00092-prk)
 
-### Staging (Session 20 - New!)
+### Staging (Session 21 - Complete!)
+**Frontend (GUI):** https://cvstomize-frontend-staging-1036528578375.us-central1.run.app
 **Backend (API):** https://cvstomize-api-staging-1036528578375.us-central1.run.app
-**Status:** ✅ HEALTHY (cvstomize-api-staging-00007-8bd)
-**Frontend:** ⏳ Pending deployment (Session 21)
+**Status:** ✅ FULLY OPERATIONAL - Ready for resume-first implementation
 
 ---
 
@@ -38,12 +38,14 @@
 
 ---
 
-## 📊 Current Status (Session 20 - November 8, 2025)
+## 📊 Current Status (Session 21 - November 8, 2025)
 
-### ✅ STAGING ENVIRONMENT DEPLOYED (Session 20)
+### ✅ STAGING ENVIRONMENT COMPLETE (Session 20-21)
 - **Separate GCP Project:** cvstomize-staging (complete isolation)
-- **Staging API:** cvstomize-api-staging-00007-8bd (HEALTHY)
+- **Staging Frontend:** cvstomize-frontend-staging-00001-6pr (DEPLOYED ✅)
+- **Staging API:** cvstomize-api-staging-00008-hc7 (HEALTHY ✅)
 - **Staging Database:** cvstomize-db-staging (all 12 tables)
+- **CORS Configured:** Frontend ↔ Backend communication enabled
 - **Environment-Aware Code:** Automatically detects staging vs production
 - **Ready for:** Resume-first gap analysis implementation
 
@@ -148,13 +150,14 @@ cd api
 
 ---
 
-## 🎯 Next Steps (Session 21)
+## 🎯 Next Steps (Session 22)
 
 1. ✅ **Staging environment deployed** (Session 20 - Complete)
-2. Deploy frontend to staging
-3. Test end-to-end conversation flow in staging
-4. Begin resume-first gap analysis implementation (backend)
-5. Test resume-first thoroughly in staging before production
+2. ✅ **Frontend deployed to staging** (Session 21 - Complete)
+3. ✅ **CORS configured** (Session 21 - Complete)
+4. Test end-to-end conversation flow in staging (browser testing)
+5. Begin resume-first gap analysis implementation (backend)
+6. Test resume-first thoroughly in staging before production
 
 See [ROADMAP.md](ROADMAP.md) for complete roadmap and [STAGING_ENVIRONMENT_SETUP.md](STAGING_ENVIRONMENT_SETUP.md) for staging details.
 
