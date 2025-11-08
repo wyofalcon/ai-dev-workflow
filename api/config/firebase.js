@@ -13,15 +13,20 @@ async function initializeFromSecretManager() {
   try {
     const client = new SecretManagerServiceClient();
 
+    // Detect current GCP project (staging vs production)
+    // Use K_SERVICE to determine environment, or default to production
+    const isStaging = process.env.NODE_ENV === 'staging';
+    const currentGcpProject = isStaging ? 'cvstomize-staging' : 'cvstomize';
+
     // Get project ID from Secret Manager first
     const [projectIdResponse] = await client.accessSecretVersion({
-      name: 'projects/351889420459/secrets/cvstomize-project-id/versions/latest',
+      name: `projects/${currentGcpProject}/secrets/cvstomize-project-id/versions/latest`,
     });
     const projectId = projectIdResponse.payload.data.toString('utf8').trim();
 
-    // Get service account key from Secret Manager
+    // Get service account key from Secret Manager (stored in the same GCP project as DATABASE_URL)
     const [serviceAccountResponse] = await client.accessSecretVersion({
-      name: `projects/${projectId}/secrets/cvstomize-service-account-key/versions/latest`,
+      name: `projects/${currentGcpProject}/secrets/cvstomize-service-account-key/versions/latest`,
     });
     const serviceAccountKey = JSON.parse(
       serviceAccountResponse.payload.data.toString('utf8')
