@@ -16,18 +16,34 @@ const PORT = process.env.PORT || 3001;
 // Security middleware
 app.use(helmet());
 
-// CORS configuration
+// CORS configuration - Allow all environments (production, staging, development)
+const allowedOrigins = [
+  // Production
+  'https://cvstomize-frontend-351889420459.us-central1.run.app',
+  'https://cvstomize.web.app',
+  'https://cvstomize.firebaseapp.com',
+  // Staging
+  'https://cvstomize-frontend-staging-j7hztys6ba-uc.a.run.app',
+  'https://cvstomize-api-staging-j7hztys6ba-uc.a.run.app',
+  // Development
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3010',
+  'http://localhost:3011'
+];
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? [
-        'https://cvstomize-frontend-351889420459.us-central1.run.app',
-        'https://cvstomize.web.app',
-        'https://cvstomize.firebaseapp.com',
-        'http://localhost:3000',
-        'http://localhost:3010',
-        'http://localhost:3011'
-      ]
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3010', 'http://localhost:3011'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200,
 };
