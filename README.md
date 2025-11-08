@@ -11,12 +11,17 @@
 
 ---
 
-## 🌐 Production URLs
+## 🌐 Environment URLs
 
+### Production
 **Frontend (GUI):** https://cvstomize-frontend-351889420459.us-central1.run.app
 **Backend (API):** https://cvstomize-api-351889420459.us-central1.run.app
+**Status:** ✅ STABLE (cvstomize-api-00092-prk)
 
-**Status:** ✅ Production RESTORED | ⏳ JD fix pending deployment | 🔒 Enterprise-grade security
+### Staging (Session 20 - New!)
+**Backend (API):** https://cvstomize-api-staging-1036528578375.us-central1.run.app
+**Status:** ✅ HEALTHY (cvstomize-api-staging-00007-8bd)
+**Frontend:** ⏳ Pending deployment (Session 21)
 
 ---
 
@@ -26,28 +31,36 @@
 
 **Essential Docs:**
 - [CREDENTIALS_SECURE.md](CREDENTIALS_SECURE.md) - Secure credential access (NO passwords!)
-- [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Daily operations & commands
-- [WORLD_CLASS_SETUP.md](WORLD_CLASS_SETUP.md) - Infrastructure setup guide
+- [STAGING_ENVIRONMENT_SETUP.md](STAGING_ENVIRONMENT_SETUP.md) - Staging infrastructure (Session 20)
+- [RESUME_FIRST_PROMPT.md](RESUME_FIRST_PROMPT.md) - Resume-first gap analysis prompt
 
 **Archived Docs:** [docs/archive/](docs/archive/) - Session summaries & deployment records
 
 ---
 
-## 📊 Current Status (Sessions 18-19 - November 7, 2025)
+## 📊 Current Status (Session 20 - November 8, 2025)
+
+### ✅ STAGING ENVIRONMENT DEPLOYED (Session 20)
+- **Separate GCP Project:** cvstomize-staging (complete isolation)
+- **Staging API:** cvstomize-api-staging-00007-8bd (HEALTHY)
+- **Staging Database:** cvstomize-db-staging (all 12 tables)
+- **Environment-Aware Code:** Automatically detects staging vs production
+- **Ready for:** Resume-first gap analysis implementation
 
 ### ✅ WORLD-CLASS INFRASTRUCTURE
 - **Secret Management:** All credentials in GCP Secret Manager with CLI tool
 - **CI/CD Pipeline:** Automated deployments (GitHub Actions + Cloud Build)
 - **Security:** IAM access control, audit logging, password rotation
 - **Deployment Time:** 5 minutes (66% faster than manual)
-- **Environment Isolation:** Dev/Staging/Production ready
+- **Environment Isolation:** ✅ Production + Staging (separate projects)
 
-### 🎯 Features Live
-1. **11-Question Conversational Flow** - AI personality inference
-2. **Personality-Based Resume Generation** - Dynamic framing
-3. **3 Professional PDF Templates** - Classic, Modern, Minimal
-4. **ATS Optimization** - 80%+ keyword coverage
-5. **Outcome Tracking** - Interview/offer data collection (API ready)
+### 🎯 Features Live (Production)
+1. **JD-Specific Questions** - Gemini generates 5 custom questions per job
+2. **Gemini-Powered Personality Inference** - AI-based Big 5 analysis
+3. **Resume Generation** - Pulls conversation answers + personality
+4. **3 Professional PDF Templates** - Classic, Modern, Minimal
+5. **ATS Optimization** - 80%+ keyword coverage
+6. **Outcome Tracking** - Interview/offer data collection (API ready)
 
 ---
 
@@ -135,15 +148,15 @@ cd api
 
 ---
 
-## 🎯 Next Steps (Session 18)
+## 🎯 Next Steps (Session 21)
 
-1. Create staging/dev database environments
-2. Test CI/CD pipeline (push to dev branch)
-3. Set up Sentry error tracking
-4. End-to-end production testing
-5. Frontend Phase 7 UI (outcome tracking)
+1. ✅ **Staging environment deployed** (Session 20 - Complete)
+2. Deploy frontend to staging
+3. Test end-to-end conversation flow in staging
+4. Begin resume-first gap analysis implementation (backend)
+5. Test resume-first thoroughly in staging before production
 
-See [ROADMAP.md](ROADMAP.md) for complete roadmap.
+See [ROADMAP.md](ROADMAP.md) for complete roadmap and [STAGING_ENVIRONMENT_SETUP.md](STAGING_ENVIRONMENT_SETUP.md) for staging details.
 
 ---
 
@@ -176,6 +189,6 @@ See [ROADMAP.md](ROADMAP.md) for complete roadmap.
 
 ---
 
-**Last Updated:** February 2, 2025
-**Session:** 17 (World-Class Infrastructure Complete)
-**Status:** 🌟 WORLD-CLASS PRODUCTION
+**Last Updated:** November 8, 2025
+**Session:** 20 (Staging Environment Complete)
+**Status:** 🌟 PRODUCTION + STAGING READY
