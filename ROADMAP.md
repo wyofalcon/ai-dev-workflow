@@ -1,14 +1,59 @@
 # 🚀 CVstomize v2.0 - Complete Roadmap
 
-**Last Updated:** 2025-11-08 (Session 21 - Staging Frontend Complete)
+**Last Updated:** 2025-11-08 (Session 23 - Testing Infrastructure Complete)
 **Branch:** dev
-**Status:** ✅ STAGING FULLY OPERATIONAL - Ready for Resume-First Implementation
-**Production:** Frontend + API (100% traffic, stable)
-**Staging:** Frontend + API (100% traffic, CORS configured) ✅ SESSION 21
+**Status:** ✅ RESUME-FIRST IMPLEMENTED & TESTED - Ready for Manual Validation
+**Production:** Frontend + API (stable, awaiting resume-first deployment)
+**Staging:** Frontend + API + Resume-First Feature (deployed, needs manual testing)
+**Testing:** 289 tests, 249 passing (86%), 23.66% coverage
 
 ---
 
 ## 📍 CURRENT STATUS & IMMEDIATE NEXT STEPS
+
+### ✅ SESSION 22 & 23 COMPLETED (Resume-First Implementation + Testing)
+
+**SESSION 22: Resume-First Feature Implemented ✅**
+- ✅ Backend accepts `existingResume` parameter (jobDescriptionAnalyzer.js)
+- ✅ Gap analysis generates 2-5 targeted questions (not always 5)
+- ✅ HYBRID resume generation (KEEP + ENHANCE + FILL)
+- ✅ Frontend accepts resume input (ConversationalWizard.js)
+- ✅ Deployed to staging and tested
+- ✅ Backwards compatible (no resume = 5 questions as before)
+
+**SESSION 23: Testing Infrastructure Refactored ✅**
+- ✅ Fixed supertest dependency issue (switched npm → pnpm)
+- ✅ Consolidated test directories (__tests__/ only)
+- ✅ Added 15 resume-first tests (7 unit + 8 integration)
+- ✅ Integration tests now running (289 tests, 249 passing)
+- ✅ Coverage: 23.66% (up from 14.01%)
+  - conversation.js: 73.29% (was 0%)
+  - jobDescriptionAnalyzer.js: 89.24%
+  - 5 services at 100% coverage
+- ✅ Manual staging test guide created
+- **Next:** Execute manual browser testing before production deployment
+
+### 🎯 IMMEDIATE NEXT STEPS (Session 24)
+
+1. **Execute Manual Testing** - Use [MANUAL_STAGING_TEST_GUIDE.md](./MANUAL_STAGING_TEST_GUIDE.md)
+   - Test resume-first flow in staging browser
+   - Validate 2-5 targeted questions
+   - Verify HYBRID resume output
+   - Check 85-95% ATS scores
+
+2. **Production Deployment** (if manual tests pass)
+   - Deploy backend with resume-first to production
+   - Deploy frontend with resume input to production
+   - Monitor error logs and user feedback
+
+3. **Fix Integration Test Timeouts**
+   - Debug async cleanup issues
+   - Get all 289 tests passing (currently 249/289)
+
+4. **Increase Coverage to 50%+**
+   - Add resume.js integration tests
+   - Add auth.js tests
+   - Target: 50% overall coverage
 
 ### ✅ What's Working (Session 19 Achievements)
 
@@ -81,70 +126,57 @@ Result: Higher ATS match (85-95%), faster UX (5-8 min vs 10-15 min), better qual
 
 ### 📋 RESUME-FIRST IMPLEMENTATION PLAN
 
-**PHASE 1: Backend Foundation (Session 20 - Week 1)**
+**PHASE 1: Backend Foundation ✅ COMPLETE (Session 22)**
 
-**Step 1.1: Update jobDescriptionAnalyzer.js**
-- [ ] Add `existingResume` parameter to `analyze()` method
-- [ ] Implement new prompt with gap analysis (see RESUME_FIRST_PROMPT.md)
-- [ ] Return `resumeGapAnalysis` section in response
-- [ ] Preserve all existing JSON structure (backwards compatible)
-- **Files:** api/services/jobDescriptionAnalyzer.js
-- **Lines:** ~48-200
-- **Test:** Unit test with resume vs without
+**Step 1.1: Update jobDescriptionAnalyzer.js ✅**
+- ✅ Add `existingResume` parameter to `analyze()` method
+- ✅ Implement new prompt with gap analysis
+- ✅ Return `resumeGapAnalysis` section in response
+- ✅ Preserve all existing JSON structure (backwards compatible)
+- ✅ **Coverage:** 89.24% with 7 new unit tests
 
-**Step 1.2: Update Conversation Start Endpoint**
-- [ ] Add optional `existingResume` parameter to POST /conversation/start
-- [ ] Pass to `JobDescriptionAnalyzer.analyze(jd, existingResume)`
-- [ ] Store resume content in jdSessions Map (for reference during answers)
-- [ ] Adapt question count based on `resumeGapAnalysis.questionCount`
-- **Files:** api/routes/conversation.js
-- **Lines:** ~27-171
-- **Test:** API test with/without resume parameter
+**Step 1.2: Update Conversation Start Endpoint ✅**
+- ✅ Add optional `existingResume` parameter to POST /conversation/start
+- ✅ Pass to `JobDescriptionAnalyzer.analyze(jd, existingResume)`
+- ✅ Store resume content in jdSessions Map
+- ✅ Adapt question count (2-5 based on gaps)
+- ✅ **Coverage:** 73.29% with integration tests
 
-**Step 1.3: Enhance Resume Generation**
-- [ ] Update `buildResumePrompt()` to include gap analysis strategy
-- [ ] Add instructions to KEEP strong existing content
-- [ ] Add instructions to ENHANCE weak sections with conversation answers
-- [ ] Add instructions to FILL gaps with new content
-- **Files:** api/routes/resume.js
-- **Lines:** ~14-96
-- **Test:** Compare output with vs without existing resume
+**Step 1.3: Enhance Resume Generation ✅**
+- ✅ Update `buildResumePrompt()` with gap analysis strategy
+- ✅ Add KEEP strong existing content instructions
+- ✅ Add ENHANCE weak sections instructions
+- ✅ Add FILL gaps instructions
+- ✅ Load gap analysis from jdSessions
 
-**Step 1.4: Deploy & Test Backend**
-- [ ] Deploy to staging environment (if ready) or dev
-- [ ] Test with General Laborer JD + sample resume
-- [ ] Verify gap analysis identifies correct weaknesses
-- [ ] Verify questions are targeted, not redundant
-- [ ] Verify final resume is hybrid (existing + enhanced)
+**Step 1.4: Deploy & Test Backend ✅**
+- ✅ Deployed to staging (revision 00009-z28)
+- ✅ Health checks passing
+- ⚠️ Manual browser testing pending
 
-**PHASE 2: Frontend Integration (Session 20 - Week 2)**
+**PHASE 2: Frontend Integration ✅ COMPLETE (Session 22)**
 
-**Step 2.1: Add Resume Input Field**
-- [ ] Add textarea for resume paste in ConversationalWizard.js
-- [ ] Show BEFORE "Analyze & Continue" button
-- [ ] Make optional with clear label: "Have a resume? (Optional - helps us ask better questions)"
-- [ ] Character limit: 10,000 chars (reasonable resume length)
-- **Files:** src/components/ConversationalWizard.js
-- **Lines:** ~232-269 (renderJDInput section)
+**Step 2.1: Add Resume Input Field ✅**
+- ✅ Added textarea for resume paste in ConversationalWizard.js
+- ✅ Shows BEFORE job description input
+- ✅ Optional with clear label
+- ✅ Success alert when resume detected (>100 chars)
 
-**Step 2.2: Update API Call**
-- [ ] Pass `existingResume` to POST /conversation/start
-- [ ] Handle response with fewer questions (2-5 instead of always 5)
-- [ ] Update progress bar calculation (dynamic total)
-- **Files:** src/components/ConversationalWizard.js
-- **Lines:** ~46-93 (startConversation function)
+**Step 2.2: Update API Call ✅**
+- ✅ Pass `existingResume` to POST /conversation/start
+- ✅ Handle dynamic question count (2-5)
+- ✅ Progress bar adapts to actual question count
 
-**Step 2.3: UX Enhancements**
-- [ ] Show resume gap summary after analysis (optional nice-to-have)
-- [ ] "We found X gaps in your resume - let's fill them!"
-- [ ] Progress indicator adjusts to question count
-- **Files:** src/components/ConversationalWizard.js
+**Step 2.3: UX Enhancements ✅**
+- ✅ Resume detection alert ("✅ Resume detected!")
+- ✅ Adaptive welcome messages
+- ✅ Progress indicator adjusts automatically
 
-**Step 2.4: Deploy & User Test**
-- [ ] Deploy frontend to Cloud Run
-- [ ] A/B test: Resume-first vs current flow
-- [ ] Measure: Completion time, question count, user satisfaction
-- [ ] Collect feedback on final resume quality
+**Step 2.4: Deploy & User Test ⚠️ IN PROGRESS**
+- ✅ Deployed frontend to staging (revision 00002-6g8)
+- ⚠️ Manual browser testing pending
+- ⚠️ A/B testing not yet configured
+- ⚠️ User feedback not yet collected
 
 **PHASE 3: File Upload Support (Session 21 - Week 3)**
 
