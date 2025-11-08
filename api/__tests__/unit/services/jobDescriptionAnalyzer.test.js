@@ -46,7 +46,7 @@ const mockGeminiService = {
   }))
 };
 
-const JobDescriptionAnalyzer = require('../services/jobDescriptionAnalyzer');
+const JobDescriptionAnalyzer = require('../../../services/jobDescriptionAnalyzer');
 
 describe('Job Description Analyzer Service', () => {
   let analyzer;
@@ -283,6 +283,89 @@ describe('Job Description Analyzer Service', () => {
       const question = analyzer.getCultureFitQuestion(cultural, []);
       expect(question.followUp).toBeDefined();
       expect(question.followUp.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ========================================================================
+  // RESUME-FIRST GAP ANALYSIS TESTS (Session 22)
+  // ========================================================================
+  describe('Resume-First Gap Analysis (Session 22)', () => {
+    const validJD = 'Senior Full-Stack Engineer with 5+ years React/Node.js, AWS deployment experience required';
+    const juniorResume = `John Smith
+Software Engineer
+3 years experience with JavaScript
+Built web features
+Worked with team on various projects`;
+
+    describe('analyze() with existingResume parameter', () => {
+      test('should accept existingResume as second parameter', async () => {
+        const result = await analyzer.analyze(validJD, juniorResume);
+
+        expect(result.hasResume).toBe(true);
+        expect(result.existingResume).toBe('provided');
+      });
+
+      test('should return resumeGapAnalysis section when resume provided', async () => {
+        const result = await analyzer.analyze(validJD, juniorResume);
+
+        const gapAnalysis = result.analysis.resumeGapAnalysis;
+        expect(gapAnalysis).toBeDefined();
+        expect(gapAnalysis.strengths).toBeInstanceOf(Array);
+        expect(gapAnalysis.weaknesses).toBeInstanceOf(Array);
+        expect(gapAnalysis.missingContent).toBeInstanceOf(Array);
+        expect(gapAnalysis.atsMatchScore).toBeGreaterThanOrEqual(0);
+        expect(gapAnalysis.atsMatchScore).toBeLessThanOrEqual(100);
+        expect(gapAnalysis.questionCount).toBeGreaterThanOrEqual(2);
+        expect(gapAnalysis.questionCount).toBeLessThanOrEqual(5);
+      });
+
+      test('should generate 2-5 questions when resume has gaps', async () => {
+        const result = await analyzer.analyze(validJD, juniorResume);
+
+        expect(result.questions.length).toBeGreaterThanOrEqual(2);
+        expect(result.questions.length).toBeLessThanOrEqual(5);
+        expect(result.generatedBy).toBe('gemini');
+      });
+
+      test('gap questions should have gapType field', async () => {
+        const result = await analyzer.analyze(validJD, juniorResume);
+
+        result.questions.forEach(question => {
+          expect(question.gapType).toBeDefined();
+          expect(['missing', 'weak', 'unquantified', 'comprehensive']).toContain(question.gapType);
+        });
+      });
+
+      test('should treat resume < 100 chars as no resume', async () => {
+        const tooShort = 'John Smith';  // < 100 characters
+
+        const result = await analyzer.analyze(validJD, tooShort);
+
+        // Should fallback to 5 questions like no resume
+        expect(result.questions.length).toBe(5);
+        expect(result.hasResume).toBe(false);
+      });
+    });
+
+    describe('analyze() without resume (backwards compatibility)', () => {
+      test('should generate exactly 5 comprehensive questions', async () => {
+        const result = await analyzer.analyze(validJD);  // No resume parameter
+
+        expect(result.questions.length).toBe(5);
+        expect(result.hasResume).toBe(false);
+        expect(result.analysis.resumeGapAnalysis.strengths).toEqual([]);
+        expect(result.analysis.resumeGapAnalysis.weaknesses).toEqual([]);
+      });
+
+      test('should work exactly like before Session 22', async () => {
+        const oldStyleResult = await analyzer.analyze(validJD);
+
+        // Should have same structure as before
+        expect(oldStyleResult.jobDescription).toBe(validJD);
+        expect(oldStyleResult.analysis).toBeDefined();
+        expect(oldStyleResult.questions).toHaveLength(5);
+        expect(oldStyleResult.analyzedAt).toBeDefined();
+      });
     });
   });
 });

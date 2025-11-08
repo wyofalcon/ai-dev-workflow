@@ -5,7 +5,7 @@ const {
   determineLeadershipStyle,
   determineCommunicationStyle,
   determineMotivationType,
-} = require('../services/personalityInference');
+} = require('../../../services/personalityInference');
 
 describe('Personality Inference Service', () => {
   describe('calculateTraitScore', () => {

@@ -5,7 +5,7 @@ const {
   getQuestionById,
   getTotalQuestions,
   getProgress,
-} = require('../services/questionFramework');
+} = require('../../../services/questionFramework');
 
 describe('Question Framework', () => {
   describe('QUESTION_CATEGORIES', () => {

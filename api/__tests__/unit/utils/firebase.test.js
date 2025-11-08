@@ -39,7 +39,7 @@ jest.mock('@google-cloud/secret-manager', () => ({
 
 // NOW require the modules that depend on mocks
 const admin = require('firebase-admin');
-const { initializeFirebase, getFirebaseAdmin } = require('../config/firebase');
+const { initializeFirebase, getFirebaseAdmin } = require('../../../config/firebase');
 
 describe('Firebase Admin SDK Initialization', () => {
   let originalEnv;

@@ -32,15 +32,15 @@ jest.mock('../services/personalityInference');
 jest.mock('uuid', () => ({ v4: () => 'mock-uuid-123' }));
 
 // NOW require the modules that depend on mocks
-const conversationRouter = require('../routes/conversation');
-const { verifyFirebaseToken } = require('../middleware/authMiddleware');
+const conversationRouter = require('../../routes/conversation');
+const { verifyFirebaseToken } = require('../../../middleware/authMiddleware');
 const {
   getNextQuestion,
   getQuestionById,
   getTotalQuestions,
   getProgress,
-} = require('../services/questionFramework');
-const { inferPersonality } = require('../services/personalityInference');
+} = require('../../services/questionFramework');
+const { inferPersonality } = require('../../services/personalityInference');
 
 // Create Express app for testing
 const app = express();

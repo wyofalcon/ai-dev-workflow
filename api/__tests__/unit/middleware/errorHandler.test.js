@@ -14,7 +14,7 @@ const mockLogger = {
 jest.mock('../utils/logger', () => mockLogger);
 
 // NOW require errorHandler
-const errorHandler = require('../middleware/errorHandler');
+const errorHandler = require('../../../middleware/errorHandler');
 
 describe('errorHandler', () => {
   let req, res, next;

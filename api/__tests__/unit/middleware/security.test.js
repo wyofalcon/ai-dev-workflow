@@ -7,7 +7,7 @@
 const {
   sanitizeInput,
   additionalSecurityHeaders,
-} = require('../middleware/security');
+} = require('../../../middleware/security');
 
 describe('Security Middleware', () => {
   let req, res, next;

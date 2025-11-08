@@ -9,7 +9,7 @@ const {
   getQuestionHint,
   getFollowUpQuestion,
   buildFullConversation
-} = require('../services/personalityQuestions');
+} = require('../../../services/personalityQuestions');
 
 describe('Personality Questions Framework', () => {
   describe('PERSONALITY_QUESTIONS constant', () => {

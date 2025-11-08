@@ -43,7 +43,7 @@ const {
   verifyFirebaseToken,
   requireSubscription,
   checkResumeLimit,
-} = require('../middleware/authMiddleware');
+} = require('../../../middleware/authMiddleware');
 
 describe('authMiddleware', () => {
   let req, res, next;

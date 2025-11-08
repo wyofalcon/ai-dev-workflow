@@ -98,7 +98,7 @@ jest.mock('../services/personalityInference', () => ({
 
 // Use global Firebase mock from setup.js (no need to mock again)
 const request = require('supertest');
-const { app } = require('../index');
+const { app } = require('../../index');
 
 describe('Resume API Endpoints', () => {
   let validToken;
