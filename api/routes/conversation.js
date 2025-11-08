@@ -28,7 +28,7 @@ const jdSessions = new Map();
 router.post('/start', verifyFirebaseToken, async (req, res, next) => {
   try {
     const { firebaseUid } = req.user;
-    const { jobDescription } = req.body; // NEW: Accept job description
+    const { jobDescription, existingResume } = req.body; // NEW: Accept existingResume for gap analysis
 
     const user = await prisma.user.findUnique({
       where: { firebaseUid },
@@ -50,23 +50,33 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
     let questionsToUse = 'generic';
 
     // If job description provided, analyze it and use JD-specific questions
+    // If existingResume also provided, perform gap analysis for targeted questions
     if (jobDescription && jobDescription.trim().length >= 50) {
       try {
-        console.log('📋 Analyzing job description for targeted questions...');
+        const hasResume = existingResume && existingResume.trim().length >= 100;
+
+        if (hasResume) {
+          console.log('📋 Analyzing job description + existing resume for gap-filling questions...');
+        } else {
+          console.log('📋 Analyzing job description for targeted questions...');
+        }
 
         const analyzer = new JobDescriptionAnalyzer(geminiService);
         const validation = analyzer.validateJobDescription(jobDescription);
 
         if (validation.valid) {
-          const analysis = await analyzer.analyze(jobDescription);
+          // Pass existingResume to analyzer for gap analysis
+          const analysis = await analyzer.analyze(jobDescription, existingResume || null);
           jdAnalysis = analysis;
 
-          // Store JD analysis and questions for this session
+          // Store JD analysis, questions, and existing resume for this session
           jdSessions.set(sessionId, {
             analysis: analysis.analysis,
             questions: analysis.questions,
             currentQuestionIndex: 0,
-            jobDescription
+            jobDescription,
+            existingResume: existingResume || null, // Store for resume generation
+            hasResume: !!existingResume
           });
 
           // Use first JD-specific question
@@ -109,17 +119,22 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
       });
     }
 
-    // Create welcome message
+    // Create welcome message (adjusted for resume-first mode)
+    const hasResumeGapAnalysis = jdAnalysis?.hasResume;
+    const gapAnalysis = jdAnalysis?.analysis?.resumeGapAnalysis;
+
     const welcomeMessage = `Hi ${user.displayName || 'there'}! 👋
 
 I'm here to help you build an amazing resume that showcases your unique strengths and personality.
 
 ${jdAnalysis
-  ? `Great news! I analyzed the **${jdAnalysis.analysis.jobTitle}** position and will ask you ${jdAnalysis.questions.length} targeted questions specifically about this role.`
+  ? hasResumeGapAnalysis
+    ? `Great news! I analyzed the **${jdAnalysis.analysis.jobTitle}** position and compared it to your existing resume. I found ${gapAnalysis?.questionCount || jdAnalysis.questions.length} key areas where we can strengthen your application with specific examples.`
+    : `Great news! I analyzed the **${jdAnalysis.analysis.jobTitle}** position and will ask you ${jdAnalysis.questions.length} targeted questions specifically about this role.`
   : 'I\'ll ask you about 16 questions covering your experience, achievements, and work style.'
 }
 
-This should take about 5-10 minutes. You can save and continue later anytime.
+This should take about ${hasResumeGapAnalysis ? '5-8 minutes' : '10-15 minutes'}. You can save and continue later anytime.
 
 Ready to get started?`;
 
@@ -582,4 +597,6 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
   }
 });
 
+// Export both router and jdSessions map (for resume.js to access gap analysis)
 module.exports = router;
+module.exports.jdSessions = jdSessions;

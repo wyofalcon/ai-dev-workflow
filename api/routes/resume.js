@@ -11,7 +11,7 @@ const pdfGenerator = require('../services/pdfGenerator');
 const cloudStorageService = require('../services/cloudStorage');
 
 // Helper: Build personality-enhanced Gemini prompt
-function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality }) {
+function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality, gapAnalysis, existingResume }) {
   let personalityGuidance = '';
 
   if (personality) {
@@ -27,28 +27,62 @@ Frame achievements through this personality lens.
 `;
   }
 
+  // NEW: Gap analysis guidance for resume-first mode
+  let gapAnalysisGuidance = '';
+  if (gapAnalysis && existingResume) {
+    gapAnalysisGuidance = `
+**RESUME-FIRST MODE - GAP ANALYSIS STRATEGY:**
+
+Based on analysis, the candidate's existing resume has:
+- **Strengths:** ${gapAnalysis.strengths?.join(', ') || 'Well-structured content'}
+- **Weaknesses:** ${gapAnalysis.weaknesses?.join(', ') || 'Some areas need enhancement'}
+- **Missing Content:** ${gapAnalysis.missingContent?.join(', ') || 'None identified'}
+- **Current ATS Match:** ${gapAnalysis.atsMatchScore || 0}% (Target: 85%+)
+
+**CRITICAL INSTRUCTIONS FOR HYBRID RESUME:**
+1. KEEP all strong existing content from their resume (strengths listed above)
+2. ENHANCE weak sections with specific examples and metrics from conversation answers
+3. FILL gaps by integrating missing required skills/experience from answers
+4. DO NOT remove good existing content - build upon it
+5. Result should be 85-95% ATS match with employer's exact language
+
+**EXISTING RESUME CONTENT:**
+${existingResume}
+
+**CONVERSATION ANSWERS (To fill gaps):**
+${personalStories || 'No additional information provided'}
+`;
+  }
+
   const hasContent = (resumeText && resumeText.length > 20) || (personalStories && personalStories.length > 20);
+  const isResumeFirstMode = !!existingResume;
 
   return `You are an elite-level professional resume writer and career strategist with 15+ years of experience.
 
 ${personalityGuidance}
 
+${gapAnalysisGuidance}
+
 **TARGET JOB DESCRIPTION:**
 ${jobDescription}
 
+${!isResumeFirstMode ? `
 **CANDIDATE'S BACKGROUND:**
 ${resumeText || 'No formal resume provided - extract experience from personal stories below'}
 
 **PERSONAL ACHIEVEMENTS & STORIES:**
 ${personalStories || 'Limited information - create professional examples based on job requirements'}
+` : ''}
 
 **REQUIRED SECTIONS:**
 ${Array.isArray(selectedSections) ? selectedSections.join(', ') : selectedSections}
 
 **INSTRUCTIONS:**
-${hasContent
-  ? '1. Extract concrete experience, skills, and achievements from the candidate\'s background and stories'
-  : '1. Since minimal candidate data provided, create a professional resume framework with placeholder content marked with [EDIT: ...]'
+${isResumeFirstMode
+  ? '1. Use the HYBRID approach: Keep strong existing content, enhance weak sections, fill gaps with conversation answers'
+  : hasContent
+    ? '1. Extract concrete experience, skills, and achievements from the candidate\'s background and stories'
+    : '1. Since minimal candidate data provided, create a professional resume framework with placeholder content marked with [EDIT: ...]'
 }
 2. Tailor EVERY bullet point to match keywords and requirements from the job description
 3. Use strong action verbs (Led, Achieved, Implemented, Optimized, Delivered)
@@ -182,13 +216,35 @@ router.post('/generate',
       console.warn('⚠️ No personality profile found - resume will lack personality framing');
     }
 
-    // Build prompt (use conversation answers if available)
+    // NEW: Load gap analysis if sessionId provided (resume-first mode)
+    let gapAnalysis = null;
+    let existingResumeFromSession = null;
+
+    if (sessionId) {
+      // Access jdSessions map from conversation.js (in-memory store)
+      // TODO: In production, move to Redis or database
+      const conversationModule = require('./conversation');
+      const jdSession = conversationModule.jdSessions?.get(sessionId);
+
+      if (jdSession) {
+        gapAnalysis = jdSession.analysis?.resumeGapAnalysis;
+        existingResumeFromSession = jdSession.existingResume;
+
+        if (gapAnalysis) {
+          console.log(`✅ Gap analysis loaded: ${gapAnalysis.questionCount} questions asked, ATS match: ${gapAnalysis.atsMatchScore}%`);
+        }
+      }
+    }
+
+    // Build prompt (use conversation answers if available, plus gap analysis for resume-first)
     const prompt = buildResumePrompt({
       resumeText,
       personalStories: conversationAnswers, // Now uses conversation answers if sessionId provided
       jobDescription,
       selectedSections: Array.isArray(selectedSections) ? selectedSections : selectedSections.split(','),
-      personality
+      personality,
+      gapAnalysis, // NEW: Gap analysis from JD analyzer
+      existingResume: existingResumeFromSession // NEW: Original resume for hybrid mode
     });
 
     // Generate with Gemini Pro
