@@ -546,7 +546,7 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
     });
 
     // Save personality traits
-    await prisma.personalityTrait.upsert({
+    await prisma.personalityTraits.upsert({
       where: { userId: user.id },
       update: {
         openness: personality.openness,
