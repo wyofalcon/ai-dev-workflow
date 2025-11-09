@@ -16,7 +16,7 @@
 ### Production
 **Frontend (GUI):** https://cvstomize-frontend-351889420459.us-central1.run.app
 **Backend (API):** https://cvstomize-api-351889420459.us-central1.run.app
-**Status:** ✅ STABLE (cvstomize-api-00092-prk)
+**Status:** ✅ OPERATIONAL (cvstomize-api-00117-nnn)
 
 ### Staging (Session 21 - Complete!)
 **Frontend (GUI):** https://cvstomize-frontend-staging-1036528578375.us-central1.run.app
@@ -30,26 +30,29 @@
 **👉 START HERE:** [ROADMAP.md](ROADMAP.md) - Complete project documentation
 
 **Essential Docs:**
-- [CREDENTIALS_SECURE.md](CREDENTIALS_SECURE.md) - Secure credential access (NO passwords!)
-- [STAGING_ENVIRONMENT_SETUP.md](STAGING_ENVIRONMENT_SETUP.md) - Staging infrastructure (Session 20)
-- [RESUME_FIRST_PROMPT.md](RESUME_FIRST_PROMPT.md) - Resume-first gap analysis prompt
+- [QUICK_START_SESSION_27.md](QUICK_START_SESSION_27.md) - Start here for next session
+- [SESSION_26_FINAL_STATUS.md](SESSION_26_FINAL_STATUS.md) - Complete Session 26 recap
+- [CREDENTIALS_SECURE.md](CREDENTIALS_SECURE.md) - Secure credential access
+- [MONETIZATION_STRATEGY.md](MONETIZATION_STRATEGY.md) - Business strategy
 
-**Archived Docs:** [docs/archive/](docs/archive/) - Session summaries & deployment records
+**Additional Docs:**
+- [docs/setup/](docs/setup/) - Setup guides (Firebase, Staging)
+- [docs/testing/](docs/testing/) - Testing guides
+- [docs/archive/](docs/archive/) - Historical session summaries
 
 ---
 
-## 📊 Current Status (Session 24 - November 9, 2025)
+## 📊 Current Status (Session 26 - November 9, 2025)
 
-### ⚠️ SESSION 24: RESUME UPLOAD COMPLETE - DEPLOYMENT BLOCKED
-- **Upload Feature:** ✅ Code complete with comprehensive tests
-- **Backend Endpoint:** POST /api/resume/extract-text (PDF/DOCX/DOC/TXT support)
-- **Frontend UI:** Drag-and-drop file upload with file list
-- **Tests:** 26 total (25 passing - 96%), 10 new upload tests (100% passing)
-- **Staging:** Upload endpoint live (cvstomize-api-staging-00011-d4q)
-- **Production:** ❌ Stuck on revision 00092-prk (Nov 7) - NO upload endpoint
-- **Blocker:** GCP Docker layer caching prevents new code deployment
-- **Documented:** [DEPLOYMENT_ISSUES.md](./DEPLOYMENT_ISSUES.md)
-- **Workaround:** Resume paste functionality working in production
+### ✅ SESSION 26: UPLOAD EXTRACTION WORKING!
+- **Upload Feature:** ✅ Working in production (extracted 11,220 chars from 3 PDFs)
+- **Resume Generation:** ✅ Working (personality-driven content)
+- **Conversation Flow:** ✅ Working (all 5 questions + personality inference)
+- **Backend:** cvstomize-api-00117-nnn (pdf-parse v1.1.1 stable)
+- **File Limit:** 25MB per file (increased from 5MB)
+- **Database:** 5 new personality fields added (leadership, motivation, decision-making)
+- **Remaining Issue:** Download button (frontend needs update to call backend endpoint)
+- **Next Session:** [QUICK_START_SESSION_27.md](QUICK_START_SESSION_27.md)
 
 ### ✅ STAGING ENVIRONMENT (Session 20-21)
 - **Separate GCP Project:** cvstomize-staging (complete isolation)
@@ -159,14 +162,13 @@ cd api
 
 ---
 
-## 🎯 Next Steps (Session 25)
+## 🎯 Next Steps (Session 27)
 
-1. 🔴 **Fix GCP deployment caching issue** - Get upload endpoint live in production
-2. **Seed staging database** - Add test user accounts for end-to-end testing
-3. **Fix duplicate question bug** - Gemini generating same question twice
-4. **Fix profile picture CORS** - CORP policy blocking Google avatars
+1. 🔴 **Fix download button** - Frontend needs to call `/api/resume/:id/download` correctly
+2. **End-to-end testing** - Verify complete upload → conversation → generation → download flow
+3. **User acceptance testing** - Collect feedback on UX and resume quality
 
-See [ROADMAP.md](ROADMAP.md) for complete roadmap and [STAGING_ENVIRONMENT_SETUP.md](STAGING_ENVIRONMENT_SETUP.md) for staging details.
+See [QUICK_START_SESSION_27.md](QUICK_START_SESSION_27.md) for detailed next steps.
 
 ---
 
@@ -200,5 +202,5 @@ See [ROADMAP.md](ROADMAP.md) for complete roadmap and [STAGING_ENVIRONMENT_SETUP
 ---
 
 **Last Updated:** November 9, 2025
-**Session:** 24 (Resume Upload Feature Complete - Deployment Blocked)
-**Status:** ⚠️ UPLOAD CODE READY - GCP CACHING ISSUE BLOCKING PRODUCTION
+**Session:** 26 (Upload Extraction Working!)
+**Status:** ✅ OPERATIONAL - Upload, Generation, Conversation all working
