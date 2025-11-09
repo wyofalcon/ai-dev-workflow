@@ -1,9 +1,9 @@
 # 🚀 CVstomize v2.0 - Complete Roadmap
 
-**Last Updated:** 2025-11-09 (Session 26 - Production Fully Restored, All Features Working)
+**Last Updated:** 2025-11-09 (Session 26 FINAL - Upload Extraction Working!)
 **Branch:** dev
-**Status:** ✅ PRODUCTION READY - Upload + Paste-First + Resume Generation Working
-**Production:** Frontend 00008-wbs + API 00111-gk9 (Nov 9 - All features functional)
+**Status:** ✅ PRODUCTION OPERATIONAL - Upload Working, Generation Working, Download Needs Frontend Fix
+**Production:** Frontend 00008-wbs + API 00117-nnn (Nov 9 - Upload, Generation, Conversation all working)
 **Staging:** Frontend 00003-p94 + API 00011-d4q (has upload endpoint, needs user accounts)
 **Testing:** 26 total tests (25 passing - 96%), 10 new upload tests (100% passing)
 
@@ -11,40 +11,54 @@
 
 ## 📍 CURRENT STATUS & IMMEDIATE NEXT STEPS
 
-### ✅ SESSION 26 COMPLETED (Production Restored + GCP Caching Resolved) 🎉
+### ✅ SESSION 26 COMPLETED (Upload Extraction Working!) 🎉
 
 **All Production Features Verified Working:**
-- ✅ Upload endpoint (POST /api/resume/extract-text) - PDF/DOCX/TXT support
-- ✅ JD analysis (POST /api/resume/analyze-jd) - Gap questions generation
-- ✅ Resume generation (POST /api/resume/generate) - Full workflow functional
-- ✅ Authentication - Firebase tokens working correctly
-- ✅ Database - All Prisma queries fixed
+- ✅ Upload endpoint - PDF/DOCX/TXT extraction working (extracted 11,220 chars from 3 files)
+- ✅ JD analysis - Gap questions generation working
+- ✅ Resume generation - Full workflow functional (personality-driven content)
+- ✅ Conversation flow - All 5 questions, personality inference working
+- ✅ Database schema - 5 new PersonalityTraits fields added and working
 
-**Bugs Fixed:**
-1. ✅ Conversation complete endpoint - Removed `profileCompleteness` field references (doesn't exist in schema)
-2. ✅ Conversation complete endpoint - Fixed `personalityTrait` → `personalityTraits` typo
-3. ✅ Resume generation endpoint - Removed non-existent PersonalityTraits fields:
-   - Removed: `leadershipStyle`, `motivationType`, `decisionMaking`, `inferenceConfidence`
-   - Kept: `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `neuroticism`, `workStyle`, `communicationStyle`
+**Major Fixes Completed:**
+1. ✅ **Database Schema Migration** - Added 5 personality fields (leadershipStyle, motivationType, decisionMaking, inferenceConfidence, analysisVersion)
+2. ✅ **Upload File Size Limit** - Increased from 5MB to 25MB (users were hitting limit)
+3. ✅ **PDF Parser Library** - Downgraded pdf-parse from 2.4.5 to 1.1.1 (stable version that works)
+4. ✅ **Upload Error Handling** - Added detailed error messages for file size/type/count errors
+5. ✅ **Download Endpoint** - Backend now returns actual markdown file (frontend needs update to use it)
+6. ✅ **User Resume Limit** - Upgraded test user to unlimited (999 resumes)
 
-**GCP Caching Issue Resolved:**
-- Root cause: Cloud Run creating new revisions but not routing traffic automatically
-- Solution: Manual traffic routing required after deployment
-- Workflow: Deploy → Find new revision number → Route traffic explicitly
-- Command: `gcloud run services update-traffic cvstomize-api --to-revisions=cvstomize-api-XXXXX-YYY=100`
+**Database Migration Applied:**
+```sql
+ALTER TABLE personality_traits
+ADD COLUMN leadership_style VARCHAR(255),
+ADD COLUMN motivation_type VARCHAR(255),
+ADD COLUMN decision_making VARCHAR(255),
+ADD COLUMN inference_confidence DECIMAL(3,2),
+ADD COLUMN analysis_version VARCHAR(50);
+```
+- Applied by postgres superuser
+- Password stored in Secret Manager: `DB_POSTGRES_PASSWORD`
 
-**Session 26 Timeline:**
-1. Fresh Docker build with Cloud Build (bypassed local cache)
-2. Deployed image `personality-fix-1762658000`
-3. Discovered revision 00111 created but traffic still on 00134
-4. Manually routed traffic to revision 00111
-5. Verified all endpoints working with authenticated test script
+**Session 26 Journey (7 Deployments):**
+1. Revision 00111 - Initial personality fields fix (resume.js only)
+2. Revision 00112 - Schema update without migration (failed - missing DB columns)
+3. Revision 00113 - Restored conversation.js + schema (applied DB migration)
+4. Revision 00114 - Upload error handling + download fix
+5. Revision 00115 - File size limit 5MB→25MB (still pdf-parse broken)
+6. Revision 00116 - PDF parser fix attempt (still broken)
+7. **Revision 00117** - pdf-parse downgrade to v1.1.1 ✅ **WORKING**
+
+**Critical Decisions Made:**
+- **ADDED fields to schema** instead of removing from code (preserves AI-generated data)
+- **Downgraded pdf-parse** instead of trying to fix v2.4.5 (stable > latest)
+- **Increased file limit to 25MB** to handle professional resumes with graphics
 
 **Key Learning:**
-- GCP Cloud Build works correctly - caching issue was at Cloud Run traffic routing level
-- Fresh builds create new revisions but require manual traffic routing
-- Always check `gcloud run revisions list` after deployment
-- Always manually route traffic after deploying fixes
+- Don't discard valuable AI-generated personality insights
+- Library versions: stable and tested > latest release
+- Always apply schema migrations before deploying code changes
+- Manual traffic routing required after every Cloud Run deployment
 
 ### ✅ SESSION 22 & 23 COMPLETED (Resume-First Implementation + Testing)
 
@@ -90,19 +104,28 @@
 
 ### 🎯 IMMEDIATE NEXT STEPS (Session 27)
 
-1. **User Acceptance Testing**
-   - Test complete paste-first workflow in production
-   - Test upload workflow in production
-   - Collect user feedback on UX
+1. **🔴 HIGH PRIORITY: Fix Download Button (Frontend)**
+   - **Issue:** Download button doesn't trigger file download
+   - **Root Cause:** Frontend not calling `/api/resume/:id/download` endpoint correctly
+   - **Backend:** Already fixed (returns markdown file with Content-Disposition header)
+   - **Files to Check:**
+     - `frontend/src/components/ResumeView.js` (or similar)
+     - Look for download button onClick handler
+     - Should use `window.open()` or create temporary `<a>` tag with download attribute
+   - **Expected Behavior:** Clicking download should download `Resume_for_General_Laborer.md` file
 
-2. **Fix Remaining Minor Issues**
-   - Profile picture CORS (cosmetic)
-   - Duplicate question bug (low frequency)
+2. **Testing & Validation**
+   - [ ] Test download button after frontend fix
+   - [ ] Test with different file types (PDF, DOCX, TXT)
+   - [ ] Test with large files (close to 25MB)
+   - [ ] Verify ATS analysis scores are reasonable
+   - [ ] Check personality influence on resume tone
 
-3. **Performance Monitoring**
-   - Monitor Cloud Run logs for errors
-   - Track resume generation success rate
-   - Monitor database query performance
+3. **Optional Enhancements (Low Priority)**
+   - [ ] Add upload progress indicator
+   - [ ] Show extracted text preview before conversation
+   - [ ] Add client-side file validation (type/size before upload)
+   - [ ] Fix avatar CORS warning (cosmetic only)
 
 ### ✅ What's Working (Session 19 Achievements)
 
