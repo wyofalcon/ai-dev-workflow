@@ -41,7 +41,7 @@ steps:
       - '--set-env-vars'
       - 'NODE_ENV=production'
       - '--set-secrets'
-      - 'DATABASE_URL=DATABASE_URL:latest,GOOGLE_APPLICATION_CREDENTIALS_JSON=GOOGLE_APPLICATION_CREDENTIALS_JSON:latest'
+      - 'DATABASE_URL=DATABASE_URL:latest'
       - '--add-cloudsql-instances'
       - 'cvstomize:us-central1:cvstomize-db'
       - '--max-instances'
