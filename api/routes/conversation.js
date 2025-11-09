@@ -528,25 +528,20 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
     // Check if this was a JD session
     const jdSession = jdSessions.get(sessionId);
     const totalQuestions = jdSession ? jdSession.questions.length : getTotalQuestions();
-    const profileCompleteness = Math.round((userMessages.length / totalQuestions) * 100);
 
     // Clean up JD session if exists
     if (jdSession) {
       jdSessions.delete(sessionId);
     }
 
-    // Update or create user profile (basic for now, will extract more data with Gemini later)
+    // Update or create user profile (ensure it exists)
     await prisma.userProfile.upsert({
       where: { userId: user.id },
       update: {
-        profileCompleteness,
-        conversationCompleted: true,
         updatedAt: new Date(),
       },
       create: {
         userId: user.id,
-        profileCompleteness,
-        conversationCompleted: true,
       },
     });
 
@@ -587,7 +582,6 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
 
     res.status(200).json({
       message: 'Profile completed successfully',
-      profileCompleteness,
       personality,
       nextStep: 'generate_resume',
     });
