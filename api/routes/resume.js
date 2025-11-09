@@ -992,10 +992,11 @@ router.get('/:id/download', verifyFirebaseToken, async (req, res, next) => {
       }
     });
 
-    return res.json({
-      markdown: resume.resumeMarkdown,
-      title: resume.title
-    });
+    // Return markdown as downloadable file
+    const filename = `${resume.title || 'resume'}.md`.replace(/[^a-z0-9\-_.]/gi, '_');
+    res.setHeader('Content-Type', 'text/markdown');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.send(resume.resumeMarkdown);
   } catch (error) {
     next(error);
   }
@@ -1036,11 +1037,39 @@ const upload = multer({
 });
 
 // Resume file upload endpoint - extracts text from PDF/DOCX/TXT files
-router.post('/extract-text', verifyFirebaseToken, upload.array('resumes', 5), async (req, res, next) => {
+router.post('/extract-text', verifyFirebaseToken, (req, res, next) => {
+  upload.array('resumes', 5)(req, res, (err) => {
+    if (err) {
+      console.error('❌ Multer error:', err.message);
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            error: 'File too large',
+            message: 'Each file must be less than 5MB'
+          });
+        }
+        if (err.code === 'LIMIT_FILE_COUNT') {
+          return res.status(400).json({
+            error: 'Too many files',
+            message: 'Maximum 5 files allowed'
+          });
+        }
+      }
+      return res.status(400).json({
+        error: 'Upload failed',
+        message: err.message
+      });
+    }
+    next();
+  });
+}, async (req, res, next) => {
   const tempFiles = [];
 
   try {
+    console.log(`📤 Upload request received. Files:`, req.files ? req.files.length : 0);
+
     if (!req.files || req.files.length === 0) {
+      console.log('❌ No files in request');
       return res.status(400).json({
         error: 'No files uploaded',
         message: 'Please upload at least one resume file (PDF, DOCX, or TXT)'
