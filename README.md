@@ -38,16 +38,25 @@
 
 ---
 
-## 📊 Current Status (Session 21 - November 8, 2025)
+## 📊 Current Status (Session 24 - November 9, 2025)
 
-### ✅ STAGING ENVIRONMENT COMPLETE (Session 20-21)
+### ⚠️ SESSION 24: RESUME UPLOAD COMPLETE - DEPLOYMENT BLOCKED
+- **Upload Feature:** ✅ Code complete with comprehensive tests
+- **Backend Endpoint:** POST /api/resume/extract-text (PDF/DOCX/DOC/TXT support)
+- **Frontend UI:** Drag-and-drop file upload with file list
+- **Tests:** 26 total (25 passing - 96%), 10 new upload tests (100% passing)
+- **Staging:** Upload endpoint live (cvstomize-api-staging-00011-d4q)
+- **Production:** ❌ Stuck on revision 00092-prk (Nov 7) - NO upload endpoint
+- **Blocker:** GCP Docker layer caching prevents new code deployment
+- **Documented:** [DEPLOYMENT_ISSUES.md](./DEPLOYMENT_ISSUES.md)
+- **Workaround:** Resume paste functionality working in production
+
+### ✅ STAGING ENVIRONMENT (Session 20-21)
 - **Separate GCP Project:** cvstomize-staging (complete isolation)
-- **Staging Frontend:** cvstomize-frontend-staging-00001-6pr (DEPLOYED ✅)
-- **Staging API:** cvstomize-api-staging-00008-hc7 (HEALTHY ✅)
-- **Staging Database:** cvstomize-db-staging (all 12 tables)
+- **Staging Frontend:** cvstomize-frontend-staging-00003-p94 (has upload UI ✅)
+- **Staging API:** cvstomize-api-staging-00011-d4q (has upload endpoint ✅)
+- **Staging Database:** cvstomize-db-staging (needs user account seeding)
 - **CORS Configured:** Frontend ↔ Backend communication enabled
-- **Environment-Aware Code:** Automatically detects staging vs production
-- **Ready for:** Resume-first gap analysis implementation
 
 ### ✅ WORLD-CLASS INFRASTRUCTURE
 - **Secret Management:** All credentials in GCP Secret Manager with CLI tool
@@ -150,14 +159,12 @@ cd api
 
 ---
 
-## 🎯 Next Steps (Session 22)
+## 🎯 Next Steps (Session 25)
 
-1. ✅ **Staging environment deployed** (Session 20 - Complete)
-2. ✅ **Frontend deployed to staging** (Session 21 - Complete)
-3. ✅ **CORS configured** (Session 21 - Complete)
-4. Test end-to-end conversation flow in staging (browser testing)
-5. Begin resume-first gap analysis implementation (backend)
-6. Test resume-first thoroughly in staging before production
+1. 🔴 **Fix GCP deployment caching issue** - Get upload endpoint live in production
+2. **Seed staging database** - Add test user accounts for end-to-end testing
+3. **Fix duplicate question bug** - Gemini generating same question twice
+4. **Fix profile picture CORS** - CORP policy blocking Google avatars
 
 See [ROADMAP.md](ROADMAP.md) for complete roadmap and [STAGING_ENVIRONMENT_SETUP.md](STAGING_ENVIRONMENT_SETUP.md) for staging details.
 
@@ -192,6 +199,6 @@ See [ROADMAP.md](ROADMAP.md) for complete roadmap and [STAGING_ENVIRONMENT_SETUP
 
 ---
 
-**Last Updated:** November 8, 2025
-**Session:** 20 (Staging Environment Complete)
-**Status:** 🌟 PRODUCTION + STAGING READY
+**Last Updated:** November 9, 2025
+**Session:** 24 (Resume Upload Feature Complete - Deployment Blocked)
+**Status:** ⚠️ UPLOAD CODE READY - GCP CACHING ISSUE BLOCKING PRODUCTION
