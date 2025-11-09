@@ -204,11 +204,7 @@ router.post('/generate',
         agreeableness: true,
         neuroticism: true,
         workStyle: true,
-        leadershipStyle: true,
-        communicationStyle: true,
-        motivationType: true,
-        decisionMaking: true,
-        inferenceConfidence: true
+        communicationStyle: true
       }
     });
 
