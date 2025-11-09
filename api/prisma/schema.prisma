@@ -78,7 +78,12 @@ model PersonalityTraits {
   agreeableness         Int?
   neuroticism           Int?
   workStyle             String?   @map("work_style")
+  leadershipStyle       String?   @map("leadership_style")
   communicationStyle    String?   @map("communication_style")
+  motivationType        String?   @map("motivation_type")
+  decisionMaking        String?   @map("decision_making")
+  inferenceConfidence   Float?    @map("inference_confidence")
+  analysisVersion       String?   @map("analysis_version")
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
 
