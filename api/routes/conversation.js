@@ -555,12 +555,7 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
         agreeableness: personality.agreeableness,
         neuroticism: personality.neuroticism,
         workStyle: personality.workStyle,
-        leadershipStyle: personality.leadershipStyle,
         communicationStyle: personality.communicationStyle,
-        motivationType: personality.motivationType,
-        decisionMaking: personality.decisionMaking,
-        inferenceConfidence: personality.inferenceConfidence,
-        analysisVersion: personality.analysisVersion,
         updatedAt: new Date(),
       },
       create: {
@@ -571,12 +566,7 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
         agreeableness: personality.agreeableness,
         neuroticism: personality.neuroticism,
         workStyle: personality.workStyle,
-        leadershipStyle: personality.leadershipStyle,
         communicationStyle: personality.communicationStyle,
-        motivationType: personality.motivationType,
-        decisionMaking: personality.decisionMaking,
-        inferenceConfidence: personality.inferenceConfidence,
-        analysisVersion: personality.analysisVersion,
       },
     });
 
