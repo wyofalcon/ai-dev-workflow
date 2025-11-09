@@ -1017,7 +1017,7 @@ const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit per file
+    fileSize: 25 * 1024 * 1024, // 25MB limit per file (increased for image-heavy resumes)
     files: 5 // Maximum 5 files
   },
   fileFilter: (req, file, cb) => {
@@ -1045,7 +1045,7 @@ router.post('/extract-text', verifyFirebaseToken, (req, res, next) => {
         if (err.code === 'LIMIT_FILE_SIZE') {
           return res.status(400).json({
             error: 'File too large',
-            message: 'Each file must be less than 5MB'
+            message: 'Each file must be less than 25MB'
           });
         }
         if (err.code === 'LIMIT_FILE_COUNT') {
