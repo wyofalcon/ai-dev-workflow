@@ -21,9 +21,12 @@ router.get('/avatar', async (req, res) => {
 
     // Fetch the image from Google using https module
     https.get(url, (imageRes) => {
-      // Set appropriate headers
+      // Set appropriate headers with CORS support
       res.set('Content-Type', imageRes.headers['content-type'] || 'image/jpeg');
       res.set('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      res.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+      res.set('Access-Control-Allow-Methods', 'GET');
+      res.set('Cross-Origin-Resource-Policy', 'cross-origin'); // Critical for CORP
 
       // Pipe the image directly to the response
       imageRes.pipe(res);
