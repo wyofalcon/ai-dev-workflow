@@ -24,6 +24,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { auth } from '../firebase/index.js';
+import { useAuth } from '../contexts/AuthContext';
+import ProfileCompletionModal from './ProfileCompletionModal';
 
 /**
  * Conversational Wizard Component (FIXED - Session 18)
@@ -36,6 +38,7 @@ import { auth } from '../firebase/index.js';
  * 4. Complete conversation → Generate resume
  */
 function ConversationalWizard({ onComplete }) {
+  const { userProfile, currentUser } = useAuth();
   const [sessionId, setSessionId] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [currentAnswer, setCurrentAnswer] = useState('');
@@ -49,6 +52,7 @@ function ConversationalWizard({ onComplete }) {
   const [isComplete, setIsComplete] = useState(false);
   const [jobTitle, setJobTitle] = useState(null);
   const [questionsType, setQuestionsType] = useState('generic');
+  const [showProfileModal, setShowProfileModal] = useState(false); // Profile completion modal
 
   const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
 
@@ -214,6 +218,45 @@ function ConversationalWizard({ onComplete }) {
     }
   };
 
+  // NEW: Check profile completeness (Option B - Pre-generation check)
+  const checkProfileCompleteness = () => {
+    // Check if critical profile fields are missing
+    const hasName = userProfile?.fullName && userProfile.fullName.trim().length > 0;
+
+    // If name is missing, show profile completion modal
+    if (!hasName) {
+      console.log('⚠️ Profile incomplete, showing completion modal...');
+      return false;
+    }
+
+    return true;
+  };
+
+  // NEW: Save profile data from modal
+  const handleProfileSave = async (profileData) => {
+    const token = await auth.currentUser.getIdToken();
+
+    const response = await fetch(`${API_BASE}/api/profile`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to save profile');
+    }
+
+    console.log('✅ Profile saved successfully');
+
+    // Close modal and proceed with resume generation
+    setShowProfileModal(false);
+    await generateResumeAfterCompletion();
+  };
+
   // Step 3: Complete conversation and generate resume
   const completeConversation = async () => {
     setLoading(true);
@@ -242,7 +285,28 @@ function ConversationalWizard({ onComplete }) {
 
       console.log('✅ Conversation completed, personality inferred:', completeData.personality);
 
-      // Now generate resume using conversation data
+      // NEW: Check profile completeness before generating resume (Option B)
+      if (!checkProfileCompleteness()) {
+        setShowProfileModal(true);
+        setLoading(false);
+        return;
+      }
+
+      // Profile is complete, proceed with generation
+      await generateResumeAfterCompletion();
+
+    } catch (err) {
+      console.error('❌ Complete conversation error:', err);
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  // NEW: Generate resume after profile check/completion
+  const generateResumeAfterCompletion = async () => {
+    try {
+      const token = await auth.currentUser.getIdToken();
+
       console.log('📝 Generating resume...');
 
       const resumeResponse = await fetch(`${API_BASE}/api/resume/generate`, {
@@ -273,7 +337,7 @@ function ConversationalWizard({ onComplete }) {
       }
 
     } catch (err) {
-      console.error('❌ Complete conversation error:', err);
+      console.error('❌ Resume generation error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -553,9 +617,20 @@ function ConversationalWizard({ onComplete }) {
   );
 
   return (
-    <Paper elevation={3} sx={{ p: 4, maxWidth: 800, mx: 'auto', my: 4 }}>
-      {!sessionId ? renderJDInput() : isComplete ? renderComplete() : renderQuestion()}
-    </Paper>
+    <>
+      <Paper elevation={3} sx={{ p: 4, maxWidth: 800, mx: 'auto', my: 4 }}>
+        {!sessionId ? renderJDInput() : isComplete ? renderComplete() : renderQuestion()}
+      </Paper>
+
+      {/* Profile Completion Modal (Option B - Pre-generation prompt) */}
+      <ProfileCompletionModal
+        open={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        onSave={handleProfileSave}
+        currentProfile={userProfile}
+        userEmail={currentUser?.email}
+      />
+    </>
   );
 }
 
