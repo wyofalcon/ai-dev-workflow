@@ -13,6 +13,12 @@ const cloudStorageService = require('../services/cloudStorage');
 // Helper: Build personality-enhanced Gemini prompt
 function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality, gapAnalysis, existingResume, userProfile, userEmail, userDisplayName }) {
   // Build contact information from user profile with Google account fallbacks
+  console.log('🔍 Contact info inputs:', {
+    userProfileFullName: userProfile?.fullName,
+    userDisplayName,
+    userEmail
+  });
+
   const contactInfo = {
     name: userProfile?.fullName || userDisplayName || 'Professional',
     location: userProfile?.location || '', // Omit if not provided
@@ -20,6 +26,8 @@ function buildResumePrompt({ resumeText, personalStories, jobDescription, select
     email: userEmail || 'your.email@example.com',
     linkedin: userProfile?.linkedinUrl || '' // Omit if not provided
   };
+
+  console.log('📋 Built contact info:', contactInfo);
 
   // Build contact line (only include fields that exist)
   const contactParts = [
