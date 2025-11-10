@@ -146,9 +146,26 @@ ADD COLUMN analysis_version VARCHAR(50);
 - ⚠️ Discovered multiple production bugs from user testing
 - ⚠️ GCP caching persisted despite multiple fresh deployments
 
-### 🎯 IMMEDIATE NEXT STEPS (Session 28)
+### 🚨 CRITICAL BUGS DISCOVERED (Session 27 Real User Testing)
 
-1. **🔴 CRITICAL: End-to-End Production Testing**
+**User:** Francisco Calisto | **Test:** Merchandise Processing Associate at Savers
+**Result:** ❌ Resume generation BROKEN - invented "John Doe" with fake content instead of user's real CV
+
+**📋 See:** [CRITICAL_BUGS_AND_FIXES.md](CRITICAL_BUGS_AND_FIXES.md) + [RESUME_GENERATION_FLOW_EXPLAINED.md](RESUME_GENERATION_FLOW_EXPLAINED.md)
+
+**Bug #1:** Resume content lost (in-memory storage cleared by Cloud Run)
+**Bug #2:** PDF downloads return 500 errors (Puppeteer/Chrome missing)
+**Gap #3:** Personality profiles too shallow (need profile-first flow for new users)
+
+---
+
+### 🎯 IMMEDIATE NEXT STEPS (Session 28) - PRIORITIES CHANGED!
+
+**❌ CANCELLED:** End-to-end testing (critical bugs must be fixed first)
+
+**NEW PRIORITIES:**
+
+1. **🔴 CRITICAL: Fix Resume Content Persistence**
    - [ ] Upload different file types (PDF, DOCX, TXT)
    - [ ] Upload files close to 25MB limit
    - [ ] Test various job descriptions (technical vs non-technical)
