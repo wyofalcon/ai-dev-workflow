@@ -27,32 +27,35 @@
 
 ## 🚀 Quick Start
 
-**👉 START HERE:** [ROADMAP.md](ROADMAP.md) - Complete project documentation
+**👉 START HERE:** [ROADMAP.md](ROADMAP.md) - Complete project documentation & roadmap
 
 **Essential Docs:**
-- [QUICK_START_SESSION_27.md](QUICK_START_SESSION_27.md) - Start here for next session
-- [SESSION_26_FINAL_STATUS.md](SESSION_26_FINAL_STATUS.md) - Complete Session 26 recap
+- [ROADMAP.md](ROADMAP.md) - Complete roadmap, session history, critical bugs, and next steps
 - [CREDENTIALS_SECURE.md](CREDENTIALS_SECURE.md) - Secure credential access
-- [MONETIZATION_STRATEGY.md](MONETIZATION_STRATEGY.md) - Business strategy
+- [MONETIZATION_STRATEGY.md](MONETIZATION_STRATEGY.md) - Business strategy (keep untouched)
 
 **Additional Docs:**
 - [docs/setup/](docs/setup/) - Setup guides (Firebase, Staging)
 - [docs/testing/](docs/testing/) - Testing guides
-- [docs/archive/](docs/archive/) - Historical session summaries
 
 ---
 
-## 📊 Current Status (Session 26 - November 9, 2025)
+## 📊 Current Status (Session 27 COMPLETE - November 10, 2025)
 
-### ✅ SESSION 26: UPLOAD EXTRACTION WORKING!
-- **Upload Feature:** ✅ Working in production (extracted 11,220 chars from 3 PDFs)
-- **Resume Generation:** ✅ Working (personality-driven content)
-- **Conversation Flow:** ✅ Working (all 5 questions + personality inference)
-- **Backend:** cvstomize-api-00117-nnn (pdf-parse v1.1.1 stable)
-- **File Limit:** 25MB per file (increased from 5MB)
-- **Database:** 5 new personality fields added (leadership, motivation, decision-making)
-- **Remaining Issue:** Download button (frontend needs update to call backend endpoint)
-- **Next Session:** [QUICK_START_SESSION_27.md](QUICK_START_SESSION_27.md)
+### ✅ SESSION 27: DOWNLOAD WORKING! (Core Features Complete!)
+- **Download Button:** ✅ Fixed - Created ResumeViewPage component (370 lines)
+- **Complete Flow:** ✅ Upload → JD Analysis → Questions → Generate → Download
+- **4 Download Formats:** ✅ Markdown + 3 PDF templates (Classic/Modern/Minimal)
+- **Frontend:** cvstomize-frontend-00010-lrd (100% traffic)
+- **Backend:** cvstomize-api-00117-nnn (100% traffic)
+
+**🔴 Critical Bugs Discovered (Real User Testing):**
+- Bug #1: Resume content lost (volatile Map storage) - Francisco's CV ignored, "John Doe" invented
+- Bug #2: PDF downloads fail (Puppeteer/Chrome missing in Docker) - All 3 PDFs return 500
+- Gap #3: Shallow profiles (need profile-first RAG system for competitive advantage)
+
+**Next Session 28:** Fix critical bugs (database persistence + PDF generation)
+**See:** [ROADMAP.md](ROADMAP.md) for complete details and implementation plan
 
 ### ✅ STAGING ENVIRONMENT (Session 20-21)
 - **Separate GCP Project:** cvstomize-staging (complete isolation)
@@ -162,45 +165,42 @@ cd api
 
 ---
 
-## 🎯 Next Steps (Session 27)
+## 🎯 Next Steps (Session 28 - CRITICAL BUG FIXES)
 
-1. 🔴 **Fix download button** - Frontend needs to call `/api/resume/:id/download` correctly
-2. **End-to-end testing** - Verify complete upload → conversation → generation → download flow
-3. **User acceptance testing** - Collect feedback on UX and resume quality
+**🚨 MUST FIX BEFORE ANY OTHER WORK:**
 
-See [QUICK_START_SESSION_27.md](QUICK_START_SESSION_27.md) for detailed next steps.
+1. **🔴 Fix Resume Content Persistence** (Production Blocker)
+   - Database migration: Add 3 columns to conversations table
+   - Update conversation.js: Save to DB (not volatile Map)
+   - Update resume.js: Load from DB (not volatile Map)
+   - Test: Francisco's resume must show "Francisco Calisto" NOT "John Doe"
+
+2. **🔴 Fix PDF Generation** (User Experience)
+   - Update Dockerfile: Install Chromium + dependencies
+   - Deploy with 1Gi memory (increased from 512Mi)
+   - Test: All 3 PDF templates return HTTP 200 (not 500)
+
+3. **✅ End-to-End Production Testing**
+   - Verify complete flow with real user data
+   - Test all 4 download formats
+   - Only proceed to Session 29 if ALL tests pass
+
+**See [ROADMAP.md](ROADMAP.md) for detailed implementation steps and Sessions 29-33 (Profile-First RAG System).**
 
 ---
 
 ## 📚 Documentation Structure
 
-**Core Docs (Keep These):**
-- `ROADMAP.md` - Single source of truth, all session history
-- `README.md` - This file (quick start)
-- `MONETIZATION_STRATEGY.md` - Business strategy
+**Essential Files (4 Only):**
+- `ROADMAP.md` - Complete roadmap, session history, critical bugs, implementation plan
+- `README.md` - This file (project overview & quick start)
+- `CREDENTIALS_SECURE.md` - Secure credential access (no passwords stored)
+- `MONETIZATION_STRATEGY.md` - Business strategy (keep untouched)
 
-**Operations:**
-- `CREDENTIALS_SECURE.md` - Credential access (no passwords)
-- `QUICK_REFERENCE.md` - Daily commands
-- `scripts/manage-secrets.sh` - Secret Manager CLI
-
-**Infrastructure:**
-- `WORLD_CLASS_SETUP.md` - 4-hour transformation guide
-- `PRODUCTION_IMPROVEMENTS.md` - Prioritized backlog
-- `.github/workflows/deploy.yml` - CI/CD pipeline
-
-**Security:**
-- `SECURITY_AUDIT.md` - Enterprise audit (18 items)
-- `FIREBASE_SETUP.md` - Firebase key management
-- `scripts/clean-git-history.sh` - Remove passwords from history
-
-**Testing:**
-- `api/TESTING_GUIDE.md` - Testing patterns
-
-**Archives:** `docs/archive/` - Session summaries, old deployment docs
+**All session-specific docs consolidated into ROADMAP.md for easier context management.**
 
 ---
 
-**Last Updated:** November 9, 2025
-**Session:** 26 (Upload Extraction Working!)
-**Status:** ✅ OPERATIONAL - Upload, Generation, Conversation all working
+**Last Updated:** November 10, 2025
+**Session:** 27 COMPLETE (Download Working!)
+**Status:** ✅ Core Features Working | 🔴 Critical Bugs Identified | 📋 Session 28 Ready

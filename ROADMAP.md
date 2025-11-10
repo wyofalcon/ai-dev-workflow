@@ -151,52 +151,189 @@ ADD COLUMN analysis_version VARCHAR(50);
 **User:** Francisco Calisto | **Test:** Merchandise Processing Associate at Savers
 **Result:** ❌ Resume generation BROKEN - invented "John Doe" with fake content instead of user's real CV
 
-**📋 See:** [CRITICAL_BUGS_AND_FIXES.md](CRITICAL_BUGS_AND_FIXES.md) + [RESUME_GENERATION_FLOW_EXPLAINED.md](RESUME_GENERATION_FLOW_EXPLAINED.md)
+#### Bug #1: Resume Content Lost ⚡ PRODUCTION BLOCKER
+**Severity:** CRITICAL - Users' uploaded resumes completely ignored
+**Impact:** Generated resumes are fabricated fiction instead of real experience
 
-**Bug #1:** Resume content lost (in-memory storage cleared by Cloud Run)
-**Bug #2:** PDF downloads return 500 errors (Puppeteer/Chrome missing)
-**Gap #3:** Personality profiles too shallow (need profile-first flow for new users)
+**Root Cause:**
+- Uploaded resume stored in volatile `jdSessions = new Map()` in [conversation.js:10](api/routes/conversation.js#L10)
+- Cloud Run scales/restarts → memory cleared → uploaded CV lost
+- Generation prompt receives "No resume provided" → Gemini invents content
+- Francisco uploaded 11,220 chars of real CV, got "John Doe" with fake experience
+
+**Fix (Session 28):**
+```sql
+-- Database migration
+ALTER TABLE conversations
+ADD COLUMN existing_resume TEXT,
+ADD COLUMN gap_analysis JSONB,
+ADD COLUMN job_description TEXT;
+```
+- Update [conversation.js](api/routes/conversation.js) to save to DB (not Map)
+- Update [resume.js](api/routes/resume.js) to load from DB (not Map)
+- Test: Francisco's resume must show "Francisco Calisto" NOT "John Doe"
+
+#### Bug #2: PDF Downloads Fail 📄 USER EXPERIENCE
+**Severity:** HIGH - All 3 PDF templates return 500 errors
+**Impact:** Users cannot download PDF resumes (Markdown works)
+
+**Root Cause:**
+- Puppeteer trying to launch Chrome/Chromium
+- Not installed in [api/Dockerfile](api/Dockerfile)
+- [pdfGenerator.js](api/services/pdfGenerator.js) crashes with error
+
+**Fix (Session 28):**
+- Update Dockerfile: Install Chromium + dependencies
+- Update pdfGenerator.js: Use system Chrome path
+- Deploy with 1Gi memory (increased from 512Mi)
+- Test: All 3 PDF templates return HTTP 200 (not 500)
+
+#### Gap #3: Shallow Personality Profiles 🎯 STRATEGIC
+**Severity:** MEDIUM - Missing competitive advantage
+**Impact:** Only 5 job-specific Q&A, no deep personalization
+
+**Current State:**
+- Questions generated per job (not reusable)
+- No personal stories, passions, unique skills captured
+- Cannot generate cover letters (insufficient data)
+- No user lock-in (no profile investment)
+
+**Vision (Sessions 29-33):**
+- Profile-first onboarding with 12 conversational questions
+- RAG system: pgvector + embeddings for story retrieval
+- Cover letter generation capability
+- Database schema: personality_profiles + profile_stories tables
+- Details: See "Profile-First RAG System Design" section below
 
 ---
 
-### 🎯 IMMEDIATE NEXT STEPS (Session 28) - PRIORITIES CHANGED!
+### 🎯 SESSION 28: CRITICAL BUG FIXES (MUST COMPLETE FIRST!)
 
-**❌ CANCELLED:** End-to-end testing (critical bugs must be fixed first)
+**❌ CANCELLED:** End-to-end testing (critical bugs block production quality)
 
 **NEW PRIORITIES:**
 
-1. **🔴 CRITICAL: Fix Resume Content Persistence**
-   - [ ] Upload different file types (PDF, DOCX, TXT)
-   - [ ] Upload files close to 25MB limit
-   - [ ] Test various job descriptions (technical vs non-technical)
-   - [ ] Answer all questions with varied content
-   - [ ] Verify personality inference accuracy
-   - [ ] Check resume generation quality
-   - [ ] **Test all 4 download options (MD + 3 PDFs)**
-   - [ ] Verify ATS scores are reasonable
-   - [ ] Test with poor resume → check gap questions
-   - [ ] Test with excellent resume → check fewer questions
-   - **Goal:** Validate entire flow works for real users
+#### Task 1: Fix Resume Content Persistence ⚡ CRITICAL
+- [ ] Database migration (add 3 columns to conversations table)
+- [ ] Update Prisma schema (existingResume, gapAnalysis, jobDescription)
+- [ ] Update conversation.js - REPLACE `jdSessions.set()` with `prisma.conversation.update()`
+- [ ] Update resume.js - REPLACE `jdSessions.get()` with `prisma.conversation.findFirst()`
+- [ ] Test with Francisco's CV (3 files: DOCX + PDF, 11,220 chars)
+- [ ] **Success Criteria:** Resume shows "Francisco Calisto" with real experience
 
-2. **🟠 HIGH: Deployment Script Improvement**
-   - [ ] Update deploy-frontend.sh to auto-route traffic
-   - [ ] Update deploy-api-staging.sh with same fix
-   - [ ] Add health check verification after deployment
-   - **Problem:** Manual traffic routing required every deployment (happened 3+ times)
+#### Task 2: Fix PDF Generation 📄 HIGH
+- [ ] Update api/Dockerfile (install Chromium + dependencies)
+- [ ] Update pdfGenerator.js (use PUPPETEER_EXECUTABLE_PATH)
+- [ ] Deploy with 1Gi memory (Cloud Run)
+- [ ] Route traffic to new revision
+- [ ] **Success Criteria:** All 3 PDF templates return HTTP 200
 
-3. **🟡 MEDIUM: Frontend Cleanup**
-   - [ ] Remove or refactor ResumePage.js (legacy localStorage logic)
-   - [ ] Consolidate resume viewing components
-   - [ ] Add error boundary for ResumeViewPage
-   - [ ] Add success message after download
-   - [ ] Fix avatar CORS warning (cosmetic)
+#### Task 3: End-to-End Production Testing ✅
+- [ ] Complete flow: Upload → JD → Questions → Generate → Download
+- [ ] Verify accuracy: Name, email, experience match uploaded CV
+- [ ] Test all 4 download formats (MD + 3 PDFs)
+- [ ] Verify database persistence (check conversations.existing_resume column)
+- [ ] **Success Criteria:** ALL tests pass before proceeding to Session 29
 
-4. **🟢 NICE TO HAVE: Analytics & Feedback**
-   - [ ] Track which download format users prefer
-   - [ ] Add "Rate your resume" after generation
-   - [ ] Monitor ATS scores (are they realistic?)
-   - [ ] Add upload progress indicator
-   - [ ] Show extracted text preview before conversation
+**🚨 DO NOT PROCEED TO SESSION 29 UNLESS ALL TESTS PASS!**
+
+---
+
+### 🏗️ PROFILE-FIRST RAG SYSTEM DESIGN (Sessions 29-33)
+
+**Strategic Goal:** Deep personality profiles + RAG-powered personalization
+
+#### Session 29: Profile Builder Foundation
+**Database Schema:**
+```sql
+CREATE TABLE personality_profiles (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER UNIQUE REFERENCES users(id),
+  is_complete BOOLEAN DEFAULT false,
+  openness INTEGER CHECK (openness BETWEEN 0 AND 100),
+  conscientiousness INTEGER,
+  extraversion INTEGER,
+  agreeableness INTEGER,
+  neuroticism INTEGER,
+  work_style VARCHAR(100),
+  communication_style VARCHAR(100),
+  core_values TEXT[],
+  passions TEXT[],
+  unique_skills TEXT[],
+  profile_summary TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE profile_stories (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  question_asked TEXT NOT NULL,
+  story_text TEXT NOT NULL,
+  story_summary TEXT,
+  category VARCHAR(50), -- challenge_overcome, achievement, leadership, etc.
+  themes TEXT[],
+  skills_demonstrated TEXT[],
+  embedding VECTOR(1536), -- For RAG similarity search
+  relevance_tags TEXT[],
+  times_used_in_resumes INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+**12 Conversational Questions:**
+1. "🎯 Tell me about a time you faced a real challenge..."
+2. "🌟 What's something you're genuinely proud of accomplishing?"
+3. "📚 Think about a skill you taught yourself..."
+4. "👥 Describe a time you worked on a team..."
+5. "❤️ What are you passionate about?"
+6. "🎨 What's something about you that doesn't fit neatly on a resume?"
+7. "⚙️ How do you work best?"
+8. "🎯 Why do you do what you do?"
+9. "💬 How would you describe the way you communicate?"
+10. "🚀 Where do you want to be in 3-5 years?"
+11. "🌱 Tell me about a time something didn't go as planned..." (Optional)
+12. "🤝 Think about a time you asked for help..." (Optional)
+
+**Tasks:**
+- [ ] Apply database migration (personality_profiles + profile_stories)
+- [ ] Create profileAnalyzer.js (Gemini-powered Big 5 + story extraction)
+- [ ] Create profile routes (start, answer, complete, status)
+- [ ] Create ProfileBuilderWizard.js component
+- [ ] Add profile completeness check on login
+- [ ] Redirect new users to profile builder
+
+#### Session 30: RAG Integration
+- [ ] Install pgvector extension
+- [ ] Generate embeddings for stories (OpenAI or Vertex AI)
+- [ ] Implement semantic search: `SELECT * ORDER BY embedding <=> $query_embedding`
+- [ ] Update resume generation prompt to include retrieved stories
+- [ ] Test: Verify relevant stories appear in generated resumes
+
+#### Session 31: Cover Letter Generation
+- [ ] Create coverLetterGenerator.js
+- [ ] RAG retrieval: Match stories to company mission/values
+- [ ] Cover letter routes (generate, preview, download)
+- [ ] Cover letter UI component
+- [ ] Test: Generate cover letters for 3 different companies
+
+#### Session 32: Profile Management UI
+- [ ] Profile view/edit page
+- [ ] Add/edit/delete stories
+- [ ] View profile completeness score
+- [ ] See which stories used most in resumes
+- [ ] Update personality traits
+
+#### Session 33: Production Hardening
+- [ ] Auto-route traffic in deployment scripts
+- [ ] Add error boundaries to all components
+- [ ] Implement rate limiting (profile generation is expensive)
+- [ ] Add analytics (track feature usage)
+- [ ] Performance optimization (cache embeddings)
+
+---
+
+### 🟢 LOWER PRIORITY ITEMS (After Session 33)
 
 ### ✅ What's Working (Session 19 Achievements)
 
