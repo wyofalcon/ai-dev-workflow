@@ -91,17 +91,18 @@ ${isResumeFirstMode
   ? '1. Use the HYBRID approach: Keep strong existing content, enhance weak sections, fill gaps with conversation answers'
   : hasContent
     ? '1. Extract concrete experience, skills, and achievements from the candidate\'s background and stories'
-    : '1. Since minimal candidate data provided, create a professional resume framework with placeholder content marked with [EDIT: ...]'
+    : '1. Use ONLY information from conversation answers to create experience and education. NEVER use brackets [ ] or placeholder text. If specific dates/companies not mentioned, use general descriptions like "Recent Experience" or "Educational Background" without brackets.'
 }
 2. Tailor EVERY bullet point to match keywords and requirements from the job description
 3. Use strong action verbs (Led, Achieved, Implemented, Optimized, Delivered)
-4. Quantify ALL achievements with specific numbers, percentages, or metrics
+4. Quantify ALL achievements with specific numbers, percentages, or metrics from conversation answers
 5. Keep bullet points concise (1-2 lines maximum)
 6. Format in clean Markdown with clear headers (###)
 7. Include a compelling Professional Summary paragraph at the top
 8. Ensure ATS-friendly format (no tables, complex formatting, or images)
 9. Use the exact job title from the job description as the target role
-10. Use the provided contact information exactly as shown below
+10. CRITICAL: Never use placeholder brackets like [Your Company], [City, State], [Year]. If information not provided, omit it or use generic descriptions.
+11. Use the provided contact information exactly as shown below
 
 **CONTACT INFORMATION (Use exactly as provided):**
 - Name: ${contactInfo.name}
