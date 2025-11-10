@@ -29,19 +29,23 @@ class PDFGenerator {
 
   /**
    * Initialize browser instance (reuse across requests for performance)
+   * CRITICAL FIX: Use system Chromium from Docker (Bug #2 fix)
    */
   async initBrowser() {
     if (!this.browser) {
       this.browser = await puppeteer.launch({
         headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage', // Overcome limited resource problems
-          '--disable-gpu'
+          '--disable-gpu',
+          '--disable-software-rasterizer',
+          '--disable-extensions'
         ]
       });
-      console.log('✅ Puppeteer browser initialized');
+      console.log('✅ Puppeteer browser initialized with system Chromium');
     }
     return this.browser;
   }

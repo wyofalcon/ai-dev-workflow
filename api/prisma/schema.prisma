@@ -98,6 +98,9 @@ model Conversation {
   userId                String    @map("user_id")
   sessionId             String    @map("session_id")
   messages              Json[]
+  existingResume        String?   @map("existing_resume") @db.Text
+  gapAnalysis           Json?     @map("gap_analysis")
+  jobDescription        String?   @map("job_description") @db.Text
   // TODO: Add these columns via migration after staging environment is set up
   // status                String    @default("active")
   // completedAt           DateTime? @map("completed_at")

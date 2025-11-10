@@ -212,23 +212,38 @@ router.post('/generate',
       console.warn('⚠️ No personality profile found - resume will lack personality framing');
     }
 
-    // NEW: Load gap analysis if sessionId provided (resume-first mode)
+    // CRITICAL FIX: Load gap analysis from DATABASE (not volatile Map)
+    // This prevents data loss when Cloud Run scales/restarts (Bug #1 fix)
     let gapAnalysis = null;
     let existingResumeFromSession = null;
 
     if (sessionId) {
-      // Access jdSessions map from conversation.js (in-memory store)
-      // TODO: In production, move to Redis or database
-      const conversationModule = require('./conversation');
-      const jdSession = conversationModule.jdSessions?.get(sessionId);
+      // Load from database instead of volatile Map
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          userId: userRecord.id,
+          sessionId: sessionId
+        },
+        select: {
+          existingResume: true,
+          gapAnalysis: true,
+          jobDescription: true
+        }
+      });
 
-      if (jdSession) {
-        gapAnalysis = jdSession.analysis?.resumeGapAnalysis;
-        existingResumeFromSession = jdSession.existingResume;
+      if (conversation) {
+        gapAnalysis = conversation.gapAnalysis;
+        existingResumeFromSession = conversation.existingResume;
 
         if (gapAnalysis) {
-          console.log(`✅ Gap analysis loaded: ${gapAnalysis.questionCount} questions asked, ATS match: ${gapAnalysis.atsMatchScore}%`);
+          console.log(`✅ Gap analysis loaded from DB: ${gapAnalysis.questionCount} questions asked, ATS match: ${gapAnalysis.atsMatchScore}%`);
         }
+
+        if (existingResumeFromSession) {
+          console.log(`✅ Existing resume loaded from DB: ${existingResumeFromSession.length} characters`);
+        }
+      } else {
+        console.warn('⚠️ No conversation found in DB for sessionId:', sessionId);
       }
     }
 

@@ -1,8 +1,21 @@
 # Use Node.js 20 LTS Alpine for smaller image size
 FROM node:20-alpine
 
-# Cache bust: 2025-11-08-23:35:00 - Resume upload endpoint deployment
-ARG CACHEBUST=2
+# Cache bust: 2025-11-10 - Session 28: Bug fixes (resume persistence + PDF generation)
+ARG CACHEBUST=3
+
+# Install Chromium and dependencies for PDF generation (Bug #2 fix)
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Tell Puppeteer to use installed Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Set working directory
 WORKDIR /app

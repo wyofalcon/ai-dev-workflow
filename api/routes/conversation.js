@@ -139,6 +139,8 @@ This should take about ${hasResumeGapAnalysis ? '5-8 minutes' : '10-15 minutes'}
 Ready to get started?`;
 
     // Store conversation in database (messages as JSON array)
+    // CRITICAL FIX: Also store existingResume, gapAnalysis, and jobDescription in DB
+    // This prevents data loss when Cloud Run scales/restarts (Bug #1 fix)
     await prisma.conversation.create({
       data: {
         userId: user.id,
@@ -157,6 +159,9 @@ Ready to get started?`;
             timestamp: new Date().toISOString(),
           }
         ],
+        existingResume: existingResume || null,
+        gapAnalysis: jdAnalysis?.analysis?.resumeGapAnalysis || null,
+        jobDescription: jobDescription || null,
         // status: 'active', // Removed - column doesn't exist yet
       },
     });
