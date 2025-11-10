@@ -5,6 +5,7 @@ import { useCvState } from './hooks/useCvState.js';
 import HomePage from './components/HomePage.js';
 import TutorialModal from './components/TutorialModal.js';
 import ResumePage from './components/ResumePage.js';
+import ResumeViewPage from './components/ResumeViewPage.js';
 import ConversationalResumePage from './components/ConversationalResumePage.js';
 import ProcessModal from './components/ProcessModal.js';
 import Footer from './components/Footer.js';
@@ -222,6 +223,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ResumePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resume/:id"
+              element={
+                <ProtectedRoute>
+                  <ResumeViewPage />
                 </ProtectedRoute>
               }
             />
