@@ -629,6 +629,7 @@ function ConversationalWizard({ onComplete }) {
         onSave={handleProfileSave}
         currentProfile={userProfile}
         userEmail={currentUser?.email}
+        userDisplayName={currentUser?.displayName}
       />
     </>
   );

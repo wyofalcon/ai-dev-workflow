@@ -111,7 +111,7 @@ function ConversationalResumePage() {
               </Paper>
               <Paper sx={{ p: 3 }}>
                 <Typography variant="h6" fontWeight="bold" color="primary.main" gutterBottom>
-                  2. Answer 11 Questions
+                  2. Answer Our Questions
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Tell us about your experiences. Each answer serves two purposes: resume content + personality insights.

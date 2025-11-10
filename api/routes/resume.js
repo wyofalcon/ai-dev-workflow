@@ -101,7 +101,7 @@ ${isResumeFirstMode
 7. Include a compelling Professional Summary paragraph at the top
 8. Ensure ATS-friendly format (no tables, complex formatting, or images)
 9. Use the exact job title from the job description as the target role
-10. CRITICAL: Never use placeholder brackets like [Your Company], [City, State], [Year]. If information not provided, omit it or use generic descriptions.
+10. CRITICAL: Never use placeholder brackets like [Your Company], [City, State], [Year]. NEVER invent or assume locations, dates, or school names not mentioned by candidate. If not provided in answers, OMIT these fields entirely.
 11. Use the provided contact information exactly as shown below
 
 **CONTACT INFORMATION (Use exactly as provided):**
@@ -129,17 +129,21 @@ ${contactInfo.location} | ${contactInfo.phone} | ${contactInfo.email} | ${contac
 
 ## Professional Experience
 
-**[Job Title]** | [Company Name] | [Location] | [Dates]
+**[Job Title]** | [Company Name]
 - [Achievement with quantifiable result]
 - [Achievement with quantifiable result]
 - [Achievement with quantifiable result]
+
+NOTE: Only include location/dates if explicitly mentioned in candidate's answers. Otherwise OMIT.
 
 [Repeat for 2-3 positions]
 
 ---
 
 ## Education
-**[Degree]** | [School Name] | [Graduation Year]
+**[Degree]** | [Institution]
+
+NOTE: Only include school name/graduation year if explicitly mentioned. Otherwise use "Computer Science Degree" or similar without inventing school names.
 
 ---
 

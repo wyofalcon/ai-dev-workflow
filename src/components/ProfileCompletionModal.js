@@ -21,7 +21,7 @@ import PersonIcon from '@mui/icons-material/Person';
  *
  * Option B: Pre-generation prompt (just-in-time data collection)
  */
-function ProfileCompletionModal({ open, onClose, onSave, currentProfile, userEmail }) {
+function ProfileCompletionModal({ open, onClose, onSave, currentProfile, userEmail, userDisplayName }) {
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -31,17 +31,23 @@ function ProfileCompletionModal({ open, onClose, onSave, currentProfile, userEma
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Pre-populate form with existing profile data
+  // Pre-populate form with existing profile data OR Google SSO data
   useEffect(() => {
     if (currentProfile) {
       setFormData({
-        fullName: currentProfile.fullName || '',
+        fullName: currentProfile.fullName || userDisplayName || '',
         phone: currentProfile.phone || '',
         location: currentProfile.location || '',
         linkedinUrl: currentProfile.linkedinUrl || ''
       });
+    } else if (userDisplayName) {
+      // No profile yet, use Google display name as default
+      setFormData(prev => ({
+        ...prev,
+        fullName: userDisplayName
+      }));
     }
-  }, [currentProfile]);
+  }, [currentProfile, userDisplayName]);
 
   const handleChange = (field) => (event) => {
     setFormData({

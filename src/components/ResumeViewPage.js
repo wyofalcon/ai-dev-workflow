@@ -224,9 +224,11 @@ function ResumeViewPage() {
           <Chip label={`For: ${resume.job_title}`} color="primary" sx={{ mb: 2 }} />
         )}
 
-        <Typography variant="body2" color="text.secondary">
-          Generated on {new Date(resume?.created_at).toLocaleDateString()} at {new Date(resume?.created_at).toLocaleTimeString()}
-        </Typography>
+        {resume?.created_at && (
+          <Typography variant="body2" color="text.secondary">
+            Generated on {new Date(resume.created_at).toLocaleDateString()} at {new Date(resume.created_at).toLocaleTimeString()}
+          </Typography>
+        )}
       </Box>
 
       {/* Download Actions */}
@@ -350,7 +352,7 @@ function ResumeViewPage() {
           }}
         >
           <ReactMarkdown>
-            {resume?.content || 'No content available'}
+            {resume?.resumeMarkdown || resume?.content || 'No content available'}
           </ReactMarkdown>
         </Box>
       </Paper>
