@@ -104,14 +104,14 @@ describe('HomePage Component', () => {
     expect(mockOnStart).toHaveBeenCalled();
   });
 
-  it('should display the key benefit of 11 questions in 10 minutes', () => {
+  it('should display the key benefits', () => {
     render(
       <BrowserRouter>
         <HomePage />
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/11 questions in 10 minutes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Answer our questions/i)).toBeInTheDocument();
     expect(screen.getByText(/Zero revisions needed/i)).toBeInTheDocument();
   });
 });

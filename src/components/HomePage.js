@@ -43,7 +43,7 @@ function HomePage({ onStart }) {
       </Button>
 
       <Typography variant="body2" color="text.secondary" sx={{ mt: 2, maxWidth: 600 }}>
-        Answer 11 questions in 10 minutes. Zero revisions needed.
+        Answer our questions. Zero revisions needed.
         Our AI analyzes your target job and creates a perfectly tailored resume.
       </Typography>
     </Box>

@@ -41,7 +41,7 @@ function ConversationalResumePage() {
             Create Your Perfect Resume
           </Typography>
           <Typography variant="h6" color="text.secondary" paragraph>
-            Answer 11 questions • 10 minutes • Zero revisions needed
+            Answer our questions • Zero revisions needed
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
             Our AI analyzes your target job and asks targeted questions about your experience.
