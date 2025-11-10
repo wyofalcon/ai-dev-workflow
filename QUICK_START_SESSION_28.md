@@ -1,8 +1,9 @@
 # Quick Start - Session 28
 
-**Date Created:** 2025-11-10
+**Date Created:** 2025-11-10 (Updated after Session 27)
 **Location:** /mnt/storage/shared_windows/Cvstomize
 **Branch:** dev
+**Priority:** 🔴 CRITICAL BUG FIXES - Must complete before any other work!
 
 ---
 
@@ -10,19 +11,45 @@
 
 ✅ Download button FIXED - ResumeViewPage component created (370 lines)
 ✅ Route /resume/:id added to App.js
-✅ 4 download options working (MD + 3 PDF templates)
-✅ Frontend deployed: cvstomize-frontend-00009-thm
-✅ **MAJOR MILESTONE: Complete upload → download flow working!**
+✅ Frontend deployed: cvstomize-frontend-00010-lrd (100% traffic)
+✅ Complete system documentation created (2,700+ lines)
+✅ Critical bugs identified and analyzed
+✅ Profile + RAG system designed
+✅ Master implementation checklist created (Sessions 28-33)
 
 ---
 
-## 🎯 What's Next (Session 28)
+## 🔴 CRITICAL BUGS (Session 28 Priority)
 
-**Priority 1: END-TO-END PRODUCTION TESTING**
-Now that download works, we need to validate the entire flow works for real users.
+### Bug #1: Resume Content Lost ⚡ PRODUCTION BLOCKER
+**Impact:** Generated resumes show "John Doe" with invented content
+**Root Cause:** `jdSessions = new Map()` loses uploaded CVs when Cloud Run scales
+**Fix:** Database persistence (conversations table)
 
-**Priority 2: Deployment Script Auto-Traffic Routing**
-Stop manually routing traffic after every deployment (happened 3+ times).
+### Bug #2: PDF Downloads Fail 📄 USER EXPERIENCE
+**Impact:** All 3 PDF templates return 500 errors
+**Root Cause:** Puppeteer/Chromium not in Docker container
+**Fix:** Update Dockerfile + increase memory to 1Gi
+
+---
+
+## 🎯 Session 28 Priorities (IN ORDER)
+
+**Priority 1: FIX RESUME CONTENT PERSISTENCE** ⚡
+- Database migration (add 3 columns to conversations table)
+- Update conversation.js (save to DB, not Map)
+- Update resume.js (load from DB, not Map)
+- Test: Francisco's resume must show "Francisco Calisto" NOT "John Doe"
+
+**Priority 2: FIX PDF GENERATION** 📄
+- Update Dockerfile (install Chromium)
+- Deploy with 1Gi memory
+- Test: All 3 PDF templates return HTTP 200 (not 500)
+
+**Priority 3: END-TO-END PRODUCTION TESTING** ✅
+- Complete flow with real data
+- Verify accuracy (name, experience, downloads)
+- Only proceed to Session 29 if ALL tests pass
 
 ---
 
