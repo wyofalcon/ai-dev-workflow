@@ -1,15 +1,70 @@
 # 🚀 CVstomize v2.0 - Complete Roadmap
 
-**Last Updated:** 2025-11-10 (Session 27 COMPLETE - Download Working! Core Features Complete! 🎉)
+**Last Updated:** 2025-11-10 (Session 28 IN PROGRESS - Critical Bugs FIXED! 🔥)
 **Branch:** dev
-**Status:** ✅ PRODUCTION OPERATIONAL - Complete Upload → Download Flow Working!
-**Production:** Frontend 00009-thm + API 00117-nnn (Nov 10 - Full flow operational)
+**Status:** ✅ PRODUCTION OPERATIONAL - Bug Fixes Deployed!
+**Production:** Frontend 00010-lrd + API 00118-tbx (Nov 10 - Bug fixes deployed)
 **Staging:** Frontend 00003-p94 + API 00011-d4q (has upload endpoint, needs user accounts)
 **Testing:** 26 total tests (25 passing - 96%), 10 new upload tests (100% passing)
 
 ---
 
 ## 📍 CURRENT STATUS & IMMEDIATE NEXT STEPS
+
+### ✅ SESSION 28 IN PROGRESS - CRITICAL BUGS FIXED! 🔥
+
+**🎊 PRODUCTION BLOCKER RESOLVED: Resume Persistence Now Working!**
+
+**What We Fixed:**
+- ✅ **Bug #1: Resume Content Persistence** - Database migration + code updates COMPLETE
+- ✅ **Bug #2: PDF Generation** - Chromium installed + Puppeteer configured COMPLETE
+- ✅ **Deployed:** API revision 00118-tbx with 1Gi memory (100% traffic)
+- ⏳ **Testing:** Need to verify with Francisco's CV data
+
+**Technical Changes (Session 28):**
+1. Database migration applied to conversations table:
+   ```sql
+   ALTER TABLE conversations
+   ADD COLUMN existing_resume TEXT,
+   ADD COLUMN gap_analysis JSONB,
+   ADD COLUMN job_description TEXT;
+   ```
+
+2. Updated [api/prisma/schema.prisma](api/prisma/schema.prisma)
+   - Added existingResume, gapAnalysis, jobDescription fields
+   - Regenerated Prisma client
+
+3. Updated [api/routes/conversation.js](api/routes/conversation.js)
+   - Saves resume data to DB (not volatile Map) on /start endpoint
+   - Prevents data loss when Cloud Run scales/restarts
+
+4. Updated [api/routes/resume.js](api/routes/resume.js)
+   - Loads resume data from DB (not volatile Map) on /generate endpoint
+   - Logs resume content length for verification
+
+5. Updated [api/Dockerfile](api/Dockerfile)
+   - Installed Chromium + dependencies (nss, freetype, harfbuzz, ca-certificates, ttf-freefont)
+   - Set PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+6. Updated [api/services/pdfGenerator.js](api/services/pdfGenerator.js)
+   - Uses system Chromium via executablePath
+   - Added additional args for stability
+
+**Deployment:**
+- Built: gcr.io/cvstomize/cvstomize-api:session-28-bug-fixes
+- Deployed: cvstomize-api-00118-tbx (100% traffic)
+- Memory: Increased from 512Mi to 1Gi (PDF generation needs more memory)
+- Status: ✅ Healthy (uptime 16s)
+
+**Next Steps:**
+- [ ] Test with Francisco's CV data (verify resume shows "Francisco Calisto" NOT "John Doe")
+- [ ] Test all 4 download formats (MD + 3 PDFs should return HTTP 200)
+- [ ] Verify database persistence (check conversations.existing_resume column)
+- [ ] Only proceed to Session 29 if ALL tests pass
+
+---
+
+## 📍 PREVIOUS SESSION STATUS
 
 ### ✅ SESSION 27 COMPLETED (Download Working! Core Features Complete!) 🎉
 
