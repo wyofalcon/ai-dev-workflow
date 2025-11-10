@@ -40,22 +40,32 @@
 
 ---
 
-## 📊 Current Status (Session 27 COMPLETE - November 10, 2025)
+## 📊 Current Status (Session 28 - December 10, 2025)
 
-### ✅ SESSION 27: DOWNLOAD WORKING! (Core Features Complete!)
-- **Download Button:** ✅ Fixed - Created ResumeViewPage component (370 lines)
-- **Complete Flow:** ✅ Upload → JD Analysis → Questions → Generate → Download
-- **4 Download Formats:** ✅ Markdown + 3 PDF templates (Classic/Modern/Minimal)
-- **Frontend:** cvstomize-frontend-00010-lrd (100% traffic)
-- **Backend:** cvstomize-api-00117-nnn (100% traffic)
+### ✅ SESSION 28: Critical Bugs Fixed + Profile Completion! ⚠️
+**Status:** 5/6 fixes complete, 1 bug remaining (contact info)
 
-**🔴 Critical Bugs Discovered (Real User Testing):**
-- Bug #1: Resume content lost (volatile Map storage) - Francisco's CV ignored, "John Doe" invented
-- Bug #2: PDF downloads fail (Puppeteer/Chrome missing in Docker) - All 3 PDFs return 500
-- Gap #3: Shallow profiles (need profile-first RAG system for competitive advantage)
+**Major Fixes Completed:**
+- ✅ **UI Copy Consistency** - Removed all "11 questions" hardcoded references
+- ✅ **Gemini Prompt Leakage** - Regex cleaning prevents "Of course..." preamble
+- ✅ **Placeholder Content** - No more `[Your Company]`, `[City, State]` brackets
+- ✅ **Profile Completion Modal** - Option B implementation (just-in-time data collection)
+- ✅ **Google Avatar Display** - CORS/CORP headers fixed
+- ✅ **Resume Preview** - Shows actual content (not "No content available")
+- ✅ **PDF Generation** - All 3 templates working (Bug #2 from Session 27 FIXED!)
+- ⚠️ **Contact Info** - Email works, but "Alex Johnson" placeholder name still appears
 
-**Next Session 28:** Fix critical bugs (database persistence + PDF generation)
-**See:** [ROADMAP.md](ROADMAP.md) for complete details and implementation plan
+**Current Revisions:**
+- **Frontend:** cvstomize-frontend-00015-8qt (100% traffic)
+- **Backend:** cvstomize-api-00124-xp6 (100% traffic) - Debug logging active
+
+**🐛 Remaining Bug:**
+- Contact information shows "Alex Johnson" instead of user's Google name
+- Debug logging deployed, needs one test to identify root cause
+- Expected fix: 1 deployment (< 30 minutes)
+
+**Next Session 29:** Fix "Alex Johnson" bug, test complete flow, update docs
+**See:** [SESSION_28_HANDOFF.md](SESSION_28_HANDOFF.md) for complete details and next steps
 
 ### ✅ STAGING ENVIRONMENT (Session 20-21)
 - **Separate GCP Project:** cvstomize-staging (complete isolation)
