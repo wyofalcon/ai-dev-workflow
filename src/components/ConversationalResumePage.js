@@ -21,8 +21,9 @@ function ConversationalResumePage() {
   };
 
   const handleViewResume = () => {
-    if (generatedResume?.resumeId) {
-      navigate(`/resume/${generatedResume.resumeId}`);
+    // API returns: { resume: { id: ... } }
+    if (generatedResume?.resume?.id) {
+      navigate(`/resume/${generatedResume.resume.id}`);
     }
   };
 
