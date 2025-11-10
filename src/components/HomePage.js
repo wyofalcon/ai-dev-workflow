@@ -23,9 +23,6 @@ function HomePage({ onStart }) {
       <Typography variant="h3" component="h1" gutterBottom>
         Tell Your Story. Land The Job.
       </Typography>
-      <Typography variant="h5" sx={{ mb: 2, color: 'text.secondary' }}>
-        Let our AI help you craft the perfect resume from your unique experiences.
-      </Typography>
 
       <Button
         variant="contained"

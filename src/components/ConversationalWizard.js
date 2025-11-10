@@ -234,27 +234,43 @@ function ConversationalWizard({ onComplete }) {
 
   // NEW: Save profile data from modal
   const handleProfileSave = async (profileData) => {
-    const token = await auth.currentUser.getIdToken();
+    try {
+      const token = await auth.currentUser.getIdToken();
 
-    const response = await fetch(`${API_BASE}/api/profile`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(profileData)
-    });
+      const response = await fetch(`${API_BASE}/api/profile`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(profileData)
+      });
 
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error || 'Failed to save profile');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to save profile');
+      }
+
+      console.log('✅ Profile saved successfully');
+
+      // Close modal and proceed with resume generation
+      setShowProfileModal(false);
+      setLoading(true);
+      await generateResumeAfterCompletion();
+    } catch (err) {
+      console.error('❌ Error saving profile:', err);
+      setError(err.message);
+      setShowProfileModal(false);
+      setLoading(false);
     }
+  };
 
-    console.log('✅ Profile saved successfully');
-
-    // Close modal and proceed with resume generation
+  // NEW: Handle skipping profile completion
+  const handleProfileSkip = () => {
+    console.log('⏭️ User skipped profile completion');
     setShowProfileModal(false);
-    await generateResumeAfterCompletion();
+    setLoading(true);
+    generateResumeAfterCompletion();
   };
 
   // Step 3: Complete conversation and generate resume
@@ -625,7 +641,7 @@ function ConversationalWizard({ onComplete }) {
       {/* Profile Completion Modal (Option B - Pre-generation prompt) */}
       <ProfileCompletionModal
         open={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
+        onClose={handleProfileSkip}
         onSave={handleProfileSave}
         currentProfile={userProfile}
         userEmail={currentUser?.email}
