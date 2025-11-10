@@ -11,7 +11,16 @@ const pdfGenerator = require('../services/pdfGenerator');
 const cloudStorageService = require('../services/cloudStorage');
 
 // Helper: Build personality-enhanced Gemini prompt
-function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality, gapAnalysis, existingResume }) {
+function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality, gapAnalysis, existingResume, userProfile, userEmail, userDisplayName }) {
+  // Build contact information from user profile
+  const contactInfo = {
+    name: userProfile?.fullName || userDisplayName || 'Full Stack Software Engineer',
+    location: userProfile?.location || 'Available to Relocate',
+    phone: userProfile?.phone || '(555) 123-4567',
+    email: userEmail || 'email@example.com',
+    linkedin: userProfile?.linkedinUrl || 'LinkedIn Profile Available'
+  };
+
   let personalityGuidance = '';
 
   if (personality) {
@@ -92,11 +101,18 @@ ${isResumeFirstMode
 7. Include a compelling Professional Summary paragraph at the top
 8. Ensure ATS-friendly format (no tables, complex formatting, or images)
 9. Use the exact job title from the job description as the target role
-10. Include contact information: [Your Name], [City, State], [Phone], [Email], [LinkedIn]
+10. Use the provided contact information exactly as shown below
+
+**CONTACT INFORMATION (Use exactly as provided):**
+- Name: ${contactInfo.name}
+- Location: ${contactInfo.location}
+- Phone: ${contactInfo.phone}
+- Email: ${contactInfo.email}
+- LinkedIn: ${contactInfo.linkedin}
 
 **OUTPUT FORMAT:**
-# [Your Name]
-[City, State] | [Phone] | [Email] | [LinkedIn]
+# ${contactInfo.name}
+${contactInfo.location} | ${contactInfo.phone} | ${contactInfo.email} | ${contactInfo.linkedin}
 
 ---
 
@@ -193,6 +209,17 @@ router.post('/generate',
       }
     }
 
+    // Load user profile for contact information
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId: userRecord.id },
+      select: {
+        fullName: true,
+        phone: true,
+        location: true,
+        linkedinUrl: true
+      }
+    });
+
     // Load personality (should already exist from /conversation/complete)
     let personality = await prisma.personalityTraits.findUnique({
       where: { userId: userRecord.id },
@@ -255,7 +282,10 @@ router.post('/generate',
       selectedSections: Array.isArray(selectedSections) ? selectedSections : selectedSections.split(','),
       personality,
       gapAnalysis, // NEW: Gap analysis from JD analyzer
-      existingResume: existingResumeFromSession // NEW: Original resume for hybrid mode
+      existingResume: existingResumeFromSession, // NEW: Original resume for hybrid mode
+      userProfile, // NEW: User profile for contact information
+      userEmail: userRecord.email, // Use Firebase email as fallback
+      userDisplayName: userRecord.displayName // Use Firebase display name as fallback
     });
 
     // Generate with Gemini Pro
@@ -264,8 +294,13 @@ router.post('/generate',
     const result = await model.generateContent(prompt);
     const response = result.response;
 
-    const resumeMarkdown = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    let resumeMarkdown = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
     if (!resumeMarkdown) throw new Error('No content generated');
+
+    // CRITICAL FIX: Clean Gemini response preamble/artifacts
+    // Remove common preambles like "Of course. Here is a compelling...", "Here's a resume...", etc.
+    resumeMarkdown = resumeMarkdown.replace(/^(Of course\.|Sure\.|Here is|Here's|I've created|I'll create|Let me create).*?(\n---|\n#)/is, '$2');
+    resumeMarkdown = resumeMarkdown.trim();
 
     const tokensUsed = response.usageMetadata?.totalTokenCount || 0;
     const generationTime = Date.now() - startTime;
