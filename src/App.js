@@ -75,6 +75,25 @@ function MainLayout() {
     setAnchorEl(null);
   };
 
+  // Helper to get proxied avatar URL
+  const getAvatarUrl = () => {
+    // First try userProfile.photoUrl (already proxied by AuthContext)
+    if (userProfile?.photoUrl) {
+      return userProfile.photoUrl;
+    }
+
+    // Fallback to Firebase currentUser.photoURL and proxy it
+    if (currentUser?.photoURL) {
+      const API_URL = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
+      if (currentUser.photoURL.includes('googleusercontent.com')) {
+        return `${API_URL}/proxy/avatar?url=${encodeURIComponent(currentUser.photoURL)}`;
+      }
+      return currentUser.photoURL;
+    }
+
+    return null;
+  };
+
   const handleLogout = async () => {
     handleMenuClose();
     try {
@@ -135,8 +154,12 @@ function MainLayout() {
 
               {/* User Menu */}
               <IconButton onClick={handleMenuOpen} color="primary">
-                {userProfile?.photoUrl ? (
-                  <Avatar src={userProfile.photoUrl} sx={{ width: 32, height: 32 }} />
+                {getAvatarUrl() ? (
+                  <Avatar
+                    src={getAvatarUrl()}
+                    sx={{ width: 32, height: 32 }}
+                    alt={currentUser?.displayName || 'User'}
+                  />
                 ) : (
                   <AccountCircle />
                 )}
