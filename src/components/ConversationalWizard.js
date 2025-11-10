@@ -24,8 +24,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { auth } from '../firebase/index.js';
-import { useAuth } from '../contexts/AuthContext';
-import ProfileCompletionModal from './ProfileCompletionModal';
+import { useAuth } from '../contexts/AuthContext.js';
+import ProfileCompletionModal from './ProfileCompletionModal.js';
 
 /**
  * Conversational Wizard Component (FIXED - Session 18)
