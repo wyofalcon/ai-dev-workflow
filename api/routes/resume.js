@@ -12,14 +12,24 @@ const cloudStorageService = require('../services/cloudStorage');
 
 // Helper: Build personality-enhanced Gemini prompt
 function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality, gapAnalysis, existingResume, userProfile, userEmail, userDisplayName }) {
-  // Build contact information from user profile
+  // Build contact information from user profile with Google account fallbacks
   const contactInfo = {
-    name: userProfile?.fullName || userDisplayName || 'Full Stack Software Engineer',
-    location: userProfile?.location || 'Available to Relocate',
-    phone: userProfile?.phone || '(555) 123-4567',
-    email: userEmail || 'email@example.com',
-    linkedin: userProfile?.linkedinUrl || 'LinkedIn Profile Available'
+    name: userProfile?.fullName || userDisplayName || 'Professional',
+    location: userProfile?.location || '', // Omit if not provided
+    phone: userProfile?.phone || '', // Omit if not provided
+    email: userEmail || 'your.email@example.com',
+    linkedin: userProfile?.linkedinUrl || '' // Omit if not provided
   };
+
+  // Build contact line (only include fields that exist)
+  const contactParts = [
+    contactInfo.location,
+    contactInfo.phone,
+    contactInfo.email,
+    contactInfo.linkedin
+  ].filter(part => part && part.trim() !== '');
+
+  const contactLine = contactParts.length > 0 ? contactParts.join(' | ') : contactInfo.email;
 
   let personalityGuidance = '';
 
@@ -113,7 +123,7 @@ ${isResumeFirstMode
 
 **OUTPUT FORMAT:**
 # ${contactInfo.name}
-${contactInfo.location} | ${contactInfo.phone} | ${contactInfo.email} | ${contactInfo.linkedin}
+${contactLine}
 
 ---
 
@@ -168,7 +178,14 @@ router.post('/generate',
       // Check resume limit
       const userRecord = await prisma.user.findUnique({
         where: { firebaseUid: user.firebaseUid },
-        select: { id: true, resumesGenerated: true, resumesLimit: true, subscriptionTier: true }
+        select: {
+          id: true,
+          resumesGenerated: true,
+          resumesLimit: true,
+          subscriptionTier: true,
+          email: true,
+          displayName: true
+        }
       });
 
       if (userRecord.resumesGenerated >= userRecord.resumesLimit) {
