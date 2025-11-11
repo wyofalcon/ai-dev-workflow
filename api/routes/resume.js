@@ -1245,4 +1245,63 @@ router.post('/extract-text', verifyFirebaseToken, (req, res, next) => {
   }
 });
 
+/**
+ * DELETE /api/resume/:id
+ * Delete a resume by ID
+ * Requires valid Firebase token
+ */
+router.delete('/:id', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { firebaseUid } = req.user;
+    const { id } = req.params;
+
+    // Get user ID
+    const user = await prisma.user.findUnique({
+      where: { firebaseUid },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User Not Found',
+        message: 'User account not found',
+      });
+    }
+
+    // Verify resume belongs to user before deleting
+    const resume = await prisma.resume.findFirst({
+      where: {
+        id,
+        userId: user.id,
+      },
+    });
+
+    if (!resume) {
+      return res.status(404).json({
+        error: 'Resume Not Found',
+        message: 'Resume not found or access denied',
+      });
+    }
+
+    // Delete resume from database
+    await prisma.resume.delete({
+      where: { id },
+    });
+
+    // TODO: Delete PDF from Cloud Storage if exists
+    // if (resume.pdfPath && resume.pdfBucket) {
+    //   await cloudStorageService.deleteFile(resume.pdfPath);
+    // }
+
+    res.status(200).json({
+      success: true,
+      message: 'Resume deleted successfully',
+      deletedId: id,
+    });
+  } catch (error) {
+    console.error('Error deleting resume:', error);
+    next(error);
+  }
+});
+
 module.exports = router;
