@@ -274,10 +274,10 @@ const ResumePage = () => {
         {/* Resume Cards */}
         <Grid container spacing={3}>
           {filteredResumes.map((resume) => (
-            <Grid item xs={12} sm={6} md={4} key={resume.id}>
+            <Grid item xs={12} sm={6} md={4} key={resume.id} sx={{ display: 'flex' }}>
               <Card
                 sx={{
-                  height: '100%',
+                  width: '100%',
                   display: 'flex',
                   flexDirection: 'column',
                   transition: 'transform 0.2s, box-shadow 0.2s',
@@ -287,21 +287,24 @@ const ResumePage = () => {
                   },
                 }}
               >
-                <CardContent sx={{ flexGrow: 1 }}>
+                <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                   {/* Title */}
-                  <Typography variant="h6" gutterBottom noWrap>
+                  <Typography variant="h6" gutterBottom noWrap sx={{ minHeight: '32px' }}>
                     {resume.title || 'Untitled Resume'}
                   </Typography>
 
                   {/* Company */}
-                  {resume.targetCompany && (
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {resume.targetCompany}
-                    </Typography>
-                  )}
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                    sx={{ minHeight: '20px' }}
+                  >
+                    {resume.targetCompany || '\u00A0'}
+                  </Typography>
 
                   {/* Status */}
-                  <Box sx={{ mt: 2, mb: 1 }}>
+                  <Box sx={{ mt: 2, mb: 1, minHeight: '32px' }}>
                     <Chip
                       label={resume.status || 'draft'}
                       color={getStatusColor(resume.status)}
@@ -309,22 +312,20 @@ const ResumePage = () => {
                     />
                   </Box>
 
-                  {/* Dates */}
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
-                    Created: {formatDate(resume.createdAt)}
-                  </Typography>
-                  {resume.downloadedAt && (
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Downloaded: {formatDate(resume.downloadedAt)}
-                    </Typography>
-                  )}
-
-                  {/* Token Usage */}
-                  {resume.tokensUsed && (
+                  {/* Dates - Fixed height section */}
+                  <Box sx={{ minHeight: '60px' }}>
                     <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
-                      AI Tokens: {resume.tokensUsed.toLocaleString()}
+                      Created: {formatDate(resume.createdAt)}
                     </Typography>
-                  )}
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Downloaded: {resume.downloadedAt ? formatDate(resume.downloadedAt) : 'Not yet'}
+                    </Typography>
+                  </Box>
+
+                  {/* Token Usage - Fixed height */}
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1, minHeight: '20px' }}>
+                    {resume.tokensUsed ? `AI Tokens: ${resume.tokensUsed.toLocaleString()}` : '\u00A0'}
+                  </Typography>
                 </CardContent>
 
                 <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
