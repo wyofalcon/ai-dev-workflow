@@ -20,7 +20,7 @@ function buildResumePrompt({ resumeText, personalStories, jobDescription, select
   });
 
   const contactInfo = {
-    name: userProfile?.fullName || userDisplayName || 'Professional',
+    name: userDisplayName || userProfile?.fullName || 'Professional', // Prioritize Google SSO name
     location: userProfile?.location || '', // Omit if not provided
     phone: userProfile?.phone || '', // Omit if not provided
     email: userEmail || 'your.email@example.com',
