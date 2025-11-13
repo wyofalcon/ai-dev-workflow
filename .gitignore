@@ -38,3 +38,6 @@ yarn-error.log*
 /logs
 generated_resumes/
 api/coverage/
+
+.gemini/
+gha-creds-*.json

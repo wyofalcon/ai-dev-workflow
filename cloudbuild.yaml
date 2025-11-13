@@ -2,37 +2,9 @@
 # Supports: dev, staging, production deployments
 
 substitutions:
-  _ENV: 'dev'  # Default environment
   _API_IMAGE: 'gcr.io/${PROJECT_ID}/cvstomize-api'
-  _FRONTEND_IMAGE: 'gcr.io/${PROJECT_ID}/cvstomize-frontend'
-
-# Determine environment from branch
-# dev branch → dev environment
-# staging branch → staging environment
-# main branch → production environment
 
 steps:
-  # ============================================
-  # Step 1: Determine Environment from Branch
-  # ============================================
-  - name: 'bash'
-    id: 'set-environment'
-    script: |
-      #!/bin/bash
-      if [[ "$BRANCH_NAME" == "main" ]]; then
-        echo "production" > /workspace/environment.txt
-      elif [[ "$BRANCH_NAME" == "staging" ]]; then
-        echo "staging" > /workspace/environment.txt
-      else
-        echo "dev" > /workspace/environment.txt
-      fi
-
-      ENV=$(cat /workspace/environment.txt)
-      echo "🌍 Deploying to: $ENV"
-      echo "$ENV" > /workspace/_ENV
-    env:
-      - 'BRANCH_NAME=$BRANCH_NAME'
-
   # ============================================
   # Step 2: Run Backend Tests
   # ============================================
@@ -84,46 +56,30 @@ steps:
     args:
       - '-c'
       - |
-        ENV=$(cat /workspace/environment.txt)
-        echo "🚀 Deploying backend to $ENV..."
-
-        # Set service name based on environment
-        if [[ "$ENV" == "production" ]]; then
-          SERVICE_NAME="cvstomize-api"
-          DB_INSTANCE="cvstomize-db"
-          MAX_INSTANCES="10"
-        elif [[ "$ENV" == "staging" ]]; then
-          SERVICE_NAME="cvstomize-api-staging"
-          DB_INSTANCE="cvstomize-db-staging"
-          MAX_INSTANCES="5"
-        else
-          SERVICE_NAME="cvstomize-api-dev"
-          DB_INSTANCE="cvstomize-db-dev"
-          MAX_INSTANCES="2"
-        fi
+        echo "🚀 Deploying backend to dev..."
 
         # Deploy to Cloud Run
-        gcloud run deploy $SERVICE_NAME \
+        gcloud run deploy cvstomize-api-dev \
           --image=${_API_IMAGE}:${SHORT_SHA} \
           --region=us-central1 \
           --platform=managed \
           --allow-unauthenticated \
           --service-account=cvstomize-deployer@${PROJECT_ID}.iam.gserviceaccount.com \
-          --add-cloudsql-instances=${PROJECT_ID}:us-central1:$DB_INSTANCE \
-          --set-env-vars="NODE_ENV=$ENV,LOG_LEVEL=info" \
-          --set-secrets="DATABASE_URL=DATABASE_URL_$ENV:latest,JWT_SECRET=JWT_SECRET_$ENV:latest,GCS_BUCKET_NAME=GCS_BUCKET_NAME_$ENV:latest" \
+          --add-cloudsql-instances=${PROJECT_ID}:us-central1:cvstomize-db-dev \
+          --set-env-vars="NODE_ENV=dev,LOG_LEVEL=info" \
+          --set-secrets="DATABASE_URL=DATABASE_URL_dev:latest,JWT_SECRET=JWT_SECRET_dev:latest,GCS_BUCKET_NAME=GCS_BUCKET_NAME_dev:latest" \
           --port=3001 \
           --timeout=60 \
           --memory=2Gi \
           --cpu=2 \
-          --max-instances=$MAX_INSTANCES \
+          --max-instances=2 \
           --min-instances=0 \
-          --labels="app=cvstomize,env=$ENV,version=${SHORT_SHA}"
+          --labels="app=cvstomize,env=dev,version=${SHORT_SHA}"
 
         # Get service URL
-        SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --region=us-central1 --format="value(status.url)")
-        echo "✅ Backend deployed: $SERVICE_URL"
-        echo "$SERVICE_URL" > /workspace/backend-url.txt
+        $$SERVICE_URL=$$(gcloud run services describe cvstomize-api-dev --region=us-central1 --format="value(status.url)")
+        echo "✅ Backend deployed: $$SERVICE_URL"
+        echo "$$SERVICE_URL" > /workspace/backend-url.txt
 
   # ============================================
   # Step 6: Run Smoke Tests
@@ -134,17 +90,16 @@ steps:
     args:
       - '-c'
       - |
-        ENV=$(cat /workspace/environment.txt)
-        BACKEND_URL=$(cat /workspace/backend-url.txt)
+        $$BACKEND_URL=$$(cat /workspace/backend-url.txt)
 
-        echo "🧪 Running smoke tests against $BACKEND_URL..."
+        echo "🧪 Running smoke tests against $$BACKEND_URL..."
 
         # Test health endpoint
-        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" $BACKEND_URL/health)
-        if [[ "$HTTP_CODE" == "200" ]]; then
+        $$HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" $$BACKEND_URL/health)
+        if [[ "$$HTTP_CODE" == "200" ]]; then
           echo "✅ Health check passed"
         else
-          echo "❌ Health check failed (HTTP $HTTP_CODE)"
+          echo "❌ Health check failed (HTTP $$HTTP_CODE)"
           exit 1
         fi
 
@@ -160,16 +115,15 @@ steps:
     args:
       - '-c'
       - |
-        ENV=$(cat /workspace/environment.txt)
-        BACKEND_URL=$(cat /workspace/backend-url.txt)
+        $$BACKEND_URL=$$(cat /workspace/backend-url.txt)
 
         echo "========================================="
         echo "✅ Deployment Successful!"
         echo "========================================="
-        echo "Environment: $ENV"
-        echo "Backend URL: $BACKEND_URL"
-        echo "Git SHA: ${SHORT_SHA}"
-        echo "Branch: ${BRANCH_NAME}"
+        echo "Environment: dev"
+        echo "Backend URL: $$BACKEND_URL"
+        echo "Git SHA: $${SHORT_SHA}"
+        echo "Branch: $${BRANCH_NAME}}"
         echo "========================================="
 
 # Build timeout (20 minutes)
