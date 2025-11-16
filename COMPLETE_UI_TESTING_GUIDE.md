@@ -42,8 +42,8 @@ This guide covers **6 major test sections:**
 6. **Downloads & Export Features**
 
 **How to use this guide:**
-- ✅ Check each box as you complete the test
-- 📝 Note any issues in the "Issues Found" section at the end
+- ✅ Check each box as you complete the testd
+- 📝 Note any issues in the "Issues Found" section at the endd
 - 🔄 If a test fails, mark it and continue (don't stop testing)
 
 ---
@@ -1537,6 +1537,45 @@ _______________________________________________
 
 **Tester Signature:** _______________________
 **Date Completed:** _______________________
+
+---
+
+# 💡 Feature Suggestions & Improvements
+
+**Collected from user feedback during testing:**
+
+### Job Application Integration
+- Provide convenient links to ZipRecruiter, LinkedIn, Indeed
+
+### User Experience
+- Add disclaimer that AI may make mistakes - users should ALWAYS double-check
+- Add drag and drop functionality to file upload box
+- Inform users about accepted file types and maximum upload size (per document or total)
+- Replace tagline with "You're more capable than you think, we will prove it."
+
+### Interview Preparation
+- In follow-up questions, provide a way to skip questions (if resume already has details)
+- Provide option for users to save their responses to follow-up questions (likely interview questions)
+
+### Profile Management
+- "Complete your profile" information should be auto-filled from resume, with users prompted to double-check
+
+### Resume Features
+- Allow for multiple resumes, mainly to extract relevant skills
+- Offer resume format options or a "surprise me" feature
+
+### Monetization & Tiers
+- Consider offering simpler application as "Standard" version and current build as "Premium" tier
+- Implement token limits per person to prevent abuse or malicious intent
+
+### Community & Support
+- Add FAQ section
+- Add feedback link or non-intrusive pop-up to ask for feedback
+- Add "share with a friend" link
+- Add "buy the dev a coffee" link
+
+### Fun
+- Add an inappropriate Easter egg
 
 ---
 

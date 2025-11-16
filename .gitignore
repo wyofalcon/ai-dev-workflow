@@ -35,9 +35,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .vercel
-/logs
-generated_resumes/
+/data/logs/
+/data/generated_resumes/
 api/coverage/
 
 .gemini/
 gha-creds-*.json
+
+# Playwright test reports
+tests/reports/
+test-results/
+playwright-report/
+playwright/.cache/

@@ -27,7 +27,7 @@ echo ""
 # Build and deploy using Cloud Build (multi-stage Docker build)
 echo "📦 Building Docker image with Cloud Build..."
 gcloud builds submit \
-  --config=cloudbuild.frontend-staging.yaml \
+  --config=../../ci/cloudbuild.frontend-staging.yaml \
   --project=$PROJECT_ID \
   .
 
