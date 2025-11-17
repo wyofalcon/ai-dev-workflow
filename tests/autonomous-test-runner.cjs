@@ -91,12 +91,118 @@ Requirements:
   },
   
   testUser: {
-    email: process.env.TEST_USER_EMAIL || 'automated-test@cvstomize.test',
+    // Authentication (use existing account or create new)
+    email: process.env.TEST_USER_EMAIL || `test-${Date.now()}@cvstomize.test`,
     password: process.env.TEST_USER_PASSWORD || 'AutoTest123!',
-    name: 'Autonomous Test User',
+    
+    // Profile fields (for ProfileCompletionModal)
+    fullName: 'QA Test User',
+    name: 'QA Test User',
     phone: '(555) 123-4567',
     location: 'San Francisco, CA',
-    linkedin: 'linkedin.com/in/testuser'
+    linkedinUrl: 'https://linkedin.com/in/qatest',
+    linkedin: 'linkedin.com/in/qatest',
+    
+    // Alternative profile variations for different tests
+    profiles: {
+      engineer: {
+        fullName: 'Alex Software Engineer',
+        location: 'Seattle, WA',
+        phone: '(206) 555-0100',
+        linkedinUrl: 'https://linkedin.com/in/alexeng'
+      },
+      marketing: {
+        fullName: 'Jordan Marketing Pro',
+        location: 'New York, NY',
+        phone: '(212) 555-0200',
+        linkedinUrl: 'https://linkedin.com/in/jordanmkt'
+      }
+    }
+  },
+  
+  // Pre-existing resume text for upload tests
+  sampleResumes: {
+    basic: `John Doe
+Email: john.doe@example.com | Phone: (555) 555-5555
+Location: Austin, TX | LinkedIn: linkedin.com/in/johndoe
+
+PROFESSIONAL SUMMARY
+Results-driven software engineer with 5+ years of experience building scalable web applications. 
+Expertise in React, Node.js, and cloud technologies. Proven track record of delivering high-quality 
+products in fast-paced environments.
+
+WORK EXPERIENCE
+
+Senior Software Engineer | TechCorp Inc. | 2021 - Present
+- Led development of customer-facing web platform serving 100K+ users
+- Reduced page load times by 40% through performance optimization
+- Mentored team of 3 junior developers
+- Technologies: React, Node.js, PostgreSQL, AWS
+
+Software Engineer | StartupCo | 2019 - 2021
+- Built RESTful APIs handling 10M+ requests per day
+- Implemented CI/CD pipeline reducing deployment time by 60%
+- Collaborated with product team on feature design and roadmap
+- Technologies: Python, Django, MongoDB, Docker
+
+EDUCATION
+
+B.S. Computer Science | University of Texas | 2019
+- GPA: 3.8/4.0
+- Dean's List all semesters
+
+SKILLS
+
+Languages: JavaScript, Python, TypeScript, SQL
+Frameworks: React, Node.js, Express, Django, Next.js
+Tools: Git, Docker, Kubernetes, AWS, PostgreSQL, MongoDB`,
+
+    detailed: `Sarah Johnson
+sarah.johnson@example.com | (415) 555-0123
+San Francisco, CA 94102 | linkedin.com/in/sarahjohnson
+
+SUMMARY
+Product Manager with 7 years of experience driving product strategy and execution for B2B SaaS companies. 
+Expert in user research, roadmap planning, and cross-functional team leadership. Shipped 15+ major features 
+resulting in 200% revenue growth.
+
+PROFESSIONAL EXPERIENCE
+
+Senior Product Manager | CloudSoft Technologies | 2020 - Present
+• Lead product strategy for enterprise analytics platform ($50M ARR)
+• Conducted 100+ user interviews to identify pain points and opportunities
+• Increased user retention by 35% through data-driven feature prioritization
+• Managed roadmap and backlog for team of 12 engineers and 2 designers
+• Key achievement: Launched AI-powered insights feature adopted by 80% of customers
+
+Product Manager | DataViz Inc. | 2018 - 2020
+• Owned end-to-end product lifecycle for dashboard visualization tool
+• Grew monthly active users from 5K to 25K in 18 months
+• Reduced onboarding time by 50% through UX improvements
+• Collaborated with sales and marketing on go-to-market strategy
+
+Associate Product Manager | StartupHub | 2016 - 2018
+• Supported product team on mobile app development
+• Created product requirements documents and user stories
+• Analyzed user data to inform feature decisions
+• Assisted with user testing and feedback synthesis
+
+EDUCATION
+
+MBA, Business Administration | Stanford Graduate School of Business | 2016
+B.A. Economics | UC Berkeley | 2014
+- Minor in Computer Science
+
+SKILLS
+
+Product Management: User Research, A/B Testing, Analytics, Roadmap Planning, Agile/Scrum
+Tools: Jira, Figma, Mixpanel, Google Analytics, SQL, Tableau
+Technical: API concepts, basic Python, SQL queries, data analysis
+
+CERTIFICATIONS
+
+• Certified Scrum Product Owner (CSPO)
+• Google Analytics Individual Qualification`
   }
 };
 
@@ -285,9 +391,35 @@ class AITestAssistant {
 
 CURRENT TEST GOAL: ${testGoal}
 
-TEST CREDENTIALS (USE THESE FOR LOGIN):
+TEST DATA AVAILABLE:
+Login/Signup:
 - Email: ${TEST_DATA.testUser.email}
 - Password: ${TEST_DATA.testUser.password}
+- Full Name: ${TEST_DATA.testUser.fullName}
+
+Profile Information (if modal appears):
+- Phone: ${TEST_DATA.testUser.phone}
+- Location: ${TEST_DATA.testUser.location}
+- LinkedIn: ${TEST_DATA.testUser.linkedinUrl}
+
+Job Description (use for "paste job description" steps):
+${TEST_DATA.jobDescription.marketing.substring(0, 200)}... [marketing role]
+
+Sample Resume (use for upload tests):
+${TEST_DATA.sampleResumes.basic.substring(0, 300)}... [basic resume available]
+
+AUTOMATION RULES:
+1. If you see LOGIN page and this test doesn't explicitly test signup:
+   - Use the test credentials above to login
+   - Don't create a new account unless the test name includes "signup" or "new user"
+2. If you see SIGNUP page and previous actions include failed login:
+   - The test account may not exist yet, proceed with signup using test credentials
+3. If you see Profile Completion Modal:
+   - Fill in all fields with the profile information above
+4. For job description fields:
+   - Use the marketing job description provided above
+5. For file uploads:
+   - Indicate you need human intervention (can't automate file selection)
 
 CURRENT PAGE STATE:
 - URL: ${pageContext.url}
@@ -322,10 +454,18 @@ RESPONSE FORMAT (valid JSON only):
 IMPORTANT: 
 - Respond with ONLY valid JSON, no markdown formatting
 - If you can't find the expected element, set humanNeeded to true
-- Be specific with selectors (use data-testid, unique text, or aria-labels)
-- When you see a login page, automatically use the test credentials provided above
-- Use proper CSS selectors like 'input[type="email"]', 'input[type="password"]', etc.
-- After entering credentials, click the login/sign-in button`;
+- Use SIMPLE, ROBUST CSS selectors:
+  ✓ Good: 'input[type="email"]', 'input[type="password"]', 'button[type="submit"]'
+  ✓ Good: 'textarea[placeholder*="job description"]', 'input[placeholder*="name"]'
+  ✗ Bad: 'email: :r2:', 'input[name="email"]' (React may not use name attributes)
+  ✗ Bad: React-specific IDs like ':r2:', ':r3:' (these change on each render)
+- When you see a login page:
+  1. Type email into 'input[type="email"]'
+  2. Type password into 'input[type="password"]'
+  3. Click 'button[type="submit"]' or button with text "Sign In"
+- When you see a signup page, fill all visible fields with test data
+- After login/signup, if Profile Completion Modal appears, fill all fields
+- Use the test data provided above for ALL form fields`;
 
     try {
       const result = await this.model.generateContent(prompt);
