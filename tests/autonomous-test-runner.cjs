@@ -100,6 +100,9 @@ Requirements:
   }
 };
 
+// Helper function for delays (Puppeteer-compatible)
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Initialize AI
 let aiModel = null;
 if (process.env.GEMINI_API_KEY) {
@@ -462,25 +465,25 @@ class AutonomousTestRunner {
         case 'navigate':
           console.log(`   🌐 Navigating to: ${target}`);
           await this.page.goto(target, { waitUntil: 'networkidle2', timeout: 30000 });
-          await this.page.waitForTimeout(1000);
+          await sleep(1000);
           break;
           
         case 'click':
           console.log(`   🖱️  Clicking: ${target}`);
           await this.page.click(target);
-          await this.page.waitForTimeout(1500);
+          await sleep(1500);
           break;
           
         case 'type':
           console.log(`   ⌨️  Typing in: ${target}`);
           await this.page.type(target, value, { delay: 50 });
-          await this.page.waitForTimeout(500);
+          await sleep(500);
           break;
           
         case 'wait':
           const waitTime = parseInt(value) || 2000;
           console.log(`   ⏳ Waiting ${waitTime}ms...`);
-          await this.page.waitForTimeout(waitTime);
+          await sleep(waitTime);
           break;
           
         case 'verify':
@@ -645,7 +648,7 @@ class AutonomousTestRunner {
       
       if (testRun) {
         console.log('\n   ⏭️  Moving to next test...\n');
-        await this.page.waitForTimeout(2000);
+        await sleep(2000);
       }
     }
     

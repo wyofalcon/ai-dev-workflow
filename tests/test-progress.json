@@ -1,87 +1,87 @@
 {
-  "lastRun": null,
-  "currentTest": null,
+  "lastRun": "2025-11-17T03:44:03.895Z",
+  "currentTest": "resume-generation-no-upload.2.3-question-generation",
   "tests": {
     "authentication": {
       "1.1-google-sso-signup": {
         "name": "Google SSO Signup (New User)",
-        "status": "not-started",
+        "status": "skipped",
         "result": null,
-        "lastAttempt": null,
+        "lastAttempt": "2025-11-17T03:41:28.536Z",
         "notes": "",
         "requiresHuman": false
       },
       "1.2-email-password-signup": {
         "name": "Email/Password Signup (New User)",
-        "status": "not-started",
-        "result": null,
-        "lastAttempt": null,
-        "notes": "",
+        "status": "failed",
+        "result": "fail",
+        "lastAttempt": "2025-11-17T03:42:37.993Z",
+        "notes": "No element found for selector: text=CVStomize the Story you want to tell your Future Employer HERE.",
         "requiresHuman": false
       },
       "1.3-google-sso-login": {
         "name": "Google SSO Login (Existing User)",
-        "status": "not-started",
-        "result": null,
-        "lastAttempt": null,
-        "notes": "",
+        "status": "failed",
+        "result": "fail",
+        "lastAttempt": "2025-11-17T03:42:48.082Z",
+        "notes": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'CVstomize the Story you want to tell your Future Employer HERE.' is not a valid selector.",
         "requiresHuman": false
       },
       "1.4-email-password-login": {
         "name": "Email/Password Login (Existing User)",
-        "status": "not-started",
-        "result": null,
-        "lastAttempt": null,
-        "notes": "",
+        "status": "failed",
+        "result": "fail",
+        "lastAttempt": "2025-11-17T03:42:51.786Z",
+        "notes": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'CVstomize the Story you want to tell your Future Employer HERE.' is not a valid selector.",
         "requiresHuman": false
       },
       "1.5-password-reset": {
         "name": "Password Reset Flow",
-        "status": "not-started",
-        "result": null,
-        "lastAttempt": null,
-        "notes": "",
+        "status": "failed",
+        "result": "fail",
+        "lastAttempt": "2025-11-17T03:42:55.372Z",
+        "notes": "Protocol error (Page.navigate): Cannot navigate to invalid URL",
         "requiresHuman": false
       },
       "1.6-logout": {
         "name": "Logout Functionality",
-        "status": "not-started",
-        "result": null,
-        "lastAttempt": null,
-        "notes": "",
+        "status": "completed",
+        "result": "undetermined",
+        "lastAttempt": "2025-11-17T03:42:58.437Z",
+        "notes": "Unsure why it tries to test the logout feature here?",
         "requiresHuman": false
       },
       "1.7-profile-completion": {
         "name": "Profile Completion Modal",
-        "status": "not-started",
-        "result": null,
-        "lastAttempt": null,
-        "notes": "",
+        "status": "failed",
+        "result": "fail",
+        "lastAttempt": "2025-11-17T03:43:49.424Z",
+        "notes": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'textarea: Tell me a story about a time you solved a complex problem, learned a new skill, led a team, or even a hobby you're passionate about...' is not a valid selector.",
         "requiresHuman": false
       }
     },
     "resume-generation-no-upload": {
       "2.1-start-creation": {
         "name": "Start Resume Creation (Fresh)",
-        "status": "not-started",
-        "result": null,
-        "lastAttempt": null,
-        "notes": "",
+        "status": "failed",
+        "result": "fail",
+        "lastAttempt": "2025-11-17T03:43:53.731Z",
+        "notes": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'CVstomize the Story you want to tell your Future Employer HERE.' is not a valid selector.",
         "requiresHuman": false
       },
       "2.2-job-description-input": {
         "name": "Job Description Input (No Upload)",
-        "status": "not-started",
-        "result": null,
-        "lastAttempt": null,
-        "notes": "",
+        "status": "failed",
+        "result": "fail",
+        "lastAttempt": "2025-11-17T03:44:00.578Z",
+        "notes": "No element found for selector: Next",
         "requiresHuman": false
       },
       "2.3-question-generation": {
         "name": "AI Question Generation & Gap Analysis",
-        "status": "not-started",
+        "status": "running",
         "result": null,
-        "lastAttempt": null,
+        "lastAttempt": "2025-11-17T03:44:03.895Z",
         "notes": "",
         "requiresHuman": false
       },

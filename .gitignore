@@ -25,15 +25,23 @@ api/.env.production
 # Firebase credentials
 **/firebase-admin-key.json
 **/firebase-service-account.json
+**/cvstomize-deployer-key.json
 secrets/
 .secrets/
+
+# Database tools
+**/cloud-sql-proxy
 
 # misc
 .DS_Store
 
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+combined.log
+error.log
 .vercel
 /data/logs/
 /data/generated_resumes/
