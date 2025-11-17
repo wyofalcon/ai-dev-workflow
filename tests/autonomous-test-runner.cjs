@@ -92,8 +92,8 @@ Requirements:
   
   testUser: {
     // FIXED TEST ACCOUNT - Always use this for ALL tests (never create new accounts)
-    email: process.env.TEST_USER_EMAIL || 'PASTE_YOUR_TEST_EMAIL_HERE',
-    password: process.env.TEST_USER_PASSWORD || 'PASTE_YOUR_TEST_PASSWORD_HERE',
+    email: process.env.TEST_USER_EMAIL || 'mc3793.nm@gmail.com',
+    password: process.env.TEST_USER_PASSWORD || 'Password1!',
     
     // Profile fields (for ProfileCompletionModal)
     fullName: 'QA Test User',
