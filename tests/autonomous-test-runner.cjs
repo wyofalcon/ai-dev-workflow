@@ -91,9 +91,9 @@ Requirements:
   },
   
   testUser: {
-    // Authentication (use existing account or create new)
-    email: process.env.TEST_USER_EMAIL || `test-${Date.now()}@cvstomize.test`,
-    password: process.env.TEST_USER_PASSWORD || 'AutoTest123!',
+    // FIXED TEST ACCOUNT - Always use this for ALL tests (never create new accounts)
+    email: process.env.TEST_USER_EMAIL || 'PASTE_YOUR_TEST_EMAIL_HERE',
+    password: process.env.TEST_USER_PASSWORD || 'PASTE_YOUR_TEST_PASSWORD_HERE',
     
     // Profile fields (for ProfileCompletionModal)
     fullName: 'QA Test User',
@@ -604,8 +604,9 @@ class AutonomousTestRunner {
     });
   }
   
-  async executeAction(guidance, testId) {
+  async executeAction(guidance, testId, retryCount = 0) {
     const { nextAction, target, value, alternatives } = guidance;
+    const maxRetries = 2;
     
     try {
       switch (nextAction) {
@@ -617,12 +618,18 @@ class AutonomousTestRunner {
           
         case 'click':
           console.log(`   🖱️  Clicking: ${target}`);
+          // Wait for element to be available
+          await this.page.waitForSelector(target, { timeout: 5000 }).catch(() => null);
           await this.page.click(target);
           await sleep(1500);
           break;
           
         case 'type':
-          console.log(`   ⌨️  Typing in: ${target}`);
+          console.log(`   ⌨️  Typing "${value}" in: ${target}`);
+          // Wait for element and clear it first
+          await this.page.waitForSelector(target, { timeout: 5000 }).catch(() => null);
+          await this.page.click(target, { clickCount: 3 }); // Select all
+          await sleep(200);
           await this.page.type(target, value, { delay: 50 });
           await sleep(500);
           break;
@@ -651,24 +658,45 @@ class AutonomousTestRunner {
     } catch (error) {
       console.log(`   ❌ Action failed: ${error.message}`);
       
-      // Try alternatives
+      // Try alternatives first
       if (alternatives && alternatives.length > 0) {
-        console.log(`   🔄 Trying alternatives...`);
-        for (const alt of alternatives) {
+        console.log(`   🔄 Trying ${alternatives.length} alternatives...`);
+        for (let i = 0; i < alternatives.length; i++) {
+          const alt = alternatives[i];
           try {
+            console.log(`   Attempt ${i + 1}/${alternatives.length}: ${alt}`);
+            
             if (nextAction === 'click') {
+              await this.page.waitForSelector(alt, { timeout: 3000 }).catch(() => null);
               await this.page.click(alt);
-              console.log(`   ✓ Success with alternative: ${alt}`);
-              return { success: true };
+              await sleep(1500);
+            } else if (nextAction === 'type') {
+              await this.page.waitForSelector(alt, { timeout: 3000 }).catch(() => null);
+              await this.page.click(alt, { clickCount: 3 });
+              await sleep(200);
+              await this.page.type(alt, value, { delay: 50 });
+              await sleep(500);
             }
+            
+            console.log(`   ✅ Success with alternative: ${alt}`);
+            await this.takeScreenshot(testId, `${nextAction}-alt-${i}`);
+            return { success: true };
           } catch (altError) {
+            console.log(`   ⚠️  Alternative ${i + 1} failed: ${altError.message}`);
             continue;
           }
         }
       }
       
+      // Retry the original action if we haven't exceeded max retries
+      if (retryCount < maxRetries) {
+        console.log(`   🔁 Retrying action (attempt ${retryCount + 1}/${maxRetries})...`);
+        await sleep(2000); // Wait before retry
+        return this.executeAction(guidance, testId, retryCount + 1);
+      }
+      
       await this.takeScreenshot(testId, 'error');
-      return { success: false, error: error.message };
+      return { success: false, error: error.message, needsAIGuidance: true };
     }
   }
   
@@ -744,6 +772,12 @@ class AutonomousTestRunner {
         const result = await this.executeAction(guidance, `${category}-${testId}`);
         
         if (!result.success) {
+          if (result.needsAIGuidance) {
+            console.log(`   🤔 Action failed after retries. Getting fresh AI guidance...`);
+            await sleep(1000);
+            // Continue to next iteration to get new AI guidance
+            continue;
+          }
           throw new Error(result.error);
         }
         
