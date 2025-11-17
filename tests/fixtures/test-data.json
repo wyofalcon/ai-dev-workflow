@@ -5,9 +5,10 @@
       "note": "Existing test account with Google SSO"
     },
     "emailPassword": {
-      "email": "test-" + Date.now() + "@cvstomize-test.com",
+      "email": "test-user@cvstomize-test.com",
       "password": "TestPassword123!",
-      "displayName": "Test User"
+      "displayName": "Test User",
+      "note": "Use timestamp in test code: test-${Date.now()}@cvstomize-test.com"
     }
   },
   "jobDescriptions": {

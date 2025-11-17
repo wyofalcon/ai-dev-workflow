@@ -11,8 +11,10 @@ test.describe('Downloads & Export Features', () => {
 
   test.beforeEach(async ({ page }) => {
     cvPage = new CVstomizePage(page);
-    // Navigate to a resume that exists
-    await cvPage.goto('/resume/1'); // Assumes resume ID 1 exists
+    // MANUAL PREREQUISITE: You must be logged in with a generated resume
+    console.log('⏸️  PREREQUISITE: Please ensure you are logged in with a generated resume');
+    console.log('   Navigate to your resume, then wait 15 seconds for test to continue...');
+    await page.waitForTimeout(15000);
   });
 
   test('6.1: Download Markdown (.md)', async ({ page }) => {

@@ -42,8 +42,14 @@ api/coverage/
 .gemini/
 gha-creds-*.json
 
-# Playwright test reports
+# Testing artifacts
 tests/reports/
 test-results/
 playwright-report/
 playwright/.cache/
+tests/test-progress.backup.json
+
+# Test screenshots (keep only error screenshots in git)
+tests/reports/screenshots/*
+!tests/reports/screenshots/*error*.png
+!tests/reports/screenshots/.gitkeep

@@ -6,5 +6,16 @@
     "editor.defaultFormatter": "google.geminicodeassist",
     "terminal.integrated.automationProfile.linux": {
         
+    },
+    "mcp.servers": {
+        "puppeteer": {
+            "command": "mcp-server-puppeteer",
+            "args": [],
+            "env": {
+                "PUPPETEER_HEADLESS": "true",
+                "PUPPETEER_TIMEOUT": "30000"
+            },
+            "description": "Browser automation for automated testing with Puppeteer"
+        }
     }
 }

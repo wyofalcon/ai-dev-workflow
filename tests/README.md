@@ -1,42 +1,46 @@
-# CVstomize Automated Testing Workspace
+# CVstomize Testing Suite
 
 **Created:** November 15, 2025  
-**Purpose:** Automated E2E testing based on COMPLETE_UI_TESTING_GUIDE.md  
-**Tools:** Playwright, TypeScript
+**Updated:** November 16, 2025  
+**Purpose:** Comprehensive automated E2E testing with AI-powered autonomous execution  
+**Tools:** Playwright (TypeScript), Gemini AI, Puppeteer
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies (Already Done)
+### Choose Your Testing Approach
+
+#### 🤖 **Autonomous AI Testing (Recommended)**
+Gemini-powered testing that adapts to UI changes and runs with minimal intervention.
+
 ```bash
-npm install
+# Setup (first time only)
+./setup-autonomous-testing.sh
+
+# Run all tests autonomously
+node autonomous-test-runner.cjs
+
+# Run with visible browser
+HEADLESS=false node autonomous-test-runner.cjs
+
+# View progress dashboard
+node view-test-progress.cjs
 ```
 
-### 2. Run Tests
+📖 **Full Guide:** [`docs/testing/AUTONOMOUS_TESTING_GUIDE.md`](../docs/testing/AUTONOMOUS_TESTING_GUIDE.md)
 
-**Watch tests with UI (Recommended for monitoring):**
+#### 🎭 **Playwright Testing (Traditional)**
+Structured TypeScript tests for specific scenarios.
+
 ```bash
+# Watch tests with UI
 npm run test:e2e:ui
-```
 
-**Run all tests in headless mode:**
-```bash
+# Run all tests headless
 npm run test:e2e
-```
 
-**Run with browser visible (headed mode):**
-```bash
-npm run test:e2e:headed
-```
-
-**Debug mode (step through tests):**
-```bash
-npm run test:e2e:debug
-```
-
-### 3. View Reports
-```bash
+# View reports
 npm run test:report
 ```
 
@@ -46,77 +50,96 @@ npm run test:report
 
 ```
 tests/
-├── e2e/
-│   ├── 01-authentication.spec.ts      # Section 1: Auth & Account Management
-│   ├── 02-resume-generation.spec.ts   # Section 2: Resume Generation (No Upload)
-│   ├── 03-resume-with-upload.spec.ts  # Section 3: Resume Generation (With Upload)
-│   ├── 04-resume-history.spec.ts      # Section 4: Resume History & Management
-│   ├── 05-profile.spec.ts             # Section 5: Profile Management
-│   ├── 06-downloads.spec.ts           # Section 6: Downloads & Export
-│   └── helpers.ts                      # Page Object Model & utilities
+├── autonomous-test-runner.cjs          # 🤖 AI-powered autonomous test orchestrator
+├── view-test-progress.cjs              # 📊 Progress dashboard & viewer
+├── test-progress.json                  # ✅ Test checkpoint file (auto-updated)
+├── setup-autonomous-testing.sh         # ⚙️  Quick setup script
+├── ai-enhanced-test-suite.cjs          # 🧠 AI test enhancements (legacy)
+├── complete-automated-suite.cjs        # 🎯 Complete test suite (legacy)
+├── e2e/                                # Playwright TypeScript tests
+│   ├── 01-authentication.spec.ts
+│   ├── 02-resume-generation.spec.ts
+│   ├── 03-resume-with-upload.spec.ts
+│   ├── 04-resume-history.spec.ts
+│   ├── 05-profile.spec.ts
+│   ├── 06-downloads.spec.ts
+│   └── helpers.ts
 ├── fixtures/
 │   └── test-data.json                  # Test data (job descriptions, answers)
 └── reports/
     ├── html/                           # HTML test reports
-    ├── screenshots/                    # Failure screenshots
-    └── results.json                    # JSON results
+    ├── screenshots/                    # Step-by-step screenshots
+    └── results.json                    # Machine-readable results
 ```
 
 ---
 
 ## 🎯 Test Coverage
 
-### ✅ Implemented Tests
+### 🤖 Autonomous Testing (50+ Tests)
 
-**Authentication (01-authentication.spec.ts):**
-- Test 1.1: Google SSO Signup
-- Test 1.2: Email/Password Signup
-- Test 1.3: Google SSO Login
-- Test 1.6: Logout
-- Test 1.7: Profile Completion Modal
+The autonomous system tests 50+ scenarios across 6 categories:
 
-**Resume Generation (02-resume-generation.spec.ts):**
-- Test 2.1-2.6: Complete flow without existing resume
-  - Job description input
-  - Question generation (2-5 questions, NOT 11)
-  - Answer questions
-  - Generate resume
-  - Verify content (no placeholders, real user name)
+1. **Authentication (7 tests)** - SSO, email/password, password reset, logout
+2. **Resume Generation - No Upload (6 tests)** - Full creation flow
+3. **Resume Generation - With Upload (6 tests)** - Hybrid resume flow
+4. **Resume History (8 tests)** - Browse, search, filter, manage
+5. **Profile Management (4 tests)** - View, edit, avatar, counter
+6. **Downloads (6 tests)** - Markdown, PDF templates, timestamps
+7. **Edge Cases (5 tests)** - Validation, limits, error handling
 
-**Downloads (06-downloads.spec.ts):**
-- Test 6.1: Markdown download
-- Test 6.2: PDF Modern template
-- Test 6.3: PDF Classic template
-- Test 6.4: PDF Minimal template
-- Test 6.5: Multiple downloads
+**Progress Tracking:**
+- Real-time checkpoint system
+- Resume from last test
+- Pass/fail/undetermined results
+- Human intervention workflow
 
-### 📋 To Be Implemented
+### 🎭 Playwright Tests (Traditional)
 
-- Test 3.x: Resume generation WITH upload
-- Test 4.x: Resume history & management
-- Test 5.x: Profile management
-- Test 7.x: Responsive design & browser compatibility
+**Implemented:**
+- `01-authentication.spec.ts` - Google SSO, email/password auth
+- `02-resume-generation.spec.ts` - Complete generation flow
+- `06-downloads.spec.ts` - All download formats
+
+**To Be Implemented:**
+- `03-resume-with-upload.spec.ts` - Upload & hybrid flow
+- `04-resume-history.spec.ts` - History management
+- `05-profile.spec.ts` - Profile features
 
 ---
 
 ## 🔧 Configuration
 
+### Autonomous Testing Config
+
+**Environment Variables:**
+```bash
+export GEMINI_API_KEY="your-api-key"  # Required
+export HEADLESS="false"                # Optional: visible browser
+export SLOW_MO="500"                   # Optional: slow down actions
+```
+
+**Features:**
+- Gemini 2.0 Flash (latest experimental model)
+- Intelligent element detection
+- Self-healing test logic
+- Auto-retry with alternatives
+- Screenshot every step
+- Real-time progress tracking
+
 ### Playwright Config (`playwright.config.js`)
 
 **Key Settings:**
-- **Workers:** 1 (sequential execution for monitoring)
+- **Workers:** 1 (sequential execution)
 - **Base URL:** Production frontend
-- **Timeouts:** 2min per test (resume generation takes 30s+)
-- **Reporters:** HTML, JSON, JUnit, List (terminal)
+- **Timeouts:** 2min per test
+- **Reporters:** HTML, JSON, JUnit, List
 - **Screenshots:** On failure
 - **Videos:** On failure
 
 **Browsers:**
-- Chromium (Desktop Chrome)
-- Firefox (Desktop Firefox)
-- WebKit (Desktop Safari)
-- Mobile Chrome (Pixel 5)
-- Mobile Safari (iPhone 12)
+- Chromium, Firefox, WebKit
+- Mobile Chrome, Mobile Safari
 
 ---
 
@@ -154,7 +177,28 @@ Every test verifies:
 
 ## 💡 Usage Tips
 
-### Running Specific Tests
+### Autonomous Testing
+
+**View Progress:**
+```bash
+node view-test-progress.cjs             # Full dashboard
+node view-test-progress.cjs --summary   # Summary only
+node view-test-progress.cjs --failed    # Failed tests only
+node view-test-progress.cjs --pending   # Pending tests
+```
+
+**Human Intervention:**
+- Tests pause automatically when manual verification needed
+- Browser stays open for inspection
+- Terminal prompts: `pass`, `fail`, or `skip`
+- Add notes: `pass - looks good`, `fail - missing skills`
+
+**Resume Testing:**
+- Tests save state in `test-progress.json`
+- Automatically resumes from last checkpoint
+- Can restart specific tests by editing JSON
+
+### Playwright Testing
 
 **Single test file:**
 ```bash
@@ -166,30 +210,14 @@ npx playwright test 02-resume-generation
 npx playwright test -g "Complete Resume Generation Flow"
 ```
 
-**Specific browser:**
+**UI mode** (best for development):
 ```bash
-npx playwright test --project=chromium
+npm run test:e2e:ui
 ```
-
-### Watching Tests
-
-The **UI mode** (`npm run test:e2e:ui`) is best for development:
-- See tests run in real-time
-- Inspect DOM at each step
+- Real-time execution
+- DOM inspection
 - Time-travel debugging
-- Watch mode (re-run on file changes)
-
-### Test Authentication
-
-**For tests requiring login:**
-1. Create auth fixtures for persistent sessions
-2. Or use `test.use({ storageState: 'auth.json' })`
-3. Run login once, save state, reuse across tests
-
-**Google SSO tests:**
-- Currently skipped (require credentials)
-- Set `GOOGLE_TEST_EMAIL` env var to enable
-- Or mock OAuth flow
+- Auto-rerun on changes
 
 ---
 

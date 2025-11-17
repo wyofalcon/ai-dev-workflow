@@ -10,6 +10,54 @@
             "name": "Launch Chrome against localhost",
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run Autonomous Tests (AI)",
+            "program": "${workspaceFolder}/tests/autonomous-test-runner.cjs",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "HEADLESS": "false"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "View Test Progress",
+            "program": "${workspaceFolder}/tests/view-test-progress.cjs",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug AI-Enhanced Tests",
+            "program": "${workspaceFolder}/tests/ai-enhanced-test-suite.cjs",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "HEADLESS": "false"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run Playwright Tests (Headless)",
+            "program": "${workspaceFolder}/node_modules/.bin/playwright",
+            "args": ["test", "--reporter=list"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run Playwright Tests (Headed)",
+            "program": "${workspaceFolder}/node_modules/.bin/playwright",
+            "args": ["test", "--headed", "--reporter=list"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

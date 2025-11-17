@@ -1,0 +1,356 @@
+{
+  "lastRun": null,
+  "currentTest": null,
+  "tests": {
+    "authentication": {
+      "1.1-google-sso-signup": {
+        "name": "Google SSO Signup (New User)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "1.2-email-password-signup": {
+        "name": "Email/Password Signup (New User)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "1.3-google-sso-login": {
+        "name": "Google SSO Login (Existing User)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "1.4-email-password-login": {
+        "name": "Email/Password Login (Existing User)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "1.5-password-reset": {
+        "name": "Password Reset Flow",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "1.6-logout": {
+        "name": "Logout Functionality",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "1.7-profile-completion": {
+        "name": "Profile Completion Modal",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      }
+    },
+    "resume-generation-no-upload": {
+      "2.1-start-creation": {
+        "name": "Start Resume Creation (Fresh)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "2.2-job-description-input": {
+        "name": "Job Description Input (No Upload)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "2.3-question-generation": {
+        "name": "AI Question Generation & Gap Analysis",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "2.4-answer-questions": {
+        "name": "Answer Questions (Conversational)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "2.5-generate-resume": {
+        "name": "Generate Resume (Processing)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "2.6-verify-content": {
+        "name": "Resume Preview & Content Verification",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": true
+      }
+    },
+    "resume-generation-with-upload": {
+      "3.1-start-with-upload": {
+        "name": "Start New Resume with Upload",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "3.2-upload-file": {
+        "name": "Upload Existing Resume File",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "3.3-job-description-with-upload": {
+        "name": "Job Description Input (With Upload)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "3.4-gap-analysis-questions": {
+        "name": "Gap Analysis Questions",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "3.5-answer-gap-questions": {
+        "name": "Answer Gap Analysis Questions",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "3.6-generate-hybrid-resume": {
+        "name": "Generate Hybrid Resume",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": true
+      }
+    },
+    "resume-history": {
+      "4.1-navigate-history": {
+        "name": "Navigate to Resume History",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "4.2-card-display": {
+        "name": "Resume Cards Display",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "4.3-search": {
+        "name": "Search Functionality",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "4.4-filter": {
+        "name": "Filter Dropdown",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "4.5-view-resume": {
+        "name": "View Resume (Detail Page)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "4.6-download-from-history": {
+        "name": "Download from History",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "4.7-delete-resume": {
+        "name": "Delete Resume",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "4.8-empty-state": {
+        "name": "Empty State (No Resumes)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      }
+    },
+    "profile-management": {
+      "5.1-view-profile": {
+        "name": "View Profile",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "5.2-edit-profile": {
+        "name": "Edit Profile",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "5.3-avatar-display": {
+        "name": "User Avatar Display",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "5.4-resume-counter": {
+        "name": "Resume Counter Display",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      }
+    },
+    "downloads": {
+      "6.1-download-markdown": {
+        "name": "Download Markdown (.md)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "6.2-download-pdf-modern": {
+        "name": "Download PDF - Modern Template",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "6.3-download-pdf-classic": {
+        "name": "Download PDF - Classic Template",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "6.4-download-pdf-minimal": {
+        "name": "Download PDF - Minimal Template",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "6.5-multiple-downloads": {
+        "name": "Multiple Downloads (Same Resume)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "6.6-download-timestamp": {
+        "name": "Download Timestamp Update",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      }
+    },
+    "edge-cases": {
+      "8.1-resume-limit": {
+        "name": "Resume Limit Enforcement (Free Tier)",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "8.2-empty-job-description": {
+        "name": "Empty Job Description",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "8.3-skip-all-questions": {
+        "name": "Skip All Questions",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "8.4-unsupported-file": {
+        "name": "Unsupported File Upload",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      },
+      "8.5-corrupted-file": {
+        "name": "Corrupted File Upload",
+        "status": "not-started",
+        "result": null,
+        "lastAttempt": null,
+        "notes": "",
+        "requiresHuman": false
+      }
+    }
+  }
+}
