@@ -35,7 +35,7 @@ try {
 
 // Configuration
 const CONFIG = {
-  APP_URL: 'https://cvstomize-frontend-351889420459.us-central1.run.app',
+  APP_URL: process.env.TEST_URL || 'http://localhost:3000',
   PROGRESS_FILE: path.join(__dirname, 'test-progress.json'),
   SCREENSHOTS_DIR: path.join(__dirname, 'reports', 'screenshots'),
   REPORTS_DIR: path.join(__dirname, 'reports'),
@@ -91,8 +91,8 @@ Requirements:
   },
   
   testUser: {
-    email: `test-${Date.now()}@cvstomize-test.com`,
-    password: 'TestPass123!',
+    email: process.env.TEST_USER_EMAIL || 'automated-test@cvstomize.test',
+    password: process.env.TEST_USER_PASSWORD || 'AutoTest123!',
     name: 'Autonomous Test User',
     phone: '(555) 123-4567',
     location: 'San Francisco, CA',
@@ -285,6 +285,10 @@ class AITestAssistant {
 
 CURRENT TEST GOAL: ${testGoal}
 
+TEST CREDENTIALS (USE THESE FOR LOGIN):
+- Email: ${TEST_DATA.testUser.email}
+- Password: ${TEST_DATA.testUser.password}
+
 CURRENT PAGE STATE:
 - URL: ${pageContext.url}
 - Title: ${pageContext.title}
@@ -318,7 +322,10 @@ RESPONSE FORMAT (valid JSON only):
 IMPORTANT: 
 - Respond with ONLY valid JSON, no markdown formatting
 - If you can't find the expected element, set humanNeeded to true
-- Be specific with selectors (use data-testid, unique text, or aria-labels)`;
+- Be specific with selectors (use data-testid, unique text, or aria-labels)
+- When you see a login page, automatically use the test credentials provided above
+- Use proper CSS selectors like 'input[type="email"]', 'input[type="password"]', etc.
+- After entering credentials, click the login/sign-in button`;
 
     try {
       const result = await this.model.generateContent(prompt);
@@ -532,6 +539,16 @@ class AutonomousTestRunner {
     console.log(`${'='.repeat(70)}\n`);
     
     await this.progress.markStarted(category, testId);
+    
+    // Navigate to the app first (before AI starts analyzing)
+    console.log(`   🌐 Initial navigation to: ${CONFIG.APP_URL}`);
+    try {
+      await this.page.goto(CONFIG.APP_URL, { waitUntil: 'networkidle2', timeout: 30000 });
+      await sleep(2000);
+    } catch (navError) {
+      console.log(`   ❌ Failed to navigate to ${CONFIG.APP_URL}: ${navError.message}`);
+      throw new Error(`Cannot reach application at ${CONFIG.APP_URL}`);
+    }
     
     const actions = [];
     let maxSteps = 20; // Prevent infinite loops
