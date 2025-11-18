@@ -1,0 +1,42 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+error.log
+combined.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Prisma migrations (schema is included)
+prisma/migrations
+
+# Cloud SQL Proxy
+cloud-sql-proxy
+proxy.log
+
+# Backup files
+*.backup
+*.bak

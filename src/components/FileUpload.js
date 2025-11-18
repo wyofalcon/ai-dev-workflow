@@ -15,14 +15,21 @@ const FileUpload = ({ files, setFiles }) => {
   };
 
   return (
-    <div className="card">
-      <h2>1. Upload Your Documents</h2>
-
-      {/* This standard input replaces the dropzone component */}
-      <div style={{ border: '2px dashed #ccc', borderRadius: '8px', padding: '2rem', textAlign: 'center' }}>
-          <p>Click the button below to select your files.</p>
-          <input type="file" multiple onChange={handleFileChange} style={{marginTop: '10px'}} />
-          <em style={{display: 'block', marginTop: '10px'}}>(PDF or DOCX)</em>
+    <div className="form-section">
+      {/* Update the title to specify DOCX only */}
+      <h3>Upload Your DOCX Documents</h3>
+      <div className="file-upload-area">
+        <input
+          type="file"
+          id="file-upload"
+          // Update the 'accept' attribute to only allow .docx files
+          accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          onChange={handleFileChange}
+          multiple
+        />
+        <label htmlFor="file-upload" className="file-upload-label">
+          Drag & Drop or Click to Upload
+        </label>
       </div>
 
       {files.length > 0 && (

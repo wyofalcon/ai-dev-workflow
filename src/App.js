@@ -1,135 +1,277 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import FileUpload from './components/FileUpload';
-import TextInput from './components/TextInput';
-import ResumeDisplay from './components/ResumeDisplay';
-import SectionSelector from './components/SectionSelector';
-import TutorialModal from './components/TutorialModal';
-import StyleSelector from './components/StyleSelector'; // Import the new component
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext.js';
+import { useCvState } from './hooks/useCvState.js';
+import HomePage from './components/HomePage.js';
+import TutorialModal from './components/TutorialModal.js';
+import ResumePage from './components/ResumePage.js';
+import ResumeViewPage from './components/ResumeViewPage.js';
+import ConversationalResumePage from './components/ConversationalResumePage.js';
+import ProcessModal from './components/ProcessModal.js';
+import Footer from './components/Footer.js';
+import LoginPage from './components/LoginPage.js';
+import SignupPage from './components/SignupPage.js';
+import ResetPasswordPage from './components/ResetPasswordPage.js';
+import {
+  Container,
+  Button,
+  AppBar,
+  Toolbar,
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+  Typography,
+} from '@mui/material';
+import { AccountCircle } from '@mui/icons-material';
+import logo from './components/logo.png';
 import './App.css';
 
-const ALL_SECTIONS = [
-  'Contact Information', 'Professional Summary or Objective Statement', 'Core Competencies / Key Skills',
-  'Professional Experience (Work History)', 'Education', 'Certifications & Licenses', 'Major Projects or Portfolio Highlights',
-  'Technical Skills (Tools, Technologies, Platforms)', 'Research Experience (Academic/Industry)', 'Publications & Presentations',
-  'Awards & Honors', 'Professional Affiliations & Memberships', 'Volunteer Experience & Community Involvement',
-  'Conferences, Workshops & Continuing Education', 'Patents & Intellectual Property', 'Language Proficiency',
-  'Leadership & Extracurricular Activities', 'Interests & Hobbies (if relevant to role or culture)',
-  'References (Available Upon Request)', 'Additional Information (Security Clearances, Visa Status, etc.)'
-];
+// Protected Route wrapper
+function ProtectedRoute({ children }) {
+  const { currentUser } = useAuth();
 
-const RECOMMENDED_SECTIONS = [
-  'Contact Information', 'Professional Summary or Objective Statement', 'Core Competencies / Key Skills',
-  'Professional Experience (Work History)', 'Education'
-];
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
 
-function App() {
-  const [files, setFiles] = useState([]);
-  const [personalStories, setPersonalStories] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
-  const [generatedCv, setGeneratedCv] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [selectedSections, setSelectedSections] = useState(RECOMMENDED_SECTIONS);
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState('Modern'); // State for the resume style
+  return children;
+}
 
-  const handleGenerate = async () => {
-    if (files.length === 0 || !jobDescription || selectedSections.length === 0) {
-      setError('Please upload a document, provide a job description, and select at least one section.');
-      return;
+// Public Route wrapper (redirect to home if already logged in)
+function PublicRoute({ children }) {
+  const { currentUser } = useAuth();
+
+  if (currentUser) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
+function MainLayout() {
+  const cvState = useCvState();
+  const { isTutorialOpen, setIsTutorialOpen } = cvState;
+  const { currentUser, userProfile, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const [isProcessStarted, setIsProcessStarted] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleStart = () => {
+    setIsProcessStarted(true);
+  };
+
+  const handleClose = () => {
+    setIsProcessStarted(false);
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  // Helper to get proxied avatar URL
+  const getAvatarUrl = () => {
+    // First try userProfile.photoUrl (already proxied by AuthContext)
+    if (userProfile?.photoUrl) {
+      return userProfile.photoUrl;
     }
-    
-    setIsLoading(true);
-    setError('');
-    setGeneratedCv('');
 
-    const formData = new FormData();
-    files.forEach(file => {
-      formData.append('documents', file);
-    });
-    formData.append('personalStories', personalStories);
-    formData.append('jobDescription', jobDescription);
-    formData.append('selectedSections', selectedSections.join(','));
+    // Fallback to Firebase currentUser.photoURL and proxy it
+    if (currentUser?.photoURL) {
+      const API_URL = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
+      if (currentUser.photoURL.includes('googleusercontent.com')) {
+        return `${API_URL}/proxy/avatar?url=${encodeURIComponent(currentUser.photoURL)}`;
+      }
+      return currentUser.photoURL;
+    }
 
+    return null;
+  };
+
+  const handleLogout = async () => {
+    handleMenuClose();
     try {
-      const response = await axios.post('/api/generate-cv', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setGeneratedCv(response.data.generatedCv);
-    } catch (err) {
-      console.error("An error occurred during CV generation:", err);
-      setError("An error occurred while generating the CV. Please try again.");
-    } finally {
-      setIsLoading(false);
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   };
 
-  const handleDownload = () => {
-    if (!generatedCv) return;
-    window.print();
+  const handleUpgrade = async () => {
+    handleMenuClose();
+    try {
+      const token = await currentUser.getIdToken();
+      const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
+
+      const response = await fetch(`${API_BASE}/api/auth/upgrade-unlimited`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.user) {
+        alert(`✅ Account upgraded to unlimited resumes!\n\nYou now have ${data.user.resumesLimit} resume generations.`);
+        window.location.reload();
+      } else {
+        alert('❌ Upgrade failed: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Upgrade error:', error);
+      alert('❌ Upgrade failed: ' + error.message);
+    }
   };
 
   return (
-    <div className="App">
-      {isTutorialOpen && <TutorialModal setIsOpen={setIsTutorialOpen} />}
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid #333' }}>
+        <Toolbar>
+          <img src={logo} alt="logo" style={{ width: '80px', marginRight: '10px' }} />
+          <Box sx={{ flexGrow: 1 }} />
 
-      <header className="App-header">
-        <h1>Don't just apply, <span>CVstomize</span></h1>
-        <div className="banner">
-          <p>Tailor your Resume for any Job in Seconds — <strong>For Free!</strong></p>
-        </div>
-        <button className="tutorial-btn" onClick={() => setIsTutorialOpen(true)}>
-          How to Use
-        </button>
-      </header>
-      <main className="App-main">
-        <div className="input-column">
-          <FileUpload files={files} setFiles={setFiles} />
-          <TextInput
-            title="2. Add Personal Stories"
-            placeholder="Add any relevant experiences, projects, or achievements..."
-            value={personalStories}
-            onChange={(e) => setPersonalStories(e.target.value)}
-          />
-          <TextInput
-            title="3. Paste Job Description"
-            placeholder="Paste the entire job description here..."
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-          />
-        </div>
-        <div className="output-column">
-          <ResumeDisplay
-            title="4. Your Custom-Crafted CV"
-            content={generatedCv}
-            isLoading={isLoading}
-            selectedStyle={selectedStyle} 
-          />
-          <SectionSelector
-            allSections={ALL_SECTIONS}
-            recommendedSections={RECOMMENDED_SECTIONS}
-            selectedSections={selectedSections}
-            setSelectedSections={setSelectedSections}
-          />
-          <StyleSelector
-            selectedStyle={selectedStyle}
-            setSelectedStyle={setSelectedStyle}
-          />
-        </div>
-      </main>
-      <footer className="App-footer">
-        <button className="generate-btn" onClick={handleGenerate} disabled={isLoading}>
-          {isLoading ? 'Generating...' : 'Generate My CV'}
-        </button>
-        {generatedCv && !isLoading && (
-          <button className="download-btn" onClick={handleDownload}>
-            Download as PDF
-          </button>
+          {/* How to Use Button */}
+          <Button color="primary" onClick={() => setIsTutorialOpen(true)} sx={{ mr: 2 }}>
+            How to Use
+          </Button>
+
+          {/* Auth Section */}
+          {currentUser ? (
+            <>
+              {/* User Info */}
+              <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
+                {userProfile?.resumesGenerated || 0} / {userProfile?.resumesLimit || 1} resumes
+              </Typography>
+
+              {/* User Menu */}
+              <IconButton onClick={handleMenuOpen} color="primary">
+                {getAvatarUrl() ? (
+                  <Avatar
+                    src={getAvatarUrl()}
+                    sx={{ width: 32, height: 32 }}
+                    alt={currentUser?.displayName || 'User'}
+                  />
+                ) : (
+                  <AccountCircle />
+                )}
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+              >
+                <MenuItem disabled>
+                  <Typography variant="body2" color="text.secondary">
+                    {currentUser.email}
+                  </Typography>
+                </MenuItem>
+                <MenuItem onClick={() => { handleMenuClose(); navigate('/resume'); }}>
+                  My Resumes
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>
+                  Logout
+                </MenuItem>
+              </Menu>
+            </>
+          ) : (
+            <>
+              <Button color="primary" onClick={() => navigate('/login')} sx={{ mr: 1 }}>
+                Login
+              </Button>
+              <Button variant="contained" color="primary" onClick={() => navigate('/signup')}>
+                Sign Up
+              </Button>
+            </>
+          )}
+        </Toolbar>
+      </AppBar>
+
+      <Container maxWidth="xl" sx={{ mt: 4, flexGrow: 1 }}>
+        <HomePage onStart={handleStart} />
+        {isTutorialOpen && <TutorialModal setIsOpen={setIsTutorialOpen} />}
+        {isProcessStarted && (
+          <ProcessModal open={isProcessStarted} handleClose={handleClose} cvState={cvState} />
         )}
-      </footer>
-       {error && <p className="error-message">{error}</p>}
-    </div>
+      </Container>
+      <Footer />
+    </Box>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <div className="App">
+          <Routes>
+            {/* Public Routes */}
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <LoginPage />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <PublicRoute>
+                  <SignupPage />
+                </PublicRoute>
+              }
+            />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+            {/* Protected Routes */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resume"
+              element={
+                <ProtectedRoute>
+                  <ResumePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resume/:id"
+              element={
+                <ProtectedRoute>
+                  <ResumeViewPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create-resume"
+              element={
+                <ProtectedRoute>
+                  <ConversationalResumePage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Catch all - redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </AuthProvider>
+    </Router>
   );
 }
 

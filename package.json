@@ -2,33 +2,44 @@
   "name": "cvstomize",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@google/generative-ai": "^0.14.1",
+    "@mui/icons-material": "^7.3.4",
+    "@mui/material": "^7.3.4",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "axios": "^1.7.2",
-    "@napi-rs/canvas": "^0.1.44",
-    "docx": "^8.5.0",
+    "axios": "^1.13.1",
+    "eslint": "^8.57.1",
+    "eslint-config-react-app": "^7.0.1",
+    "firebase": "^12.5.0",
     "formidable": "^3.5.1",
     "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
+    "jspdf": "^3.0.3",
     "mammoth": "^1.10.0",
+    "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^3.11.174",
-    "puppeteer": "^24.15.0",
+    "puppeteer": "^24.24.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^9.0.1",
+    "react-router-dom": "^6.23.1",
     "react-scripts": "5.0.1",
-    "vercel": "^44.7.2",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-"start": "react-scripts start",
-"build": "react-scripts build",
-"test": "react-scripts test",
-"eject": "react-scripts eject"
-},
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:report": "playwright show-report tests/reports/html"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -46,5 +57,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
   }
 }

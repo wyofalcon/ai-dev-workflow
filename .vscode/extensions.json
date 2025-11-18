@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "ms-playwright.playwright",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "google.geminicodeassist",
+    "redhat.vscode-yaml",
+    "yzhang.markdown-all-in-one",
+    "ms-vscode.vscode-typescript-next"
+  ],
+  "unwantedRecommendations": []
+}

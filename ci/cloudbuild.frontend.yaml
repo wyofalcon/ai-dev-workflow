@@ -1,0 +1,13 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'build'
+  - '-t'
+  - 'gcr.io/cvstomize/cvstomize-frontend'
+  - '--build-arg'
+  - 'REACT_APP_API_URL=https://cvstomize-api-351889420459.us-central1.run.app'
+  - '-f'
+  - 'Dockerfile.frontend'
+  - '.'
+images:
+- 'gcr.io/cvstomize/cvstomize-frontend'

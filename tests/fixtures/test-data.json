@@ -1,0 +1,48 @@
+{
+  "testAccounts": {
+    "google": {
+      "email": "fco.calisto@gmail.com",
+      "note": "Existing test account with Google SSO"
+    },
+    "emailPassword": {
+      "email": "test-user@cvstomize-test.com",
+      "password": "TestPassword123!",
+      "displayName": "Test User",
+      "note": "Use timestamp in test code: test-${Date.now()}@cvstomize-test.com"
+    }
+  },
+  "jobDescriptions": {
+    "marketingManager": {
+      "title": "Marketing Manager - Digital Strategy",
+      "company": "Tech Innovators Inc",
+      "description": "Join our innovative marketing team as a Digital Marketing Manager!\n\nResponsibilities:\n- Lead digital marketing campaigns across social media, email, and paid channels\n- Analyze campaign performance and ROI using Google Analytics\n- Manage a team of 3 marketing specialists\n- Develop content strategy and SEO optimization\n- Collaborate with sales team on lead generation\n\nRequirements:\n- 5+ years of digital marketing experience\n- Expert in Google Analytics, Facebook Ads, Google Ads\n- Experience managing marketing teams\n- Strong analytical and communication skills\n- Bachelor's degree in Marketing or related field"
+    },
+    "softwareEngineer": {
+      "title": "Senior Software Engineer - Backend",
+      "company": "CloudTech Solutions",
+      "description": "We're seeking an experienced backend engineer to join our platform team.\n\nResponsibilities:\n- Design and build scalable microservices using Node.js and Python\n- Optimize database performance (PostgreSQL, MongoDB)\n- Implement RESTful APIs and GraphQL endpoints\n- Collaborate with frontend team on API contracts\n- Write comprehensive tests and documentation\n\nRequirements:\n- 5+ years backend development experience\n- Expert in Node.js or Python\n- Strong SQL and NoSQL database skills\n- Experience with Docker and Kubernetes\n- BS in Computer Science or equivalent"
+    }
+  },
+  "sampleAnswers": {
+    "marketing": {
+      "q1_experience": "I've led digital marketing campaigns for 6 years across SaaS and e-commerce companies. I managed budgets of $50K-200K/month across Facebook Ads, Google Ads, and LinkedIn. My campaigns consistently achieved 3-5x ROAS through A/B testing and audience segmentation. I'm experienced with both brand awareness and performance marketing.",
+      "q2_analytics": "I use Google Analytics daily to track user behavior, conversion funnels, and campaign attribution. I've built custom dashboards in Google Data Studio and use Facebook Pixel for retargeting. I also have experience with Mixpanel and Hotjar for deeper user insights. Data-driven decision making is core to my approach.",
+      "q3_team": "I currently manage a team of 3 marketing specialists - one focused on content, one on paid ads, and one on social media. I hold weekly 1-on-1s, set clear OKRs, and foster a collaborative culture. Last year, my team exceeded our lead generation goals by 40% while staying under budget.",
+      "q4_campaign": "I launched a multi-channel campaign for a product launch that generated 5,000 qualified leads in 30 days. I coordinated email sequences, social media ads, and influencer partnerships. By optimizing ad creative and targeting, we reduced cost-per-lead by 60% compared to previous campaigns. The campaign directly resulted in $500K in new revenue.",
+      "q5_motivation": "I love the creativity and data science blend in marketing. Seeing campaigns go from concept to driving real business results is incredibly rewarding. I'm motivated by challenging goals and continuous learning - the marketing landscape changes fast and I enjoy staying ahead of trends. Building and mentoring teams is also a passion of mine."
+    },
+    "engineering": {
+      "q1_graphql": "I've built GraphQL APIs for two projects in the past year. I designed the schema, implemented resolvers in Node.js, and used Apollo Server. The GraphQL implementation reduced over-fetching and improved mobile app performance by 40% compared to our REST endpoints.",
+      "q2_kubernetes": "I've deployed microservices to Kubernetes clusters in AWS EKS. I wrote Helm charts for application deployments and configured auto-scaling based on CPU metrics. I also set up monitoring with Prometheus and Grafana for our K8s infrastructure.",
+      "q3_database": "I optimized a slow PostgreSQL query that was taking 12 seconds down to 200ms. I analyzed the query plan, added composite indexes, and rewrote the query to avoid N+1 issues. I also implemented connection pooling with PgBouncer to handle increased load."
+    }
+  },
+  "profileData": {
+    "default": {
+      "fullName": "Jane Smith",
+      "phone": "(555) 123-4567",
+      "location": "San Francisco, CA",
+      "linkedinUrl": "linkedin.com/in/janesmith"
+    }
+  }
+}
