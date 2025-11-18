@@ -25,7 +25,7 @@ echo ""
 echo "📦 Critical Dependencies:"
 
 # Check for key dependencies
-deps=("puppeteer" "@google/generative-ai" "@playwright/test")
+deps=("@playwright/test" "firebase" "axios")
 for dep in "${deps[@]}"; do
     if npm list "$dep" &> /dev/null; then
         version=$(npm list "$dep" 2>/dev/null | grep "$dep" | head -1 | awk -F@ '{print $NF}')
@@ -38,12 +38,6 @@ done
 echo ""
 echo "🔑 Environment Variables:"
 
-if [ -n "$GEMINI_API_KEY" ]; then
-    echo "   ✅ GEMINI_API_KEY is set"
-else
-    echo "   ⚠️  GEMINI_API_KEY not set (required for autonomous testing)"
-fi
-
 if [ -f ".env" ]; then
     echo "   ✅ .env file exists"
 else
@@ -53,7 +47,7 @@ fi
 echo ""
 echo "📁 Project Structure:"
 
-dirs=("tests/e2e" "tests/reports" "docs/testing" ".vscode")
+dirs=("tests/e2e" "tests/recorded" "tests/reports" "tests/fixtures" "docs/testing" "tools" "scripts" ".vscode")
 for dir in "${dirs[@]}"; do
     if [ -d "$dir" ]; then
         echo "   ✅ $dir/"
@@ -65,28 +59,42 @@ done
 echo ""
 echo "🧪 Test Files:"
 
-if [ -f "tests/autonomous-test-runner.cjs" ]; then
-    echo "   ✅ Autonomous test runner"
-else
-    echo "   ❌ Autonomous test runner missing"
-fi
-
-if [ -f "tests/test-progress.json" ]; then
-    echo "   ✅ Test progress tracker"
-else
-    echo "   ❌ Test progress tracker missing"
-fi
-
 if [ -f "playwright.config.js" ]; then
     echo "   ✅ Playwright config"
 else
     echo "   ❌ Playwright config missing"
 fi
 
+# Count E2E test files
+if [ -d "tests/e2e" ]; then
+    test_count=$(find tests/e2e -name "*.spec.ts" -o -name "*.spec.js" | wc -l)
+    echo "   ✅ E2E test files: $test_count"
+else
+    echo "   ❌ E2E test directory missing"
+fi
+
+if [ -f "tools/test-tracker.html" ]; then
+    echo "   ✅ Test tracker tool"
+else
+    echo "   ❌ Test tracker missing"
+fi
+
+if [ -f "scripts/record-test.sh" ]; then
+    echo "   ✅ Test recording script"
+else
+    echo "   ❌ Test recording script missing"
+fi
+
+if [ -f "start-testing.sh" ]; then
+    echo "   ✅ Testing workspace launcher"
+else
+    echo "   ❌ Testing workspace launcher missing"
+fi
+
 echo ""
 echo "📚 Documentation:"
 
-docs=("TESTING.md" "docs/testing/AUTONOMOUS_TESTING_GUIDE.md" ".ai-instructions.md")
+docs=("TESTING_WORKSPACE.md" "START_TESTING.md" "TESTING.md" "COMPLETE_UI_TESTING_GUIDE.md" "docs/testing/PLAYWRIGHT_CODEGEN_GUIDE.md")
 for doc in "${docs[@]}"; do
     if [ -f "$doc" ]; then
         echo "   ✅ $doc"
@@ -101,26 +109,27 @@ echo "════════════════════════�
 # Count issues
 issues=0
 if ! command -v node &> /dev/null; then ((issues++)); fi
-if ! npm list "puppeteer" &> /dev/null; then ((issues++)); fi
-if ! npm list "@google/generative-ai" &> /dev/null; then ((issues++)); fi
-if [ -z "$GEMINI_API_KEY" ]; then ((issues++)); fi
+if ! npm list "@playwright/test" &> /dev/null; then ((issues++)); fi
+if ! npm list "firebase" &> /dev/null; then ((issues++)); fi
 
 if [ $issues -eq 0 ]; then
     echo "✅ All checks passed! Project is ready for testing."
     echo ""
     echo "Quick Start:"
-    echo "  npm run test:autonomous        - Run AI-powered tests"
-    echo "  npm run test:e2e:ui            - Run Playwright tests"
-    echo "  npm run test:progress          - View test progress"
+    echo "  ./start-testing.sh             - Open testing workspace"
+    echo "  npm run test:e2e:ui            - Run Playwright tests (UI)"
+    echo "  npm run test:e2e               - Run Playwright tests (headless)"
+    echo "  open tools/test-tracker.html   - Manual testing tracker"
+    echo "  ./scripts/record-test.sh       - Record new test"
 else
     echo "⚠️  Found $issues issue(s). Please resolve before testing."
     echo ""
     echo "To fix:"
-    if [ -z "$GEMINI_API_KEY" ]; then
-        echo "  export GEMINI_API_KEY='your-key'"
-    fi
-    if ! npm list "puppeteer" &> /dev/null || ! npm list "@google/generative-ai" &> /dev/null; then
+    if ! npm list "@playwright/test" &> /dev/null || ! npm list "firebase" &> /dev/null; then
         echo "  npm install"
+    fi
+    if ! command -v node &> /dev/null; then
+        echo "  Install Node.js from https://nodejs.org"
     fi
 fi
 

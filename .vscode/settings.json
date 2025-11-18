@@ -15,7 +15,8 @@
                 "PUPPETEER_HEADLESS": "true",
                 "PUPPETEER_TIMEOUT": "30000"
             },
-            "description": "Browser automation for automated testing with Puppeteer"
+            "description": "Browser automation for visual testing and documentation with MCP"
         }
-    }
+    },
+    "git.ignoreLimitWarning": true
 }

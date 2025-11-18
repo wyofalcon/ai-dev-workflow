@@ -38,11 +38,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
-    "test:report": "playwright show-report tests/reports/html",
-    "test:autonomous": "node tests/autonomous-test-runner.cjs",
-    "test:autonomous:headed": "HEADLESS=false node tests/autonomous-test-runner.cjs",
-    "test:progress": "node tests/view-test-progress.cjs",
-    "test:setup": "./tests/setup-autonomous-testing.sh"
+    "test:report": "playwright show-report tests/reports/html"
   },
   "eslintConfig": {
     "extends": [

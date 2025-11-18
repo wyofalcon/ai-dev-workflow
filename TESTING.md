@@ -1,6 +1,6 @@
 # 🧪 CVStomize Testing Guide
 
-This project uses **two complementary testing approaches** to ensure comprehensive coverage and reliability.
+Comprehensive testing suite combining manual testing tools with automated Playwright tests.
 
 ---
 
@@ -14,76 +14,89 @@ npm install
 
 # Install Playwright browsers
 npx playwright install
-
-# Setup autonomous testing (includes API key prompt)
-npm run test:setup
 ```
 
-### 2️⃣ Run Tests
+### 2️⃣ Start Testing
 
 ```bash
-# 🤖 AI-Powered Autonomous Tests (Recommended)
-npm run test:autonomous              # Run all tests with AI
-npm run test:autonomous:headed       # Run with visible browser
-npm run test:progress                # View progress dashboard
+# 📝 Interactive Manual Testing
+./start-testing.sh                   # Launch testing workspace menu
+open tools/test-tracker.html         # Open test tracker directly
 
-# 🎭 Playwright Traditional Tests
-npm run test:e2e                     # Run all Playwright tests
+# 🎬 Record Tests
+./scripts/record-test.sh             # Record interactions
+./scripts/record-test.sh --local     # Record against localhost
+
+# 🧪 Run E2E Tests
+npm run test:e2e                     # Run all Playwright tests (headless)
 npm run test:e2e:ui                  # Interactive UI mode
+npm run test:e2e:headed              # Run with visible browser
 npm run test:report                  # View test reports
 ```
 
 ---
 
-## 🤖 Autonomous AI Testing (Gemini-Powered)
+## 📝 Manual Testing with Test Tracker
 
 **What it does:**
-- Runs 50+ comprehensive UI tests autonomously
-- Adapts to UI changes using Gemini AI
-- Pauses for human verification when needed
-- Tracks progress and resumes from checkpoints
-- Takes screenshots at every step
+- Interactive checklist-based testing
+- Tracks progress automatically
+- Add notes for each test
+- Export test reports in markdown
+- Auto-saves to browser localStorage
 
-**Key Features:**
-- ✅ Intelligent element detection (no brittle selectors)
-- ✅ Self-healing test logic with alternatives
-- ✅ Real-time progress tracking via JSON checkpoint
-- ✅ Human intervention workflow for subjective tests
-- ✅ Detailed AI reasoning in logs
-
-**Requirements:**
-- Gemini API key (free tier: 60 requests/min)
-- Set `GEMINI_API_KEY` environment variable
+**Features:**
+- ✅ Step-by-step test guidance
+- ✅ Pass/Fail/Skip marking
+- ✅ Real-time progress tracking
+- ✅ Quick notes for observations
+- ✅ Export comprehensive test reports
 
 **Test Coverage:**
-- Authentication (7 tests)
-- Resume Generation - No Upload (6 tests)
-- Resume Generation - With Upload (6 tests)
-- Resume History (8 tests)
-- Profile Management (4 tests)
-- Downloads (6 tests)
-- Edge Cases (5 tests)
+- Authentication (4 tests)
+- Resume Generation - No Upload (3 tests)
+- Resume Generation - With Upload (2 tests)
+- Resume History (3 tests)
+- Profile Management (2 tests)
+- Downloads (2 tests)
 
-**Progress Tracking:**
+**Usage:**
 ```bash
-# View full dashboard
-npm run test:progress
+# Open test tracker
+open tools/test-tracker.html
 
-# View only summary
-node tests/view-test-progress.cjs --summary
-
-# View failed tests
-node tests/view-test-progress.cjs --failed
-
-# View pending tests
-node tests/view-test-progress.cjs --pending
+# Or use the launcher
+./start-testing.sh
 ```
 
-📖 **Full Documentation:** [`docs/testing/AUTONOMOUS_TESTING_GUIDE.md`](docs/testing/AUTONOMOUS_TESTING_GUIDE.md)
+📖 **Full Documentation:** [`TESTING_WORKSPACE.md`](TESTING_WORKSPACE.md)
 
 ---
 
-## 🎭 Playwright Testing (Traditional)
+## 🎬 Recording Tests with Playwright
+
+**What it does:**
+- Records your interactions as code
+- Generates test scripts automatically
+- Perfect for creating new tests
+- Use recordings to train AI agents
+
+**Usage:**
+```bash
+# Record a test
+./scripts/record-test.sh
+
+# Record with options
+./scripts/record-test.sh --name signup-flow
+./scripts/record-test.sh --local
+./scripts/record-test.sh --typescript
+```
+
+📖 **Full Documentation:** [`docs/testing/PLAYWRIGHT_CODEGEN_GUIDE.md`](docs/testing/PLAYWRIGHT_CODEGEN_GUIDE.md)
+
+---
+
+## 🎭 Playwright E2E Testing
 
 **What it does:**
 - TypeScript-based structured tests
@@ -117,48 +130,67 @@ npx playwright test --project=chromium
 
 ## 🎯 Which Testing Approach to Use?
 
-| Scenario | Use Autonomous AI | Use Playwright |
-|----------|------------------|----------------|
-| **Full regression testing** | ✅ Best choice | ⚠️ Slower |
-| **Quick smoke tests** | ⚠️ Slower setup | ✅ Best choice |
-| **UI changes frequently** | ✅ Self-healing | ❌ Breaks easily |
-| **Need human verification** | ✅ Built-in | ❌ Manual |
-| **CI/CD pipeline** | ⚠️ Requires API key | ✅ No dependencies |
-| **Local development** | ✅ Great for exploration | ✅ Fast feedback |
-| **First time testing** | ✅ More forgiving | ⚠️ Requires setup |
+| Scenario | Use Manual Testing | Use Playwright E2E | Use Recording |
+|----------|-------------------|-------------------|---------------|
+| **Initial exploration** | ✅ Best choice | ❌ Too rigid | ⚠️ After manual |
+| **Full regression** | ⚠️ Time consuming | ✅ Best choice | ❌ Not comprehensive |
+| **Quick smoke tests** | ✅ Fast feedback | ✅ Automated | ❌ Overkill |
+| **Finding bugs** | ✅ Best choice | ⚠️ Limited scope | ❌ Won't find bugs |
+| **CI/CD pipeline** | ❌ Manual | ✅ Best choice | ❌ Manual step |
+| **Creating new tests** | ⚠️ Document first | ⚠️ Write code | ✅ Best choice |
+| **Training/Documentation** | ✅ Great | ⚠️ Technical | ✅ Great |
 
-**Recommendation:** Use **Autonomous AI** for comprehensive manual testing sessions, and **Playwright** for quick smoke tests and CI/CD pipelines.
+**Recommendation:** Use **Manual Testing** for initial exploration and bug finding, **Playwright E2E** for regression and CI/CD, and **Recording** to quickly create new automated tests.
 
 ---
 
 ## 📊 Test Reports & Artifacts
 
-### Autonomous Testing
-- **Progress:** `tests/test-progress.json` (checkpoint file)
-- **Screenshots:** `tests/reports/screenshots/` (every step)
-- **Logs:** Console output with AI reasoning
+### Manual Testing
+- **Progress:** Browser localStorage (auto-saved)
+- **Reports:** Export as markdown from test tracker
+- **Notes:** Per-test notes and quick notes
+- **Location:** `tools/test-tracker.html`
 
 ### Playwright Testing
 - **HTML Report:** `tests/reports/html/` (view with `npm run test:report`)
-- **JSON Results:** `tests/reports/results.json`
-- **Screenshots:** Only on failures
-- **Videos:** Only on failures
+- **Screenshots:** On failures
+- **Videos:** On first retry
+- **Traces:** On first retry
+- **Location:** `tests/reports/`
+
+### Recorded Tests
+- **Test Files:** `tests/recorded/`
+- **Format:** JavaScript or TypeScript
+- **Usage:** Can be run with Playwright or enhanced with AI
 
 ---
 
 ## 🛠️ VS Code Integration
 
+### Using the Testing Workspace
+```bash
+# Open the testing workspace
+code .vscode/testing.code-workspace
+```
+
 ### Tasks (Ctrl+Shift+P → "Tasks: Run Task")
-- **Run Autonomous Tests (AI-Powered)** - Run all AI tests
-- **Run Autonomous Tests (Visible Browser)** - Watch tests run
-- **View Test Progress Dashboard** - Check test status
-- **Run E2E Tests (UI Mode)** - Playwright UI
+- **Open Test Tracker** - Launch manual testing tool
+- **Record Test** - Record interactions (production)
+- **Record Test (Local)** - Record against localhost
+- **Run E2E Tests (UI Mode)** - Playwright interactive mode
+- **Run E2E Tests (Headed)** - Visible browser
+- **Run E2E Tests (Headless)** - Fast headless mode
 - **Show Test Report** - Open HTML report
 
 ### Debug Configurations (F5)
-- **Run Autonomous Tests (AI)** - Debug AI test runner
-- **View Test Progress** - Check progress in debug
-- **Run Playwright Tests** - Debug Playwright tests
+- **Record Test** - Debug test recording
+- **Record Test (Local)** - Debug local recording
+- **Run All E2E Tests** - Debug test execution
+- **Run E2E Tests (UI)** - Debug in UI mode
+- **Run E2E Tests (Headed)** - Debug with visible browser
+- **Debug Current Test** - Debug open test file
+- **Show Test Report** - View test results
 
 ---
 
@@ -169,16 +201,13 @@ npx playwright test --project=chromium
 Copy `.env.example` to `.env` and configure:
 
 ```bash
-# Required for Autonomous AI Testing
-GEMINI_API_KEY=your-gemini-api-key-here
-
-# Optional
-HEADLESS=true                    # false to see browser
-SLOW_MO=0                        # ms delay between actions
-
-# For authenticated tests
+# Optional - for authenticated tests
 GOOGLE_TEST_EMAIL=test@example.com
 GOOGLE_TEST_PASSWORD=your-password
+
+# Playwright options
+HEADLESS=true                    # false to see browser
+SLOW_MO=0                        # ms delay between actions
 ```
 
 ### Playwright Configuration
@@ -193,27 +222,28 @@ Edit `playwright.config.js` to customize:
 
 ## 🐛 Troubleshooting
 
-### "GEMINI_API_KEY not set"
-```bash
-export GEMINI_API_KEY="your-key"
-# Or add to ~/.bashrc for persistence
-```
-
 ### "Browsers not installed"
 ```bash
 npx playwright install
 ```
 
-### "Element not found"
-- AI will automatically try alternatives
-- Increase `SLOW_MO` for slow networks
-- Check screenshots in `tests/reports/screenshots/`
-
-### "Test stuck in 'running' state"
+### "Test tracker won't open"
 ```bash
-# Edit tests/test-progress.json
-# Change status from "running" to "not-started"
+# Try different methods
+open tools/test-tracker.html
+xdg-open tools/test-tracker.html
+# Or drag file to browser
 ```
+
+### "Element not found" in Playwright tests
+- Re-record the test with `./scripts/record-test.sh`
+- Update selectors in test file
+- Check if UI has changed
+
+### "Test tracker progress not saving"
+- Check browser localStorage is enabled
+- Try exporting report as backup
+- Clear cache and reload if corrupted
 
 ### Browser won't close
 ```bash
@@ -226,41 +256,43 @@ pkill -f "Google Chrome"
 
 ## 📚 Additional Resources
 
-- **Complete UI Testing Guide:** [`COMPLETE_UI_TESTING_GUIDE.md`](COMPLETE_UI_TESTING_GUIDE.md)
-- **AI Testing Guide:** [`docs/testing/AI_TESTING_GUIDE.md`](docs/testing/AI_TESTING_GUIDE.md)
-- **Autonomous Testing Guide:** [`docs/testing/AUTONOMOUS_TESTING_GUIDE.md`](docs/testing/AUTONOMOUS_TESTING_GUIDE.md)
+- **Testing Workspace Hub:** [`TESTING_WORKSPACE.md`](TESTING_WORKSPACE.md) - Your main reference
+- **Quick Start:** [`START_TESTING.md`](START_TESTING.md) - 2-minute setup
+- **Complete UI Testing Guide:** [`COMPLETE_UI_TESTING_GUIDE.md`](COMPLETE_UI_TESTING_GUIDE.md) - Manual testing checklist
+- **Playwright Codegen Guide:** [`docs/testing/PLAYWRIGHT_CODEGEN_GUIDE.md`](docs/testing/PLAYWRIGHT_CODEGEN_GUIDE.md) - Recording guide
+- **Test Quickstart:** [`TESTING_QUICKSTART.md`](TESTING_QUICKSTART.md) - 5-minute tutorial
 - **Project Structure:** [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md)
-- **AI Code Standards:** [`.ai-instructions.md`](.ai-instructions.md)
 
 ---
 
 ## 📈 Testing Best Practices
 
-1. **Run autonomous tests before major releases** - Catch UI regressions
-2. **Use Playwright for quick validation** - Fast feedback during development
-3. **Monitor test progress** - Use dashboard to track failing tests
-4. **Review AI reasoning** - Learn from AI decisions in console output
-5. **Keep checkpoints** - Commit `test-progress.json` after successful runs
-6. **Update test data** - Keep job descriptions and answers realistic
-7. **Check screenshots** - Visual verification of failures
+1. **Start with manual testing** - Use test tracker to explore and find issues
+2. **Record common flows** - Use codegen to create automated tests
+3. **Run E2E before releases** - Catch regressions early
+4. **Document as you test** - Add notes for every issue found
+5. **Test in incognito** - Fresh sessions for authentication tests
+6. **Export reports regularly** - Save your testing progress
+7. **Keep tests updated** - Re-record when UI changes
 
 ---
 
 ## 🤝 Contributing Tests
 
-### Adding Autonomous Tests
+### Adding Manual Test Cases
 
-Edit `tests/test-progress.json`:
-```json
-"new-category": {
-  "test-id": {
-    "name": "Test Name",
-    "status": "not-started",
-    "result": null,
-    "lastAttempt": null,
-    "notes": "",
-    "requiresHuman": false
-  }
+Edit `tools/test-tracker.html` and add to `testData` object:
+```javascript
+{
+  title: "New Test Section",
+  tests: [
+    {
+      id: "X.Y",
+      title: "Test Name",
+      steps: ["Step 1", "Step 2"],
+      expectedResults: ["Result 1", "Result 2"]
+    }
+  ]
 }
 ```
 
@@ -277,6 +309,11 @@ test.describe('Feature Name', () => {
 });
 ```
 
+Or record a test:
+```bash
+./scripts/record-test.sh --name feature-name
+```
+
 ---
 
-**Questions?** Check the detailed guides in [`docs/testing/`](docs/testing/)
+**Questions?** Check [`TESTING_WORKSPACE.md`](TESTING_WORKSPACE.md) for the complete testing hub

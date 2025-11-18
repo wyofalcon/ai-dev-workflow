@@ -1,9 +1,9 @@
 # CVstomize Testing Suite
 
 **Created:** November 15, 2025  
-**Updated:** November 16, 2025  
-**Purpose:** Comprehensive automated E2E testing with AI-powered autonomous execution  
-**Tools:** Playwright (TypeScript), Gemini AI, Puppeteer
+**Updated:** November 17, 2025  
+**Purpose:** Comprehensive manual and automated E2E testing  
+**Tools:** Test Tracker (HTML), Playwright (TypeScript), Playwright Codegen
 
 ---
 
@@ -11,33 +11,41 @@
 
 ### Choose Your Testing Approach
 
-#### 🤖 **Autonomous AI Testing (Recommended)**
-Gemini-powered testing that adapts to UI changes and runs with minimal intervention.
+#### 📝 **Manual Testing with Tracker (Recommended for Exploration)**
+Interactive checklist-based testing with progress tracking.
 
 ```bash
-# Setup (first time only)
-./setup-autonomous-testing.sh
+# Open test tracker
+open tools/test-tracker.html
 
-# Run all tests autonomously
-node autonomous-test-runner.cjs
-
-# Run with visible browser
-HEADLESS=false node autonomous-test-runner.cjs
-
-# View progress dashboard
-node view-test-progress.cjs
+# Or use launcher
+./start-testing.sh
 ```
 
-📖 **Full Guide:** [`docs/testing/AUTONOMOUS_TESTING_GUIDE.md`](../docs/testing/AUTONOMOUS_TESTING_GUIDE.md)
+📖 **Full Guide:** [`../TESTING_WORKSPACE.md`](../TESTING_WORKSPACE.md)
 
-#### 🎭 **Playwright Testing (Traditional)**
-Structured TypeScript tests for specific scenarios.
+#### 🎬 **Record Tests with Playwright**
+Capture interactions and generate test code.
 
 ```bash
-# Watch tests with UI
+# Record a test
+./scripts/record-test.sh
+
+# Record with options
+./scripts/record-test.sh --name my-test
+./scripts/record-test.sh --local
+```
+
+📖 **Full Guide:** [`../docs/testing/PLAYWRIGHT_CODEGEN_GUIDE.md`](../docs/testing/PLAYWRIGHT_CODEGEN_GUIDE.md)
+
+#### 🎭 **Run E2E Tests (Automated)**
+Execute Playwright test suite.
+
+```bash
+# Interactive UI mode
 npm run test:e2e:ui
 
-# Run all tests headless
+# Headless mode
 npm run test:e2e
 
 # View reports
@@ -50,25 +58,21 @@ npm run test:report
 
 ```
 tests/
-├── autonomous-test-runner.cjs          # 🤖 AI-powered autonomous test orchestrator
-├── view-test-progress.cjs              # 📊 Progress dashboard & viewer
-├── test-progress.json                  # ✅ Test checkpoint file (auto-updated)
-├── setup-autonomous-testing.sh         # ⚙️  Quick setup script
-├── ai-enhanced-test-suite.cjs          # 🧠 AI test enhancements (legacy)
-├── complete-automated-suite.cjs        # 🎯 Complete test suite (legacy)
-├── e2e/                                # Playwright TypeScript tests
-│   ├── 01-authentication.spec.ts
-│   ├── 02-resume-generation.spec.ts
-│   ├── 03-resume-with-upload.spec.ts
-│   ├── 04-resume-history.spec.ts
-│   ├── 05-profile.spec.ts
-│   ├── 06-downloads.spec.ts
-│   └── helpers.ts
+├── e2e/                                # Playwright TypeScript E2E tests
+│   ├── 01-authentication.spec.ts       # Auth flows (SSO, email/password)
+│   ├── 02-resume-generation.spec.ts    # Resume creation flow
+│   ├── 03-resume-with-upload.spec.ts   # Upload & hybrid flow
+│   ├── 04-resume-history.spec.ts       # History management
+│   ├── 05-profile.spec.ts              # Profile features
+│   ├── 06-downloads.spec.ts            # Export functionality
+│   └── helpers.ts                      # Shared test utilities
+├── recorded/                           # Tests generated from codegen
+│   └── (your-recorded-tests)          # Saved by record-test.sh
 ├── fixtures/
 │   └── test-data.json                  # Test data (job descriptions, answers)
 └── reports/
     ├── html/                           # HTML test reports
-    ├── screenshots/                    # Step-by-step screenshots
+    ├── screenshots/                    # Failure screenshots
     └── results.json                    # Machine-readable results
 ```
 
@@ -76,56 +80,39 @@ tests/
 
 ## 🎯 Test Coverage
 
-### 🤖 Autonomous Testing (50+ Tests)
+### 📝 Manual Testing (Test Tracker)
 
-The autonomous system tests 50+ scenarios across 6 categories:
+16 comprehensive test scenarios across 6 categories:
 
-1. **Authentication (7 tests)** - SSO, email/password, password reset, logout
-2. **Resume Generation - No Upload (6 tests)** - Full creation flow
-3. **Resume Generation - With Upload (6 tests)** - Hybrid resume flow
-4. **Resume History (8 tests)** - Browse, search, filter, manage
-5. **Profile Management (4 tests)** - View, edit, avatar, counter
-6. **Downloads (6 tests)** - Markdown, PDF templates, timestamps
-7. **Edge Cases (5 tests)** - Validation, limits, error handling
+1. **Authentication (4 tests)** - Google SSO, email/password, login, logout
+2. **Resume Generation - No Upload (3 tests)** - Full creation flow
+3. **Resume Generation - With Upload (2 tests)** - Upload & tailoring
+4. **Resume History (3 tests)** - View, edit, delete resumes
+5. **Profile Management (2 tests)** - View and update profile
+6. **Downloads (2 tests)** - PDF and DOCX exports
 
-**Progress Tracking:**
-- Real-time checkpoint system
-- Resume from last test
-- Pass/fail/undetermined results
-- Human intervention workflow
+**Features:**
+- Step-by-step guidance
+- Progress tracking with auto-save
+- Pass/Fail/Skip marking
+- Notes for each test
+- Export test reports
 
-### 🎭 Playwright Tests (Traditional)
+### 🎭 Playwright E2E Tests
 
 **Implemented:**
 - `01-authentication.spec.ts` - Google SSO, email/password auth
 - `02-resume-generation.spec.ts` - Complete generation flow
-- `06-downloads.spec.ts` - All download formats
-
-**To Be Implemented:**
 - `03-resume-with-upload.spec.ts` - Upload & hybrid flow
 - `04-resume-history.spec.ts` - History management
 - `05-profile.spec.ts` - Profile features
+- `06-downloads.spec.ts` - All download formats
+
+**Test Count:** 6 test files covering core functionality
 
 ---
 
 ## 🔧 Configuration
-
-### Autonomous Testing Config
-
-**Environment Variables:**
-```bash
-export GEMINI_API_KEY="your-api-key"  # Required
-export HEADLESS="false"                # Optional: visible browser
-export SLOW_MO="500"                   # Optional: slow down actions
-```
-
-**Features:**
-- Gemini 2.0 Flash (latest experimental model)
-- Intelligent element detection
-- Self-healing test logic
-- Auto-retry with alternatives
-- Screenshot every step
-- Real-time progress tracking
 
 ### Playwright Config (`playwright.config.js`)
 
@@ -162,41 +149,45 @@ All test data is in `tests/fixtures/test-data.json`:
 
 ---
 
-## 🐛 Critical Checks (Automated)
-
-Every test verifies:
-- ✅ No "Alex Johnson" placeholder
-- ✅ No "John Doe" placeholder
-- ✅ No `[Your Company]` brackets
-- ✅ No `[City, State]` brackets
-- ✅ Real user name displayed
-- ✅ No "11 questions" text
-- ✅ 2-5 questions generated (correct range)
-
----
-
 ## 💡 Usage Tips
 
-### Autonomous Testing
+### Manual Testing with Test Tracker
 
-**View Progress:**
+**Getting Started:**
 ```bash
-node view-test-progress.cjs             # Full dashboard
-node view-test-progress.cjs --summary   # Summary only
-node view-test-progress.cjs --failed    # Failed tests only
-node view-test-progress.cjs --pending   # Pending tests
+# Open the tracker
+open tools/test-tracker.html
 ```
 
-**Human Intervention:**
-- Tests pause automatically when manual verification needed
-- Browser stays open for inspection
-- Terminal prompts: `pass`, `fail`, or `skip`
-- Add notes: `pass - looks good`, `fail - missing skills`
+**Features:**
+- Check off steps as you complete them
+- Mark tests as Pass/Fail/Skip
+- Add detailed notes for each test
+- Use Quick Notes for general observations
+- Export comprehensive test report
 
-**Resume Testing:**
-- Tests save state in `test-progress.json`
-- Automatically resumes from last checkpoint
-- Can restart specific tests by editing JSON
+**Progress Auto-Saves:** All progress saved to browser localStorage
+
+### Recording Tests
+
+**Basic Recording:**
+```bash
+./scripts/record-test.sh --name login-flow
+```
+
+**Advanced Options:**
+```bash
+# Record against localhost
+./scripts/record-test.sh --local --name signup
+
+# Generate TypeScript
+./scripts/record-test.sh --typescript
+
+# Save to specific file
+./scripts/record-test.sh -o tests/e2e/custom.spec.js
+```
+
+**Generated tests saved to:** `tests/recorded/`
 
 ### Playwright Testing
 
@@ -297,6 +288,30 @@ sudo npx playwright install-deps
 
 ## 📝 Adding New Tests
 
+### Manual Testing
+Edit `tools/test-tracker.html` and add to `testData` object:
+```javascript
+{
+  title: "New Test Section",
+  tests: [{
+    id: "X.Y",
+    title: "Test Name",
+    steps: ["Step 1", "Step 2"],
+    expectedResults: ["Result 1", "Result 2"]
+  }]
+}
+```
+
+### Recording Tests
+```bash
+# Record your interaction
+./scripts/record-test.sh --name my-feature
+
+# Enhance with AI or manually edit
+# Move to tests/e2e/ if needed
+```
+
+### Writing E2E Tests
 1. **Create spec file** in `tests/e2e/`
 2. **Import helpers:**
    ```typescript
@@ -315,10 +330,12 @@ sudo npx playwright install-deps
 
 ## 🎓 Learn More
 
+- **Complete Testing Hub:** [`../TESTING_WORKSPACE.md`](../TESTING_WORKSPACE.md)
+- **Quick Start:** [`../START_TESTING.md`](../START_TESTING.md)
 - **Playwright Docs:** https://playwright.dev
-- **Test Guide:** `COMPLETE_UI_TESTING_GUIDE.md`
-- **Production URL:** https://cvstomize-frontend-351889420459.us-central1.run.app
+- **Codegen Guide:** [`../docs/testing/PLAYWRIGHT_CODEGEN_GUIDE.md`](../docs/testing/PLAYWRIGHT_CODEGEN_GUIDE.md)
+- **Manual Test Guide:** [`../COMPLETE_UI_TESTING_GUIDE.md`](../COMPLETE_UI_TESTING_GUIDE.md)
 
 ---
 
-**Happy Testing! 🚀**
+**Happy Testing! 🧪✨**

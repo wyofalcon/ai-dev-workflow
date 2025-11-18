@@ -66,57 +66,6 @@
       },
       "problemMatcher": [],
       "detail": "Open HTML test report in browser"
-    },
-    {
-      "label": "Run Autonomous Tests (AI-Powered)",
-      "type": "shell",
-      "command": "node tests/autonomous-test-runner.cjs",
-      "group": "test",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "focus": true,
-        "clear": true
-      },
-      "problemMatcher": [],
-      "detail": "Run AI-powered autonomous tests with Gemini"
-    },
-    {
-      "label": "Run Autonomous Tests (Visible Browser)",
-      "type": "shell",
-      "command": "HEADLESS=false node tests/autonomous-test-runner.cjs",
-      "group": "test",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "focus": true
-      },
-      "problemMatcher": [],
-      "detail": "Run AI tests with visible browser for monitoring"
-    },
-    {
-      "label": "View Test Progress Dashboard",
-      "type": "shell",
-      "command": "node tests/view-test-progress.cjs",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "focus": true
-      },
-      "problemMatcher": [],
-      "detail": "View current autonomous test progress and statistics"
-    },
-    {
-      "label": "Setup Autonomous Testing",
-      "type": "shell",
-      "command": "./tests/setup-autonomous-testing.sh",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "focus": true
-      },
-      "problemMatcher": [],
-      "detail": "Configure dependencies and API keys for autonomous testing"
     }
   ]
 }
