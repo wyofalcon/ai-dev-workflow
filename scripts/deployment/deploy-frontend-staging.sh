@@ -10,10 +10,17 @@
 
 set -e  # Exit on error
 
-PROJECT_ID="cvstomize-staging"
+PROJECT_ID="cvstomize"
 SERVICE_NAME="cvstomize-frontend-staging"
 REGION="us-central1"
-API_URL="https://cvstomize-api-staging-j7hztys6ba-uc.a.run.app"
+
+echo "🔍 Fetching Staging API URL..."
+API_URL=$(gcloud run services describe cvstomize-api-staging --platform managed --region $REGION --format 'value(status.url)' || echo "")
+
+if [ -z "$API_URL" ]; then
+  echo "❌ Could not find Staging API URL. Is the API deployed?"
+  read -p "Enter API URL manually (or Ctrl+C to cancel): " API_URL
+fi
 
 echo "🚀 Deploying CVstomize Frontend to STAGING..."
 echo ""
@@ -24,11 +31,16 @@ echo "  Region: $REGION"
 echo "  API URL: $API_URL"
 echo ""
 
+# Navigate to root directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/../../"
+
 # Build and deploy using Cloud Build (multi-stage Docker build)
 echo "📦 Building Docker image with Cloud Build..."
 gcloud builds submit \
-  --config=../../ci/cloudbuild.frontend-staging.yaml \
+  --config=ci/cloudbuild.frontend-staging.yaml \
   --project=$PROJECT_ID \
+  --substitutions=_REACT_APP_API_URL="$API_URL" \
   .
 
 echo ""

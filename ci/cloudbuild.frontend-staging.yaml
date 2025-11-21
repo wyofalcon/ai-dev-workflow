@@ -6,7 +6,7 @@ steps:
       - '-t'
       - 'gcr.io/$PROJECT_ID/cvstomize-frontend-staging:latest'
       - '--build-arg'
-      - 'REACT_APP_API_URL=https://cvstomize-api-staging-j7hztys6ba-uc.a.run.app'
+      - 'REACT_APP_API_URL=$_REACT_APP_API_URL'
       - '-f'
       - 'Dockerfile.frontend'
       - '.'

@@ -31,12 +31,13 @@
 
 **Essential Docs:**
 - [ROADMAP.md](ROADMAP.md) - Complete roadmap, session history, critical bugs, and next steps
-- [CREDENTIALS_SECURE.md](CREDENTIALS_SECURE.md) - Secure credential access
-- [MONETIZATION_STRATEGY.md](MONETIZATION_STRATEGY.md) - Business strategy (keep untouched)
+- [docs/project_info/CREDENTIALS_SECURE.md](docs/project_info/CREDENTIALS_SECURE.md) - Secure credential access
+- [docs/project_info/MONETIZATION_STRATEGY.md](docs/project_info/MONETIZATION_STRATEGY.md) - Business strategy (keep untouched)
 
 **Additional Docs:**
 - [docs/setup/](docs/setup/) - Setup guides (Firebase, Staging)
 - [docs/testing/](docs/testing/) - Testing guides
+- [docs/project_info/](docs/project_info/) - Project structure and info
 
 ---
 
@@ -112,11 +113,15 @@
 ./scripts/manage-secrets.sh get DATABASE_URL
 ./scripts/manage-secrets.sh export .env.local
 
-# See CREDENTIALS_SECURE.md for all commands
+# See docs/project_info/CREDENTIALS_SECURE.md for all commands
 ```
 
 ### Local Setup
 ```bash
+# Start entire stack with Docker (Recommended)
+./start-local.sh
+
+# Or manual setup:
 # Backend
 cd api
 npm install
@@ -201,11 +206,11 @@ cd api
 
 ## 📚 Documentation Structure
 
-**Essential Files (4 Only):**
+**Essential Files:**
 - `ROADMAP.md` - Complete roadmap, session history, critical bugs, implementation plan
 - `README.md` - This file (project overview & quick start)
-- `CREDENTIALS_SECURE.md` - Secure credential access (no passwords stored)
-- `MONETIZATION_STRATEGY.md` - Business strategy (keep untouched)
+- `docs/project_info/CREDENTIALS_SECURE.md` - Secure credential access (no passwords stored)
+- `docs/project_info/MONETIZATION_STRATEGY.md` - Business strategy (keep untouched)
 
 **All session-specific docs consolidated into ROADMAP.md for easier context management.**
 

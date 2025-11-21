@@ -3,7 +3,7 @@
     "window.autoDetectColorScheme": true,
     "window.closeWhenEmpty": true,
     "window.title": "",
-    "editor.defaultFormatter": "google.geminicodeassist",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "terminal.integrated.automationProfile.linux": {
         
     },
