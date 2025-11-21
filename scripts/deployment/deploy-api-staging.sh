@@ -4,10 +4,10 @@
 
 set -e  # Exit on error
 
-PROJECT_ID="cvstomize-staging"
+PROJECT_ID="cvstomize"
 SERVICE_NAME="cvstomize-api-staging"
 REGION="us-central1"
-DB_INSTANCE="cvstomize-staging:us-central1:cvstomize-db-staging"
+DB_INSTANCE="cvstomize:us-central1:cvstomize-db-staging"
 
 echo "🚀 Deploying to STAGING environment"
 echo "Project: $PROJECT_ID"
@@ -22,7 +22,9 @@ if [ "$confirm" != "yes" ]; then
   exit 1
 fi
 
-cd /mnt/storage/shared_windows/Cvstomize/api
+# Navigate to API directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/../../api"
 
 gcloud run deploy "$SERVICE_NAME" \
   --source . \
@@ -30,16 +32,18 @@ gcloud run deploy "$SERVICE_NAME" \
   --platform=managed \
   --allow-unauthenticated \
   --set-env-vars="NODE_ENV=staging" \
-  --set-secrets="DATABASE_URL=DATABASE_URL:latest,GOOGLE_APPLICATION_CREDENTIALS_JSON=GOOGLE_APPLICATION_CREDENTIALS_JSON:latest" \
+  --set-secrets="DATABASE_URL=DATABASE_URL_STAGING:latest,JWT_SECRET=JWT_SECRET_STAGING:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,FIREBASE_PROJECT_ID=FIREBASE_PROJECT_ID:latest,FIREBASE_PRIVATE_KEY=FIREBASE_PRIVATE_KEY:latest,FIREBASE_CLIENT_EMAIL=FIREBASE_CLIENT_EMAIL:latest,GCS_BUCKET_NAME=GCS_BUCKET_NAME:latest" \
   --add-cloudsql-instances="$DB_INSTANCE" \
   --project="$PROJECT_ID" \
   --max-instances=5 \
   --min-instances=0 \
   --memory=512Mi \
   --cpu=1 \
-  --timeout=60s \
+  --timeout=300 \
   --quiet
 
 echo ""
 echo "✅ Deployment complete!"
-echo "Staging API URL: https://$SERVICE_NAME-$(gcloud config get-value project 2>/dev/null).us-central1.run.app"
+# Get the URL
+SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --platform managed --region $REGION --format 'value(status.url)')
+echo "Staging API URL: $SERVICE_URL"

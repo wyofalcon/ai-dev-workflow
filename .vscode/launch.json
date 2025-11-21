@@ -11,7 +11,17 @@
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
         },
-
+        {
+            "name": "Docker: Attach to Backend",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "address": "localhost",
+            "localRoot": "${workspaceFolder}/api",
+            "remoteRoot": "/app",
+            "protocol": "inspector",
+            "restart": true
+        },
         {
             "type": "node",
             "request": "launch",

@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # Local PostgreSQL Database
+  # Completely isolated from Production/Staging Cloud SQL
+  database:
+    image: postgres:15-alpine
+    container_name: cvstomize-db-local
+    environment:
+      POSTGRES_DB: cvstomize_dev
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d cvstomize_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Local Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: cvstomize-redis-local
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    container_name: cvstomize-api-local
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://dev_user:dev_password@database:5432/cvstomize_dev?schema=public
+      - REDIS_URL=redis://redis:6379
+      - PORT=3001
+      - JWT_SECRET=local-dev-secret-key
+      - CORS_ORIGIN=http://localhost:3000
+      # To use Vertex AI, you need to provide GCP credentials.
+      # You can mount a service account key or use gcloud auth application-default login
+      # and mount the credentials file.
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-key.json
+      - GCP_PROJECT_ID=cvstomize-staging # Or your project ID
+    ports:
+      - "3001:3001"
+      - "9229:9229"
+    command: npm run dev:debug
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+      # Uncomment if you have a key file
+      - ./gcp-key.json:/app/gcp-key.json
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: cvstomize-frontend-local
+    environment:
+      - REACT_APP_API_URL=http://localhost:3001
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=0
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
