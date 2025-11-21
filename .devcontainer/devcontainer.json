@@ -1,0 +1,27 @@
+{
+	"name": "CVstomize Dev Container",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+			"version": "latest",
+			"enableNonRootDocker": "true",
+			"moby": "true"
+		},
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"ms-azuretools.vscode-docker",
+				"ms-vscode.vscode-typescript-next",
+				"prisma.prisma"
+			]
+		}
+	},
+	"forwardPorts": [3000, 3001, 5432, 6379],
+	"postCreateCommand": "npm install && cd api && npm install && npx prisma generate",
+	"remoteUser": "node"
+}
