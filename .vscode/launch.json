@@ -5,6 +5,30 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Cloud Run: Run/Debug Locally",
+            "type": "cloudcode.cloudrun",
+            "request": "launch",
+            "build": {
+                "docker": {
+                    "path": "Dockerfile"
+                }
+            },
+            "image": "cvstomize",
+            "service": {
+                "name": "cvstomize",
+                "containerPort": 8080,
+                "resources": {
+                    "limits": {
+                        "memory": "256Mi"
+                    }
+                }
+            },
+            "target": {
+                "minikube": {}
+            },
+            "watch": true
+        },
+        {
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
@@ -27,7 +51,10 @@
             "request": "launch",
             "name": "Run Playwright Tests (Headless)",
             "program": "${workspaceFolder}/node_modules/.bin/playwright",
-            "args": ["test", "--reporter=list"],
+            "args": [
+                "test",
+                "--reporter=list"
+            ],
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}"
         },
@@ -36,7 +63,11 @@
             "request": "launch",
             "name": "Run Playwright Tests (Headed)",
             "program": "${workspaceFolder}/node_modules/.bin/playwright",
-            "args": ["test", "--headed", "--reporter=list"],
+            "args": [
+                "test",
+                "--headed",
+                "--reporter=list"
+            ],
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}"
         }
