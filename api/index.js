@@ -147,12 +147,14 @@ const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 const conversationRoutes = require('./routes/conversation');
 const resumeRoutes = require('./routes/resume');
+const goldStandardRoutes = require('./routes/goldStandard');
 const proxyRoutes = require('./routes/proxy');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/conversation', conversationRoutes);
 app.use('/api/resume', resumeRoutes);
+app.use('/api/gold-standard', goldStandardRoutes);
 app.use('/api/proxy', proxyRoutes);
 
 // 404 handler
