@@ -5,7 +5,7 @@ echo "🚀 CVstomize Backend Deployment to GCP Cloud Run"
 echo "================================================"
 
 # Configuration
-PROJECT_ID="cvstomize-test"
+PROJECT_ID="cvstomize"
 REGION="us-central1"
 SERVICE_NAME="cvstomize-api"
 IMAGE_NAME="gcr.io/${PROJECT_ID}/${SERVICE_NAME}"

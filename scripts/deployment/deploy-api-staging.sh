@@ -7,7 +7,7 @@ set -e  # Exit on error
 PROJECT_ID="cvstomize"
 SERVICE_NAME="cvstomize-api-staging"
 REGION="us-central1"
-DB_INSTANCE="cvstomize:us-central1:cvstomize-db-staging"
+DB_INSTANCE="cvstomize:us-central1:cvstomize-db"
 
 echo "🚀 Deploying to STAGING environment"
 echo "Project: $PROJECT_ID"
@@ -32,7 +32,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --platform=managed \
   --allow-unauthenticated \
   --set-env-vars="NODE_ENV=staging" \
-  --set-secrets="DATABASE_URL=DATABASE_URL_STAGING:latest,JWT_SECRET=JWT_SECRET_STAGING:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,FIREBASE_PROJECT_ID=FIREBASE_PROJECT_ID:latest,FIREBASE_PRIVATE_KEY=FIREBASE_PRIVATE_KEY:latest,FIREBASE_CLIENT_EMAIL=FIREBASE_CLIENT_EMAIL:latest,GCS_BUCKET_NAME=GCS_BUCKET_NAME:latest" \
+  --set-secrets="DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,FIREBASE_PROJECT_ID=FIREBASE_PROJECT_ID:latest,FIREBASE_PRIVATE_KEY=FIREBASE_PRIVATE_KEY:latest,FIREBASE_CLIENT_EMAIL=FIREBASE_CLIENT_EMAIL:latest,GCS_BUCKET_NAME=GCS_BUCKET_NAME:latest" \
   --add-cloudsql-instances="$DB_INSTANCE" \
   --project="$PROJECT_ID" \
   --max-instances=5 \
