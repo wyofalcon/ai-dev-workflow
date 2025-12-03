@@ -36,11 +36,20 @@ function HomePage({ onStart }) {
   const options = [
     {
       id: 'build',
-      title: 'BUILD NEW RESUME / UPLOAD EXISTING RESUME/CV',
+      title: 'BUILD NEW RESUME/CV',
       icon: <BuildIcon sx={{ fontSize: 40 }} />,
-      tooltip: "Don't have a resume? CVstomize will guide you through the (often times daunting) process of building one.",
+      tooltip: "Start from scratch! CVstomize will guide you through building a professional resume step-by-step.",
       action: () => setShowBuildModal(true),
       color: '#9d99e5',
+      disabled: false,
+    },
+    {
+      id: 'upload',
+      title: 'UPLOAD EXISTING RESUME/CV',
+      icon: <BuildIcon sx={{ fontSize: 40 }} />,
+      tooltip: "Already have a resume? Upload it and CVstomize will extract your information to create optimized versions.",
+      action: () => setShowBuildModal(true),
+      color: '#7c78d8',
       disabled: false,
     },
     {
@@ -48,8 +57,8 @@ function HomePage({ onStart }) {
       title: 'TAILOR TO SPECIFIC JOB',
       icon: <TargetIcon sx={{ fontSize: 40 }} />,
       tooltip: hasResumes 
-        ? "Have at least one resume already? Cool, CVstomize will ask you a few questions and generate a tailored to fit resume specific to the provided job posting!"
-        : "CVstomize needs at least 1 resume/cv for this option.",
+        ? "Have at least one resume already? CVstomize will ask you a few questions and generate a tailored resume specific to your job posting!"
+        : "You need at least 1 resume/CV saved before using this option.",
       action: () => hasResumes && navigate('/create-resume'),
       color: '#fdbb2d',
       disabled: !hasResumes,

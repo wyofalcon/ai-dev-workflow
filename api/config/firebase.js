@@ -1,9 +1,42 @@
 const admin = require('firebase-admin');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
+const fs = require('fs');
+const path = require('path');
 
 // Promise-based lock to prevent concurrent initialization
 let firebaseInitPromise = null;
 let firebaseApp = null;
+
+/**
+ * Initialize Firebase Admin SDK from local service account file
+ * Used for local development
+ */
+async function initializeFromLocalFile() {
+  try {
+    const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || './gcp-key.json';
+    const absolutePath = path.resolve(__dirname, '..', keyPath);
+    
+    console.log(`📁 Loading Firebase credentials from: ${absolutePath}`);
+    
+    if (!fs.existsSync(absolutePath)) {
+      throw new Error(`Service account key file not found: ${absolutePath}`);
+    }
+
+    const serviceAccountKey = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+    
+    // Initialize Firebase Admin
+    const app = admin.initializeApp({
+      credential: admin.credential.cert(serviceAccountKey),
+      projectId: serviceAccountKey.project_id,
+    });
+
+    console.log(`✅ Firebase Admin SDK initialized from local file (project: ${serviceAccountKey.project_id})`);
+    return app;
+  } catch (error) {
+    console.error('❌ Failed to initialize Firebase from local file:', error);
+    throw error;
+  }
+}
 
 /**
  * Initialize Firebase Admin SDK from Google Secret Manager
@@ -70,8 +103,23 @@ async function initializeFirebase() {
     return admin.app();
   }
 
-  // Production/Development - initialize from Secret Manager
-  console.log('🚀 Initializing Firebase Admin SDK...');
+  // Development - use local service account file
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 Development environment - using local credentials');
+    firebaseInitPromise = initializeFromLocalFile()
+      .then(app => {
+        firebaseApp = app;
+        return app;
+      })
+      .catch(error => {
+        firebaseInitPromise = null;
+        throw error;
+      });
+    return firebaseInitPromise;
+  }
+
+  // Production/Staging - initialize from Secret Manager
+  console.log('🚀 Initializing Firebase Admin SDK from Secret Manager...');
   firebaseInitPromise = initializeFromSecretManager()
     .then(app => {
       firebaseApp = app;

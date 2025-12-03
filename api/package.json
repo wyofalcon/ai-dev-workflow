@@ -43,7 +43,7 @@
     "mammoth": "^1.11.0",
     "marked": "^16.4.1",
     "multer": "^2.0.2",
-    "pdf-parse": "1.1.1",
+    "pdf-parse": "^1.1.1",
     "prisma": "^6.18.0",
     "puppeteer": "^24.29.0",
     "uuid": "^13.0.0",
