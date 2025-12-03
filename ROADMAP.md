@@ -296,74 +296,159 @@ ADD COLUMN job_description TEXT;
 
 ### 🏗️ PROFILE-FIRST RAG SYSTEM DESIGN (Sessions 29-33)
 
-**Strategic Goal:** Deep personality profiles + RAG-powered personalization
+**Strategic Goal:** Deep personality profiles (90%+ accuracy) + RAG-powered personalization
+
+**🎯 HYBRID ASSESSMENT ARCHITECTURE:**
+- **Section A:** 8 Deep Behavioral Stories (15-20 min) → Resume/cover letter content
+- **Section B:** 20 Validated Likert Items (3 min) → 85-90% OCEAN accuracy
+- **Section C:** 7 Hybrid Smart Questions (5 min) → Trait reinforcement + stories
+- **Total Time:** 20-25 minutes | **Accuracy:** 90-95% vs NEO-PI-R
 
 #### Session 29: Profile Builder Foundation
+
 **Database Schema:**
 ```sql
 CREATE TABLE personality_profiles (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER UNIQUE REFERENCES users(id),
-  is_complete BOOLEAN DEFAULT false,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+
+  -- OCEAN Scores (0-100, scientifically validated)
   openness INTEGER CHECK (openness BETWEEN 0 AND 100),
-  conscientiousness INTEGER,
-  extraversion INTEGER,
-  agreeableness INTEGER,
-  neuroticism INTEGER,
-  work_style VARCHAR(100),
-  communication_style VARCHAR(100),
-  core_values TEXT[],
-  passions TEXT[],
-  unique_skills TEXT[],
+  conscientiousness INTEGER CHECK (conscientiousness BETWEEN 0 AND 100),
+  extraversion INTEGER CHECK (extraversion BETWEEN 0 AND 100),
+  agreeableness INTEGER CHECK (agreeableness BETWEEN 0 AND 100),
+  neuroticism INTEGER CHECK (neuroticism BETWEEN 0 AND 100),
+
+  -- Methodology Tracking
+  assessment_version VARCHAR(20) DEFAULT 'hybrid-v3',
+  confidence_score DECIMAL(3,2), -- 0.00-1.00
+  likert_scores JSONB, -- Raw BFI-20 responses for audit
+  narrative_scores JSONB, -- Gemini-inferred scores
+  fusion_weights JSONB, -- {"likert": 0.7, "narrative": 0.3}
+
+  -- Derived Work Preferences (from OCEAN)
+  work_style VARCHAR(100), -- collaborative, independent, hybrid
+  communication_style VARCHAR(100), -- direct, diplomatic, analytical, expressive
+  leadership_style VARCHAR(100), -- servant, democratic, transformational, none
+  motivation_type VARCHAR(100), -- achievement, autonomy, mastery, purpose
+  decision_making VARCHAR(100), -- analytical, intuitive, consultative
+
+  -- Profile Metadata
+  is_complete BOOLEAN DEFAULT FALSE,
   profile_summary TEXT,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+  key_insights TEXT[],
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  CONSTRAINT unique_user_personality_profile UNIQUE(user_id)
 );
 
 CREATE TABLE profile_stories (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id),
-  question_asked TEXT NOT NULL,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+
+  -- Story Content
+  question_type VARCHAR(50) NOT NULL, -- achievement, adversity, team, innovation, helping, learning, values, passion
+  question_text TEXT NOT NULL,
   story_text TEXT NOT NULL,
+
+  -- AI Analysis
   story_summary TEXT,
   category VARCHAR(50), -- challenge_overcome, achievement, leadership, etc.
   themes TEXT[],
   skills_demonstrated TEXT[],
-  embedding VECTOR(1536), -- For RAG similarity search
+  personality_signals JSONB, -- {"conscientiousness": 0.8, "openness": 0.6}
+
+  -- RAG Support (pgvector)
+  embedding VECTOR(768), -- Vertex AI embeddings for semantic search
   relevance_tags TEXT[],
+
+  -- Usage Tracking
   times_used_in_resumes INTEGER DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW()
+  times_used_in_cover_letters INTEGER DEFAULT 0,
+  last_used_at TIMESTAMP WITH TIME ZONE,
+
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+CREATE INDEX idx_personality_profiles_user_id ON personality_profiles(user_id);
+CREATE INDEX idx_personality_profiles_complete ON personality_profiles(is_complete);
+CREATE INDEX idx_profile_stories_user_id ON profile_stories(user_id);
+CREATE INDEX idx_profile_stories_question_type ON profile_stories(question_type);
+CREATE INDEX idx_profile_stories_embedding ON profile_stories USING ivfflat (embedding vector_cosine_ops);
 ```
 
-**12 Conversational Questions:**
-1. "🎯 Tell me about a time you faced a real challenge..."
-2. "🌟 What's something you're genuinely proud of accomplishing?"
-3. "📚 Think about a skill you taught yourself..."
-4. "👥 Describe a time you worked on a team..."
-5. "❤️ What are you passionate about?"
-6. "🎨 What's something about you that doesn't fit neatly on a resume?"
-7. "⚙️ How do you work best?"
-8. "🎯 Why do you do what you do?"
-9. "💬 How would you describe the way you communicate?"
-10. "🚀 Where do you want to be in 3-5 years?"
-11. "🌱 Tell me about a time something didn't go as planned..." (Optional)
-12. "🤝 Think about a time you asked for help..." (Optional)
+**Section A: Deep Behavioral Stories (8 questions)**
+1. 🎯 "Tell me about your proudest professional or academic achievement..." (Conscientiousness + Openness)
+2. 🌊 "Describe a time when something important didn't go as planned..." (Neuroticism + Conscientiousness)
+3. 👥 "Tell me about a memorable team experience..." (Extraversion + Agreeableness)
+4. 💡 "Think of a time you approached a problem differently than others..." (Openness + Conscientiousness)
+5. 🤝 "Describe a situation where you went out of your way to help someone..." (Agreeableness + Extraversion)
+6. 📚 "What's a skill you taught yourself?" (Openness + Conscientiousness)
+7. 🎯 "Tell me about a time you had to make a difficult decision..." (All traits)
+8. 🔥 "What are you genuinely passionate about?" (Openness + Extraversion)
+
+**Section B: BFI-20 Validated Likert Items (20 questions)**
+Format: "I see myself as someone who..." (1=Disagree Strongly → 5=Agree Strongly)
+
+*Openness (4 items):*
+- "...is original, comes up with new ideas"
+- "...is curious about many different things"
+- "...prefers work that is routine" (reverse-scored)
+- "...is inventive"
+
+*Conscientiousness (4 items):*
+- "...does a thorough job"
+- "...tends to be disorganized" (reverse-scored)
+- "...is a reliable worker"
+- "...perseveres until the task is finished"
+
+*Extraversion (4 items):*
+- "...is talkative"
+- "...is reserved" (reverse-scored)
+- "...is outgoing, sociable"
+- "...generates a lot of enthusiasm"
+
+*Agreeableness (4 items):*
+- "...is helpful and unselfish with others"
+- "...can be cold and aloof" (reverse-scored)
+- "...is considerate and kind to almost everyone"
+- "...likes to cooperate with others"
+
+*Neuroticism (4 items):*
+- "...worries a lot"
+- "...is relaxed, handles stress well" (reverse-scored)
+- "...gets nervous easily"
+- "...remains calm in tense situations" (reverse-scored)
+
+**Section C: Hybrid Smart Questions (7 questions)**
+1. "Describe your ideal work environment..." (Extraversion)
+2. "Walk me through how you approach a new project..." (Conscientiousness)
+3. "Think of the last time you felt overwhelmed..." (Neuroticism)
+4. "What's the last thing you learned just because it interested you?" (Openness)
+5. "Describe a time you disagreed with someone important..." (Agreeableness)
+6. "Tell me about a major change you experienced..." (Openness + Neuroticism)
+7. "What drives you to do your best work?" (Multi-trait motivation)
 
 **Tasks:**
-- [ ] Apply database migration (personality_profiles + profile_stories)
-- [ ] Create profileAnalyzer.js (Gemini-powered Big 5 + story extraction)
+- [ ] Apply database migration (personality_profiles + profile_stories with pgvector)
+- [ ] Create profileAnalyzer.js (dual-method: BFI-20 scoring + Gemini NLP)
+- [ ] Create storyExtractor.js (parse narratives into structured stories)
+- [ ] Create embeddingGenerator.js (Vertex AI embeddings for RAG)
 - [ ] Create profile routes (start, answer, complete, status)
-- [ ] Create ProfileBuilderWizard.js component
+- [ ] Create ProfileBuilderWizard.js component (3-section flow)
 - [ ] Add profile completeness check on login
 - [ ] Redirect new users to profile builder
 
 #### Session 30: RAG Integration
-- [ ] Install pgvector extension
-- [ ] Generate embeddings for stories (OpenAI or Vertex AI)
-- [ ] Implement semantic search: `SELECT * ORDER BY embedding <=> $query_embedding`
-- [ ] Update resume generation prompt to include retrieved stories
+- [ ] Install pgvector extension in Cloud SQL
+- [ ] Generate embeddings for stories (Vertex AI Text Embeddings API)
+- [ ] Implement semantic search: `SELECT * FROM profile_stories ORDER BY embedding <=> $query_embedding LIMIT 5`
+- [ ] Create storyRetriever.js service (RAG logic)
+- [ ] Update resume generation prompt to include top 3-5 retrieved stories
 - [ ] Test: Verify relevant stories appear in generated resumes
+- [ ] Performance: Index embeddings with IVFFlat for speed
 
 #### Session 31: Cover Letter Generation
 - [ ] Create coverLetterGenerator.js
