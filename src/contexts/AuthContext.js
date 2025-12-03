@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(null); // null = unknown, true/false = determined
 
   // API base URL - SECURITY: Never default to localhost in production
   const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
@@ -151,6 +152,7 @@ export const AuthProvider = ({ children }) => {
 
       // Clear user state
       setUserProfile(null);
+      setOnboardingCompleted(null);
 
       // Clear any tokens or user data from localStorage
       localStorage.clear();
@@ -158,6 +160,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       // Even if there's an error, try to clear local state
       setUserProfile(null);
+      setOnboardingCompleted(null);
       localStorage.clear();
       setError(error.message);
       throw error;
@@ -184,15 +187,16 @@ export const AuthProvider = ({ children }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      const userProfile = response.data.user;
+      const userProfileData = response.data.user;
 
       // Proxy Google profile image through our backend to avoid CORS/ORB issues
-      if (userProfile.photoUrl && userProfile.photoUrl.includes('googleusercontent.com')) {
-        userProfile.photoUrl = `${API_URL}/proxy/avatar?url=${encodeURIComponent(userProfile.photoUrl)}`;
+      if (userProfileData.photoUrl && userProfileData.photoUrl.includes('googleusercontent.com')) {
+        userProfileData.photoUrl = `${API_URL}/proxy/avatar?url=${encodeURIComponent(userProfileData.photoUrl)}`;
       }
 
-      setUserProfile(userProfile);
-      return userProfile;
+      setUserProfile(userProfileData);
+      setOnboardingCompleted(userProfileData.onboardingCompleted || false);
+      return userProfileData;
     } catch (error) {
       console.error('Error fetching user profile:', error);
 
@@ -215,6 +219,7 @@ export const AuthProvider = ({ children }) => {
           }
 
           setUserProfile(retryUser);
+          setOnboardingCompleted(retryUser.onboardingCompleted || false);
           return retryUser;
         } catch (registerError) {
           console.error('Failed to register user:', registerError);
@@ -235,6 +240,7 @@ export const AuthProvider = ({ children }) => {
         await fetchUserProfile(user);
       } else {
         setUserProfile(null);
+        setOnboardingCompleted(null);
       }
 
       setLoading(false);
@@ -248,6 +254,7 @@ export const AuthProvider = ({ children }) => {
     userProfile,
     loading,
     error,
+    onboardingCompleted,
     signup,
     signin,
     signInWithGoogle,
