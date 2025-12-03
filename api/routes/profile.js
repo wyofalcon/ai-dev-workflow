@@ -173,20 +173,29 @@ router.post("/", verifyFirebaseToken, async (req, res, next) => {
     const { firebaseUid } = req.user;
     const { completeOnboarding, ...profileData } = req.body;
 
+    console.log('📝 POST /api/profile - Starting profile update');
+    console.log('👤 Firebase UID:', firebaseUid);
+    console.log('✅ Complete onboarding flag:', completeOnboarding);
+    console.log('📋 Profile data keys:', Object.keys(profileData));
+
     // Find user
     const user = await prisma.user.findUnique({
       where: { firebaseUid },
-      select: { id: true },
+      select: { id: true, email: true, onboardingCompleted: true },
     });
 
     if (!user) {
+      console.error('❌ User not found for Firebase UID:', firebaseUid);
       return res.status(404).json({
         error: "User Not Found",
         message: "User account not found",
       });
     }
 
+    console.log('✅ User found:', user.id, 'Email:', user.email, 'Onboarding completed:', user.onboardingCompleted);
+
     // Upsert profile
+    console.log('💾 Attempting to upsert profile...');
     const profile = await prisma.userProfile.upsert({
       where: { userId: user.id },
       update: profileData,
@@ -196,20 +205,45 @@ router.post("/", verifyFirebaseToken, async (req, res, next) => {
       },
     });
 
+    console.log('✅ Profile upserted successfully:', profile.id);
+
     // If completeOnboarding flag is set, mark onboarding as completed
     if (completeOnboarding) {
+      console.log('🎯 Marking onboarding as completed...');
       await prisma.user.update({
         where: { id: user.id },
         data: { onboardingCompleted: true },
       });
+      console.log('✅ Onboarding marked as completed');
     }
 
+    console.log('🎉 Profile update successful!');
     res.status(200).json({
       message: "Profile updated successfully",
       profile,
       onboardingCompleted: completeOnboarding || false,
     });
   } catch (error) {
+    console.error('❌ ERROR in POST /api/profile:');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Error stack:', error.stack);
+
+    if (error.meta) {
+      console.error('Prisma error meta:', JSON.stringify(error.meta, null, 2));
+    }
+
+    if (error.code === 'P2002') {
+      console.error('❌ Unique constraint violation');
+    } else if (error.code === 'P2003') {
+      console.error('❌ Foreign key constraint failed');
+    } else if (error.code === 'P2025') {
+      console.error('❌ Record not found');
+    }
+
+    console.error('Request body received:', JSON.stringify(req.body, null, 2));
+
     next(error);
   }
 });
