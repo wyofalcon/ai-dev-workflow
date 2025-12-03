@@ -28,6 +28,7 @@ model User {
   gdprConsent           Boolean   @default(false) @map("gdpr_consent")
   gdprConsentDate       DateTime? @map("gdpr_consent_date")
   dataRetentionUntil    DateTime? @map("data_retention_until")
+  onboardingCompleted   Boolean   @default(false) @map("onboarding_completed")
 
   profile               UserProfile?
   personalityTraits     PersonalityTraits?

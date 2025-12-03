@@ -193,6 +193,7 @@ router.post('/login', verifyFirebaseToken, async (req, res, next) => {
         resumesLimit: user.resumesLimit,
         hasProfile: !!user.profile,
         hasPersonalityTraits: !!user.personalityTraits,
+        onboardingCompleted: user.onboardingCompleted || false,
       },
     });
   } catch (error) {
@@ -297,6 +298,7 @@ router.get('/me', verifyFirebaseToken, async (req, res, next) => {
         resumesGenerated: true,
         resumesLimit: true,
         emailVerified: true,
+        onboardingCompleted: true,
       },
     });
 

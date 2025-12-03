@@ -49,7 +49,7 @@ services:
       # You can mount a service account key or use gcloud auth application-default login
       # and mount the credentials file.
       - GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-key.json
-      - GCP_PROJECT_ID=cvstomize-staging # Or your project ID
+      - GCP_PROJECT_ID=cvstomize # Production project with Vertex AI enabled
     ports:
       - "3001:3001"
       - "9229:9229"
