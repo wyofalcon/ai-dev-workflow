@@ -169,6 +169,7 @@ const conversationRoutes = require("./routes/conversation");
 const resumeRoutes = require("./routes/resume");
 const goldStandardRoutes = require("./routes/goldStandard");
 const proxyRoutes = require("./routes/proxy");
+const adminMigrationRoutes = require("./routes/adminMigration");
 
 // Development-only routes
 let devAuthRoutes = null;
@@ -183,6 +184,7 @@ app.use("/api/conversation", conversationRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/gold-standard", goldStandardRoutes);
 app.use("/api/proxy", proxyRoutes);
+app.use("/api/admin-migration", adminMigrationRoutes); // TEMPORARY - for migration only
 
 // Mount dev auth routes only in development
 if (devAuthRoutes) {
