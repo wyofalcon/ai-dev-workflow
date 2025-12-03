@@ -14,6 +14,7 @@ import LoginPage from './components/LoginPage.js';
 import SignupPage from './components/SignupPage.js';
 import ResetPasswordPage from './components/ResetPasswordPage.js';
 import OnboardingPage from './components/OnboardingPage.js';
+import GoldStandardWizard from './components/GoldStandardWizard.js';
 import {
   Container,
   Button,
@@ -307,6 +308,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ConversationalResumePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gold-standard"
+              element={
+                <ProtectedRoute>
+                  <GoldStandardWizard />
                 </ProtectedRoute>
               }
             />
