@@ -18,6 +18,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { analyzePersonality } = require('../services/profileAnalyzer');
 const { batchExtractStories } = require('../services/storyExtractor');
+const { generateStoryEmbedding, formatEmbeddingForPgVector } = require('../services/embeddingGenerator');
 
 /**
  * Middleware: Check if user has Gold Standard access
@@ -268,23 +269,34 @@ router.post('/complete', checkGoldAccess, async (req, res) => {
       }))
     );
 
-    // Update stories with extracted data
+    // Update stories with extracted data and generate embeddings
     for (const story of storyData) {
-      await prisma.profileStory.updateMany({
-        where: {
-          userId: user.id,
-          profileId: profile.id,
-          questionType: story.question_type
-        },
-        data: {
-          storySummary: story.story_summary,
-          category: story.category,
-          themes: story.themes,
-          skillsDemonstrated: story.skills_demonstrated,
-          personalitySignals: story.personality_signals,
-          relevanceTags: story.relevance_tags
-        }
-      });
+      // Generate embedding for semantic search
+      const embedding = await generateStoryEmbedding(story);
+      const embeddingStr = formatEmbeddingForPgVector(embedding);
+
+      // Update story with AI analysis and embedding
+      await prisma.$executeRawUnsafe(
+        `UPDATE profile_stories
+         SET story_summary = $1,
+             category = $2,
+             themes = $3,
+             skills_demonstrated = $4,
+             personality_signals = $5,
+             relevance_tags = $6,
+             embedding = $7::vector
+         WHERE user_id = $8 AND profile_id = $9 AND question_type = $10`,
+        story.story_summary,
+        story.category,
+        story.themes,
+        story.skills_demonstrated,
+        JSON.stringify(story.personality_signals),
+        story.relevance_tags,
+        embeddingStr,
+        user.id,
+        profile.id,
+        story.question_type
+      );
     }
 
     // Perform hybrid personality analysis
@@ -438,6 +450,97 @@ router.get('/status', checkGoldAccess, async (req, res) => {
   } catch (error) {
     console.error('Error checking assessment status:', error);
     res.status(500).json({ error: 'Failed to check status' });
+  }
+});
+
+/**
+ * POST /api/gold-standard/generate-embeddings
+ * Generate embeddings for stories that don't have them
+ * (Admin/maintenance endpoint or can be triggered after assessment)
+ */
+router.post('/generate-embeddings', checkGoldAccess, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+
+    const user = await prisma.user.findUnique({
+      where: { firebaseUid: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Find all stories without embeddings
+    const storiesWithoutEmbeddings = await prisma.$queryRawUnsafe(
+      `SELECT id, question_type, question_text, story_text, story_summary
+       FROM profile_stories
+       WHERE user_id = $1 AND embedding IS NULL`,
+      user.id
+    );
+
+    if (storiesWithoutEmbeddings.length === 0) {
+      return res.json({
+        status: 'complete',
+        message: 'All stories already have embeddings',
+        processed: 0
+      });
+    }
+
+    console.log(`🔢 Generating embeddings for ${storiesWithoutEmbeddings.length} stories...`);
+
+    let processed = 0;
+    const errors = [];
+
+    // Process in batches to avoid rate limits
+    for (const story of storiesWithoutEmbeddings) {
+      try {
+        const embedding = await generateStoryEmbedding({
+          questionText: story.question_text,
+          storyText: story.story_text,
+          storySummary: story.story_summary
+        });
+
+        const embeddingStr = formatEmbeddingForPgVector(embedding);
+
+        await prisma.$executeRawUnsafe(
+          `UPDATE profile_stories
+           SET embedding = $1::vector
+           WHERE id = $2`,
+          embeddingStr,
+          story.id
+        );
+
+        processed++;
+        console.log(`✅ Embedding generated for story ${story.id.substring(0, 8)} (${processed}/${storiesWithoutEmbeddings.length})`);
+
+        // Rate limiting: wait 100ms between embeddings
+        if (processed < storiesWithoutEmbeddings.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+      } catch (error) {
+        console.error(`❌ Failed to generate embedding for story ${story.id}:`, error);
+        errors.push({
+          storyId: story.id,
+          error: error.message
+        });
+      }
+    }
+
+    res.json({
+      status: 'complete',
+      message: `Embeddings generated for ${processed} stories`,
+      processed,
+      total: storiesWithoutEmbeddings.length,
+      errors: errors.length > 0 ? errors : undefined
+    });
+
+  } catch (error) {
+    console.error('Error generating embeddings:', error);
+    res.status(500).json({
+      error: 'Failed to generate embeddings',
+      details: error.message
+    });
   }
 });
 
