@@ -16,6 +16,7 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { verifyFirebaseToken } = require('../middleware/authMiddleware');
 const { analyzePersonality } = require('../services/profileAnalyzer');
 const { batchExtractStories } = require('../services/storyExtractor');
 const { generateStoryEmbedding, formatEmbeddingForPgVector } = require('../services/embeddingGenerator');
@@ -25,7 +26,7 @@ const { generateStoryEmbedding, formatEmbeddingForPgVector } = require('../servi
  */
 async function checkGoldAccess(req, res, next) {
   try {
-    const userId = req.user.uid;
+    const userId = req.user.firebaseUid;
 
     const user = await prisma.user.findUnique({
       where: { firebaseUid: userId },
@@ -58,9 +59,9 @@ async function checkGoldAccess(req, res, next) {
  * POST /api/gold-standard/start
  * Initialize a new Gold Standard assessment session
  */
-router.post('/start', checkGoldAccess, async (req, res) => {
+router.post('/start', verifyFirebaseToken, checkGoldAccess, async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.user.firebaseUid;
 
     // Get user from database
     const user = await prisma.user.findUnique({
@@ -141,9 +142,9 @@ router.post('/start', checkGoldAccess, async (req, res) => {
  *   answers: Array | Object
  * }
  */
-router.post('/answer', checkGoldAccess, async (req, res) => {
+router.post('/answer', verifyFirebaseToken, checkGoldAccess, async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.user.firebaseUid;
     const { section, answers } = req.body;
 
     if (!section || !answers) {
@@ -204,9 +205,9 @@ router.post('/answer', checkGoldAccess, async (req, res) => {
  * POST /api/gold-standard/complete
  * Finalize assessment and trigger analysis
  */
-router.post('/complete', checkGoldAccess, async (req, res) => {
+router.post('/complete', verifyFirebaseToken, checkGoldAccess, async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.user.firebaseUid;
 
     // Get user with all assessment data
     const user = await prisma.user.findUnique({
@@ -384,9 +385,9 @@ router.post('/complete', checkGoldAccess, async (req, res) => {
  * GET /api/gold-standard/status
  * Check assessment progress
  */
-router.get('/status', checkGoldAccess, async (req, res) => {
+router.get('/status', verifyFirebaseToken, checkGoldAccess, async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.user.firebaseUid;
 
     const user = await prisma.user.findUnique({
       where: { firebaseUid: userId },
@@ -458,9 +459,9 @@ router.get('/status', checkGoldAccess, async (req, res) => {
  * Generate embeddings for stories that don't have them
  * (Admin/maintenance endpoint or can be triggered after assessment)
  */
-router.post('/generate-embeddings', checkGoldAccess, async (req, res) => {
+router.post('/generate-embeddings', verifyFirebaseToken, checkGoldAccess, async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.user.firebaseUid;
 
     const user = await prisma.user.findUnique({
       where: { firebaseUid: userId }
@@ -548,9 +549,9 @@ router.post('/generate-embeddings', checkGoldAccess, async (req, res) => {
  * GET /api/gold-standard/results
  * Retrieve completed assessment results
  */
-router.get('/results', checkGoldAccess, async (req, res) => {
+router.get('/results', verifyFirebaseToken, checkGoldAccess, async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.user.firebaseUid;
 
     const user = await prisma.user.findUnique({
       where: { firebaseUid: userId },
