@@ -9,9 +9,10 @@ const { buildFullConversation, validateAnswer } = require('../services/personali
 const atsOptimizer = require('../services/atsOptimizer');
 const pdfGenerator = require('../services/pdfGenerator');
 const cloudStorageService = require('../services/cloudStorage');
+const { retrieveStoriesForResume, incrementStoryUsage } = require('../services/storyRetriever');
 
 // Helper: Build personality-enhanced Gemini prompt
-function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality, gapAnalysis, existingResume, userProfile, userEmail, userDisplayName }) {
+function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality, gapAnalysis, existingResume, userProfile, userEmail, userDisplayName, ragStories }) {
   // Build contact information from user profile with Google account fallbacks
   console.log('🔍 Contact info inputs:', {
     userProfileFullName: userProfile?.fullName,
@@ -54,6 +55,30 @@ Frame achievements through this personality lens.
 `;
   }
 
+  // NEW: RAG-powered story context for Gold tier users
+  let ragStoryContext = '';
+  if (ragStories && ragStories.length > 0) {
+    ragStoryContext = `
+**GOLD STANDARD PREMIUM CONTENT - RELEVANT STORIES (RAG-Retrieved):**
+
+The following ${ragStories.length} stories were semantically matched to this job description (highest relevance first).
+Use these REAL, VERIFIED achievements to create compelling bullet points:
+
+${ragStories.map((story, idx) => `
+${idx + 1}. **${story.questionType.toUpperCase()} STORY** (${(story.similarity * 100).toFixed(0)}% match)
+   Category: ${story.category}
+   Summary: ${story.storySummary || story.storyText.substring(0, 200) + '...'}
+   Skills Demonstrated: ${story.skillsDemonstrated?.join(', ') || 'Various'}
+   Key Themes: ${story.themes?.join(', ') || 'N/A'}
+
+   Full Story:
+   ${story.storyText}
+`).join('\n')}
+
+**CRITICAL: Prioritize these RAG-retrieved stories over generic conversation answers.** They are pre-validated, categorized, and semantically matched to this specific role.
+`;
+  }
+
   // NEW: Gap analysis guidance for resume-first mode
   let gapAnalysisGuidance = '';
   if (gapAnalysis && existingResume) {
@@ -87,6 +112,8 @@ ${personalStories || 'No additional information provided'}
   return `You are an elite-level professional resume writer and career strategist with 15+ years of experience.
 
 ${personalityGuidance}
+
+${ragStoryContext}
 
 ${gapAnalysisGuidance}
 
@@ -269,6 +296,33 @@ router.post('/generate',
       console.warn('⚠️ No personality profile found - resume will lack personality framing');
     }
 
+    // NEW: RAG-powered story retrieval for Gold tier users
+    let ragStories = null;
+    const hasGoldStandardProfile = await prisma.personalityProfile.findUnique({
+      where: { userId: userRecord.id },
+      select: { isComplete: true }
+    });
+
+    if (hasGoldStandardProfile?.isComplete) {
+      console.log('🔍 Retrieving relevant stories using RAG semantic search...');
+      try {
+        ragStories = await retrieveStoriesForResume(userRecord.id, jobDescription, 5);
+
+        if (ragStories && ragStories.length > 0) {
+          console.log(`✅ Found ${ragStories.length} relevant stories (avg similarity: ${(ragStories.reduce((sum, s) => sum + s.similarity, 0) / ragStories.length * 100).toFixed(1)}%)`);
+
+          // Track story usage
+          for (const story of ragStories) {
+            await incrementStoryUsage(story.id, 'resume');
+          }
+        } else {
+          console.log('⚠️ No relevant stories found via RAG');
+        }
+      } catch (error) {
+        console.error('❌ RAG story retrieval failed (continuing without):', error.message);
+      }
+    }
+
     // CRITICAL FIX: Load gap analysis from DATABASE (not volatile Map)
     // This prevents data loss when Cloud Run scales/restarts (Bug #1 fix)
     let gapAnalysis = null;
@@ -315,7 +369,8 @@ router.post('/generate',
       existingResume: existingResumeFromSession, // NEW: Original resume for hybrid mode
       userProfile, // NEW: User profile for contact information
       userEmail: userRecord.email, // Use Firebase email as fallback
-      userDisplayName: userRecord.displayName // Use Firebase display name as fallback
+      userDisplayName: userRecord.displayName, // Use Firebase display name as fallback
+      ragStories // NEW: RAG-retrieved relevant stories for Gold tier
     });
 
     // Generate with Gemini Pro
@@ -399,7 +454,9 @@ router.post('/generate',
         tokensUsed,
         generationTimeMs: generationTime,
         personalityUsed: !!personality,
-        atsOptimized: true
+        atsOptimized: true,
+        ragStoriesUsed: ragStories?.length || 0,
+        premiumFeatures: ragStories && ragStories.length > 0 ? ['gold-standard-rag'] : []
       }
     });
 

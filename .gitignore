@@ -61,3 +61,4 @@ tests/test-progress.backup.json
 tests/reports/screenshots/*
 !tests/reports/screenshots/*error*.png
 !tests/reports/screenshots/.gitkeep
+openJdk-25/
