@@ -247,7 +247,7 @@ function GoldStandardWizard() {
 
     try {
       const token = await getIdToken();
-      const response = await fetch(`${API_URL}/api/gold-standard/start`, {
+      const response = await fetch(`${API_URL}/gold-standard/start`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -281,7 +281,7 @@ function GoldStandardWizard() {
 
     try {
       const token = await getIdToken();
-      await fetch(`${API_URL}/api/gold-standard/answer`, {
+      await fetch(`${API_URL}/gold-standard/answer`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -306,7 +306,7 @@ function GoldStandardWizard() {
 
     try {
       const token = await getIdToken();
-      await fetch(`${API_URL}/api/gold-standard/answer`, {
+      await fetch(`${API_URL}/gold-standard/answer`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -332,7 +332,7 @@ function GoldStandardWizard() {
 
     try {
       const token = await getIdToken();
-      await fetch(`${API_URL}/api/gold-standard/answer`, {
+      await fetch(`${API_URL}/gold-standard/answer`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -358,7 +358,7 @@ function GoldStandardWizard() {
 
     try {
       const token = await getIdToken();
-      const response = await fetch(`${API_URL}/api/gold-standard/complete`, {
+      const response = await fetch(`${API_URL}/gold-standard/complete`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -386,7 +386,7 @@ function GoldStandardWizard() {
 
     try {
       const token = await getIdToken();
-      const response = await fetch(`${API_URL}/api/gold-standard/results`, {
+      const response = await fetch(`${API_URL}/gold-standard/results`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
