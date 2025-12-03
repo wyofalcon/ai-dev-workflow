@@ -1,27 +1,63 @@
 {
-	"name": "CVstomize Dev Container",
-	"image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
-	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {
-			"version": "latest",
-			"enableNonRootDocker": "true",
-			"moby": "true"
-		},
-		"ghcr.io/devcontainers/features/git:1": {},
-		"ghcr.io/devcontainers/features/github-cli:1": {}
-	},
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"dbaeumer.vscode-eslint",
-				"esbenp.prettier-vscode",
-				"ms-azuretools.vscode-docker",
-				"ms-vscode.vscode-typescript-next",
-				"prisma.prisma"
-			]
-		}
-	},
-	"forwardPorts": [3000, 3001, 5432, 6379],
-	"postCreateCommand": "npm install && cd api && npm install && npx prisma generate",
-	"remoteUser": "node"
+  "name": "CVstomize Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true",
+      "moby": "true"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode.vscode-typescript-next",
+        "prisma.prisma",
+        "ms-playwright.playwright",
+        "github.copilot",
+        "github.copilot-chat",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "usernamehw.errorlens",
+        "eamodio.gitlens",
+        "pkief.material-icon-theme",
+        "streetsidesoftware.code-spell-checker",
+        "yzhang.markdown-all-in-one",
+        "redhat.vscode-yaml",
+        "mikestead.dotenv"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "files.autoSave": "afterDelay",
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "git.autofetch": true,
+        "workbench.iconTheme": "material-icon-theme",
+        "typescript.preferences.importModuleSpecifier": "relative"
+      }
+    }
+  },
+  "forwardPorts": [3000, 3001, 5432, 6379, 9229],
+  "portsAttributes": {
+    "3000": { "label": "Frontend (React)", "onAutoForward": "notify" },
+    "3001": { "label": "Backend (API)", "onAutoForward": "silent" },
+    "5432": { "label": "PostgreSQL", "onAutoForward": "silent" },
+    "6379": { "label": "Redis", "onAutoForward": "silent" },
+    "9229": { "label": "Node Debugger", "onAutoForward": "silent" }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "echo '\n🚀 Run ./start-local.sh to start the dev environment!\n'",
+  "remoteUser": "node",
+  "containerEnv": {
+    "NODE_ENV": "development"
+  }
 }

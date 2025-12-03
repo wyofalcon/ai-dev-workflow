@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext.js';
 import { useCvState } from './hooks/useCvState.js';
 import HomePage from './components/HomePage.js';
@@ -7,11 +7,13 @@ import TutorialModal from './components/TutorialModal.js';
 import ResumePage from './components/ResumePage.js';
 import ResumeViewPage from './components/ResumeViewPage.js';
 import ConversationalResumePage from './components/ConversationalResumePage.js';
+import UserProfilePage from './components/UserProfilePage.js';
 import ProcessModal from './components/ProcessModal.js';
 import Footer from './components/Footer.js';
 import LoginPage from './components/LoginPage.js';
 import SignupPage from './components/SignupPage.js';
 import ResetPasswordPage from './components/ResetPasswordPage.js';
+import OnboardingPage from './components/OnboardingPage.js';
 import {
   Container,
   Button,
@@ -28,12 +30,34 @@ import { AccountCircle } from '@mui/icons-material';
 import logo from './components/logo.png';
 import './App.css';
 
-// Protected Route wrapper
+// Protected Route wrapper - redirects to login if not authenticated, or to onboarding if not completed
 function ProtectedRoute({ children }) {
-  const { currentUser } = useAuth();
+  const { currentUser, onboardingCompleted } = useAuth();
+  const location = useLocation();
 
   if (!currentUser) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Redirect to onboarding if not completed (but not if already on onboarding page)
+  if (onboardingCompleted === false && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return children;
+}
+
+// Onboarding Route wrapper - only accessible if logged in but onboarding not completed
+function OnboardingRoute({ children }) {
+  const { currentUser, onboardingCompleted } = useAuth();
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // If onboarding is already completed, redirect to home
+  if (onboardingCompleted === true) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -174,6 +198,9 @@ function MainLayout() {
                     {currentUser.email}
                   </Typography>
                 </MenuItem>
+                <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+                  User Profile
+                </MenuItem>
                 <MenuItem onClick={() => { handleMenuClose(); navigate('/resume'); }}>
                   My Resumes
                 </MenuItem>
@@ -232,6 +259,16 @@ function App() {
             />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
 
+            {/* Onboarding Route - first-time setup */}
+            <Route
+              path="/onboarding"
+              element={
+                <OnboardingRoute>
+                  <OnboardingPage />
+                </OnboardingRoute>
+              }
+            />
+
             {/* Protected Routes */}
             <Route
               path="/"
@@ -246,6 +283,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ResumePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <UserProfilePage />
                 </ProtectedRoute>
               }
             />
