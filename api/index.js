@@ -170,12 +170,24 @@ const resumeRoutes = require("./routes/resume");
 const goldStandardRoutes = require("./routes/goldStandard");
 const proxyRoutes = require("./routes/proxy");
 
+// Development-only routes
+let devAuthRoutes = null;
+if (process.env.NODE_ENV === "development") {
+  devAuthRoutes = require("./routes/devAuth");
+  logger.info("🔧 Dev auth routes loaded (development mode)");
+}
+
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/conversation", conversationRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/gold-standard", goldStandardRoutes);
 app.use("/api/proxy", proxyRoutes);
+
+// Mount dev auth routes only in development
+if (devAuthRoutes) {
+  app.use("/api/auth/dev", devAuthRoutes);
+}
 
 // 404 handler
 app.use((req, res) => {

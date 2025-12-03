@@ -37,6 +37,7 @@ model User {
   profileStories     ProfileStory[]
   conversations      Conversation[]
   resumes            Resume[]
+  uploadedResumes    UploadedResume[]
   subscriptions      Subscription[]
   referrals          Referral[]          @relation("Referrer")
   referredBy         Referral[]          @relation("Referred")
@@ -237,6 +238,36 @@ model Resume {
   socialShares SocialShare[]
 
   @@map("resumes")
+}
+
+// User-uploaded original resumes (before tailoring)
+model UploadedResume {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  filename         String
+  mimeType         String   @map("mime_type")
+  fileSize         Int      @map("file_size")
+  
+  // Extracted content
+  rawText          String   @map("raw_text") @db.Text
+  
+  // Parsed structured data (JSON from AI parsing)
+  parsedData       Json?    @map("parsed_data")
+  
+  // Cloud Storage info (optional - for file storage)
+  storagePath      String?  @map("storage_path")
+  storageBucket    String?  @map("storage_bucket")
+  
+  // Metadata
+  isPrimary        Boolean  @default(false) @map("is_primary")
+  label            String?  // e.g., "Software Engineer Resume", "Marketing Resume"
+  
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("uploaded_resumes")
 }
 
 // Subscription tracking

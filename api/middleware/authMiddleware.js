@@ -1,30 +1,65 @@
-const { getFirebaseAdmin } = require('../config/firebase');
-const prisma = require('../config/database');
+const { getFirebaseAdmin } = require("../config/firebase");
+const prisma = require("../config/database");
+
+// Import dev token verification (only used in development)
+let verifyDevToken = null;
+if (process.env.NODE_ENV === "development") {
+  try {
+    verifyDevToken = require("../routes/devAuth").verifyDevToken;
+  } catch (e) {
+    // Dev auth module not loaded
+  }
+}
 
 /**
- * Middleware to verify Firebase ID token
+ * Middleware to verify Firebase ID token (or dev token in development)
  * Extracts user information and attaches to req.user
  *
  * PRODUCTION NOTE: Firebase must be initialized at server startup,
  * not per-request. See api/index.js for initialization.
+ *
+ * DEVELOPMENT: Also accepts dev tokens (starting with 'dev_') for
+ * local testing without Firebase.
  */
 async function verifyFirebaseToken(req, res, next) {
   try {
-    // Get Firebase Admin instance (already initialized at startup)
-    const admin = getFirebaseAdmin();
-
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
-        error: 'Unauthorized',
-        message: 'No authentication token provided',
+        error: "Unauthorized",
+        message: "No authentication token provided",
       });
     }
 
-    const token = authHeader.split('Bearer ')[1];
+    const token = authHeader.split("Bearer ")[1];
 
-    // Verify the token with Firebase
+    // DEV MODE: Check for dev token first
+    if (
+      process.env.NODE_ENV === "development" &&
+      token.startsWith("dev_") &&
+      verifyDevToken
+    ) {
+      const devTokenData = verifyDevToken(token);
+      if (devTokenData) {
+        req.user = {
+          firebaseUid: devTokenData.firebaseUid,
+          email: devTokenData.email,
+          emailVerified: devTokenData.emailVerified || true,
+          displayName: devTokenData.displayName,
+          photoUrl: devTokenData.photoUrl,
+          authProvider: devTokenData.authProvider || "dev-auth",
+          isDevUser: true,
+          devUserType: devTokenData.userType,
+        };
+        return next();
+      }
+      // If dev token is invalid, fall through to Firebase verification
+      // (in case someone sends a malformed token)
+    }
+
+    // PRODUCTION & FALLBACK: Verify with Firebase
+    const admin = getFirebaseAdmin();
     const decodedToken = await admin.auth().verifyIdToken(token);
 
     // Attach user info to request
@@ -39,23 +74,23 @@ async function verifyFirebaseToken(req, res, next) {
 
     next();
   } catch (error) {
-    if (error.code === 'auth/id-token-expired') {
+    if (error.code === "auth/id-token-expired") {
       return res.status(401).json({
-        error: 'Token Expired',
-        message: 'Your authentication token has expired. Please sign in again.',
+        error: "Token Expired",
+        message: "Your authentication token has expired. Please sign in again.",
       });
     }
 
-    if (error.code === 'auth/argument-error') {
+    if (error.code === "auth/argument-error") {
       return res.status(401).json({
-        error: 'Invalid Token',
-        message: 'The authentication token is invalid or malformed.',
+        error: "Invalid Token",
+        message: "The authentication token is invalid or malformed.",
       });
     }
 
     return res.status(401).json({
-      error: 'Authentication Failed',
-      message: 'Failed to authenticate request',
+      error: "Authentication Failed",
+      message: "Failed to authenticate request",
     });
   }
 }
@@ -74,15 +109,17 @@ function requireSubscription(...allowedTiers) {
 
       if (!user) {
         return res.status(404).json({
-          error: 'User Not Found',
-          message: 'User account not found in database',
+          error: "User Not Found",
+          message: "User account not found in database",
         });
       }
 
       if (!allowedTiers.includes(user.subscriptionTier)) {
         return res.status(403).json({
-          error: 'Forbidden',
-          message: `This feature requires a ${allowedTiers.join(' or ')} subscription`,
+          error: "Forbidden",
+          message: `This feature requires a ${allowedTiers.join(
+            " or "
+          )} subscription`,
           currentTier: user.subscriptionTier,
         });
       }
@@ -112,16 +149,16 @@ async function checkResumeLimit(req, res, next) {
 
     if (!user) {
       return res.status(404).json({
-        error: 'User Not Found',
-        message: 'User account not found in database',
+        error: "User Not Found",
+        message: "User account not found in database",
       });
     }
 
     // Check if user has reached their limit
     if (user.resumesGenerated >= user.resumesLimit) {
       return res.status(403).json({
-        error: 'Limit Reached',
-        message: 'You have reached your resume generation limit',
+        error: "Limit Reached",
+        message: "You have reached your resume generation limit",
         currentCount: user.resumesGenerated,
         limit: user.resumesLimit,
         subscriptionTier: user.subscriptionTier,
