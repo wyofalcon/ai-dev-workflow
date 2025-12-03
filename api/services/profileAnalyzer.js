@@ -401,5 +401,8 @@ module.exports = {
   calculateBFI20Scores,
   analyzeNarrativesWithGemini,
   fuseScores,
-  deriveWorkPreferences
+  deriveWorkPreferences,
+  calculateConfidence,
+  BFI_20_ITEMS,
+  REVERSE_SCORED_ITEMS
 };
