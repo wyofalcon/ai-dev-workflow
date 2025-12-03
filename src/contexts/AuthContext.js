@@ -44,7 +44,8 @@ export const AuthProvider = ({ children }) => {
   const API_BASE =
     process.env.REACT_APP_API_URL ||
     "https://cvstomize-api-351889420459.us-central1.run.app";
-  const API_URL = `${API_BASE}/api`;
+  // Don't add /api if it's already in the URL
+  const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
 
   // Get Firebase ID token (or dev token in development)
   const getIdToken = async () => {
