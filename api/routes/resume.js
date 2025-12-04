@@ -43,15 +43,87 @@ function buildResumePrompt({ resumeText, personalStories, jobDescription, select
   let personalityGuidance = '';
 
   if (personality) {
+    const traits = [];
+
+    // Openness: Innovation vs Reliability
+    if (personality.openness > 70) {
+      traits.push('- **INNOVATION FOCUS**: Use creative, forward-thinking language. Highlight: "pioneered," "innovated," "transformed," "reimagined." Emphasize adaptability and new approaches.');
+    } else if (personality.openness < 40) {
+      traits.push('- **RELIABILITY FOCUS**: Use proven, traditional terminology. Highlight: "maintained," "ensured," "consistently," "established." Emphasize stability and proven methods.');
+    } else {
+      traits.push('- **BALANCED APPROACH**: Mix innovative and reliable language. Show both creativity and dependability.');
+    }
+
+    // Conscientiousness: Detail vs Big Picture
+    if (personality.conscientiousness > 70) {
+      traits.push('- **DETAIL-ORIENTED**: Include specific metrics, processes, and methodologies. Use: "meticulously," "systematically," "precisely." Show attention to accuracy and planning.');
+    } else if (personality.conscientiousness < 40) {
+      traits.push('- **BIG PICTURE**: Focus on outcomes and vision. Use: "led," "drove," "initiated." Emphasize flexibility and adaptability over process.');
+    } else {
+      traits.push('- **BALANCED EXECUTION**: Show both strategic thinking and execution quality.');
+    }
+
+    // Extraversion: Team vs Individual
+    if (personality.extraversion > 70) {
+      traits.push('- **TEAM-FOCUSED**: Emphasize collaboration, leadership, and interpersonal impact. Use: "led team of," "collaborated with," "mentored," "facilitated." Show people skills.');
+    } else if (personality.extraversion < 40) {
+      traits.push('- **INDEPENDENT CONTRIBUTOR**: Highlight individual technical expertise and self-directed work. Use: "developed," "analyzed," "researched," "designed." Show deep expertise.');
+    } else {
+      traits.push('- **BALANCED COLLABORATION**: Show both teamwork and independent achievement.');
+    }
+
+    // Agreeableness: Collaborative vs Results-Driven
+    if (personality.agreeableness > 70) {
+      traits.push('- **COLLABORATIVE STYLE**: Emphasize teamwork, consensus-building, and supportive leadership. Use: "partnered with," "supported," "facilitated," "aligned."');
+    } else if (personality.agreeableness < 40) {
+      traits.push('- **RESULTS-DRIVEN**: Focus on competitive achievements and decisive action. Use: "drove," "achieved," "exceeded," "outperformed." Show winning results.');
+    } else {
+      traits.push('- **BALANCED LEADERSHIP**: Show both results achievement and team support.');
+    }
+
+    // Neuroticism: Conservative vs Bold Claims
+    if (personality.neuroticism > 60) {
+      traits.push('- **CONSERVATIVE FRAMING**: Use measured, factual language. Avoid superlatives. Present achievements as solid contributions rather than bold claims.');
+    } else if (personality.neuroticism < 30) {
+      traits.push('- **CONFIDENT FRAMING**: Use bold, impactful language. Use: "dramatically," "significantly," "revolutionized." Show major impact.');
+    } else {
+      traits.push('- **BALANCED CONFIDENCE**: Professional confidence without overselling.');
+    }
+
     personalityGuidance = `
-PERSONALITY-BASED FRAMING:
-- Openness: ${personality.openness}/100 ${personality.openness > 70 ? '(Emphasize innovation)' : '(Focus on reliability)'}
-- Conscientiousness: ${personality.conscientiousness}/100 ${personality.conscientiousness > 70 ? '(Highlight attention to detail)' : '(Emphasize adaptability)'}
-- Extraversion: ${personality.extraversion}/100 ${personality.extraversion > 70 ? '(Showcase teamwork)' : '(Highlight independent work)'}
+📊 **PERSONALITY-AUTHENTIC RESUME STRATEGY:**
+
+This candidate's Gold Standard personality assessment reveals:
+
+**Big Five Profile:**
+- Openness: ${personality.openness}/100 ${personality.openness > 70 ? '(High - Innovative)' : personality.openness < 40 ? '(Low - Traditional)' : '(Moderate)'}
+- Conscientiousness: ${personality.conscientiousness}/100 ${personality.conscientiousness > 70 ? '(High - Detail-oriented)' : personality.conscientiousness < 40 ? '(Low - Flexible)' : '(Moderate)'}
+- Extraversion: ${personality.extraversion}/100 ${personality.extraversion > 70 ? '(High - Team-focused)' : personality.extraversion < 40 ? '(Low - Independent)' : '(Moderate)'}
+- Agreeableness: ${personality.agreeableness}/100 ${personality.agreeableness > 70 ? '(High - Collaborative)' : personality.agreeableness < 40 ? '(Low - Competitive)' : '(Moderate)'}
+- Neuroticism: ${personality.neuroticism}/100 ${personality.neuroticism > 60 ? '(Higher - Conservative)' : personality.neuroticism < 30 ? '(Lower - Bold)' : '(Moderate)'}
+
+**Derived Traits:**
 - Work Style: ${personality.workStyle || 'balanced'}
 - Communication: ${personality.communicationStyle || 'professional'}
+- Leadership: ${personality.leadershipStyle || 'situational'}
+- Motivation: ${personality.motivationType || 'achievement'}
 
-Frame achievements through this personality lens.
+**CRITICAL WRITING INSTRUCTIONS - Apply to EVERY bullet point:**
+${traits.join('\n')}
+
+⚠️ **MANDATORY**: The resume MUST authentically reflect this personality. Don't just mention traits - frame ALL content through this lens. Every verb choice, every achievement description, every professional summary sentence must align with these personality indicators.
+
+**EXAMPLE TRANSFORMATIONS BY PERSONALITY TYPE:**
+
+Generic: "Led team to complete project"
+
+Personality-aligned examples:
+• High Extraversion (${personality.extraversion}) + Low Neuroticism (${personality.neuroticism}): "Spearheaded cross-functional team of 12 to deliver project 3 weeks ahead of schedule"
+• High Conscientiousness (${personality.conscientiousness}) + High Openness (${personality.openness}): "Systematically designed and piloted innovative framework, resulting in 40% efficiency gain"
+• Low Extraversion (${personality.extraversion}) + High Conscientiousness (${personality.conscientiousness}): "Independently architected robust solution, meticulously documented, zero defects in production"
+• High Agreeableness (${personality.agreeableness}) + High Extraversion (${personality.extraversion}): "Collaborated with stakeholders to build consensus, leading unified team to exceed targets by 25%"
+
+**YOUR TASK**: Transform EVERY achievement using personality-appropriate verbs and framing that feels genuinely authentic to this candidate.
 `;
   }
 
