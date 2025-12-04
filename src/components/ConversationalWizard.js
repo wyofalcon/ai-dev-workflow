@@ -55,6 +55,7 @@ function ConversationalWizard({ onComplete }) {
   const [showProfileModal, setShowProfileModal] = useState(false); // Profile completion modal
 
   const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
+  const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
 
   // NEW: Handle resume file upload
   const handleFileUpload = async (files) => {
@@ -80,7 +81,7 @@ function ConversationalWizard({ onComplete }) {
 
       console.log(`📤 Uploading ${files.length} resume file(s)...`);
 
-      const response = await fetch(`${API_BASE}/api/resume/extract-text`, {
+      const response = await fetch(`${API_URL}/resume/extract-text`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -124,7 +125,7 @@ function ConversationalWizard({ onComplete }) {
       console.log('JD Length:', jd.length);
       console.log('Resume provided:', hasResume ? 'Yes (gap analysis mode)' : 'No');
 
-      const response = await fetch(`${API_BASE}/api/conversation/start`, {
+      const response = await fetch(`${API_URL}/conversation/start`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -177,7 +178,7 @@ function ConversationalWizard({ onComplete }) {
 
       console.log('💬 Submitting answer for question:', currentQuestion.id);
 
-      const response = await fetch(`${API_BASE}/api/conversation/message`, {
+      const response = await fetch(`${API_URL}/conversation/message`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -237,7 +238,7 @@ function ConversationalWizard({ onComplete }) {
     try {
       const token = await auth.currentUser.getIdToken();
 
-      const response = await fetch(`${API_BASE}/api/profile`, {
+      const response = await fetch(`${API_URL}/profile`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -284,7 +285,7 @@ function ConversationalWizard({ onComplete }) {
       console.log('🏁 Completing conversation...');
 
       // First, complete the conversation (saves personality traits)
-      const completeResponse = await fetch(`${API_BASE}/api/conversation/complete`, {
+      const completeResponse = await fetch(`${API_URL}/conversation/complete`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -325,7 +326,7 @@ function ConversationalWizard({ onComplete }) {
 
       console.log('📝 Generating resume...');
 
-      const resumeResponse = await fetch(`${API_BASE}/api/resume/generate`, {
+      const resumeResponse = await fetch(`${API_URL}/resume/generate`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

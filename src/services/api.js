@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { auth } from '../firebase/config.js';
 
-// Get backend API base URL
+// Get backend API base URL (already includes /api suffix)
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
+// Ensure we have /api at the end
+const API_URL = API_BASE_URL.includes('/api') ? API_BASE_URL : `${API_BASE_URL}/api`;
 
 // Helper: Get Firebase auth token
 const getAuthToken = async () => {
@@ -25,7 +27,7 @@ export const generateResume = async (data) => {
   try {
     const token = await getAuthToken();
 
-    const response = await axios.post(`${API_BASE_URL}/api/resume/generate`, data, {
+    const response = await axios.post(`${API_URL}/resume/generate`, data, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -52,7 +54,7 @@ export const getResumeList = async () => {
   try {
     const token = await getAuthToken();
 
-    const response = await axios.get(`${API_BASE_URL}/api/resume/list`, {
+    const response = await axios.get(`${API_URL}/resume/list`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 

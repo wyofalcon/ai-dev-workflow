@@ -134,8 +134,9 @@ function MainLayout() {
     try {
       const token = await currentUser.getIdToken();
       const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
+      const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
 
-      const response = await fetch(`${API_BASE}/api/auth/upgrade-unlimited`, {
+      const response = await fetch(`${API_URL}/auth/upgrade-unlimited`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

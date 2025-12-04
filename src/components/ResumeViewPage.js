@@ -38,6 +38,7 @@ function ResumeViewPage() {
   const [downloading, setDownloading] = useState(false);
 
   const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
+  const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
 
   // Load resume data on mount
   useEffect(() => {
@@ -53,7 +54,7 @@ function ResumeViewPage() {
 
       console.log('📥 Loading resume:', resumeId);
 
-      const response = await fetch(`${API_BASE}/api/resume/${resumeId}`, {
+      const response = await fetch(`${API_URL}/resume/${resumeId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -85,7 +86,7 @@ function ResumeViewPage() {
       console.log('📥 Downloading markdown for resume:', resumeId);
 
       // Fetch the file from backend
-      const response = await fetch(`${API_BASE}/api/resume/${resumeId}/download`, {
+      const response = await fetch(`${API_URL}/resume/${resumeId}/download`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -141,7 +142,7 @@ function ResumeViewPage() {
       console.log(`📥 Downloading PDF (${template}) for resume:`, resumeId);
 
       // Open in new window to trigger download
-      const url = `${API_BASE}/api/resume/${resumeId}/pdf?template=${template}`;
+      const url = `${API_URL}/resume/${resumeId}/pdf?template=${template}`;
 
       // Use fetch to get auth header
       const response = await fetch(url, {

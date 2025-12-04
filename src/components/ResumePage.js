@@ -58,17 +58,18 @@ const ResumePage = () => {
         const API_BASE =
           process.env.REACT_APP_API_URL ||
           "https://cvstomize-api-351889420459.us-central1.run.app";
+        const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
 
         // Fetch both generated and uploaded resumes in parallel
         const [generatedResponse, uploadedResponse] = await Promise.all([
-          fetch(`${API_BASE}/api/resume/list`, {
+          fetch(`${API_URL}/resume/list`, {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }),
-          fetch(`${API_BASE}/api/profile/uploaded-resumes`, {
+          fetch(`${API_URL}/profile/uploaded-resumes`, {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -162,8 +163,9 @@ const ResumePage = () => {
       const API_BASE =
         process.env.REACT_APP_API_URL ||
         "https://cvstomize-api-351889420459.us-central1.run.app";
+      const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
 
-      const response = await fetch(`${API_BASE}/api/resume/${resumeId}`, {
+      const response = await fetch(`${API_URL}/resume/${resumeId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -610,8 +612,9 @@ const ResumePage = () => {
                               const API_BASE =
                                 process.env.REACT_APP_API_URL ||
                                 "https://cvstomize-api-351889420459.us-central1.run.app";
+                              const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
                               const response = await fetch(
-                                `${API_BASE}/api/profile/uploaded-resumes/${resume.id}/primary`,
+                                `${API_URL}/profile/uploaded-resumes/${resume.id}/primary`,
                                 {
                                   method: "PUT",
                                   headers: { Authorization: `Bearer ${token}` },
@@ -667,8 +670,9 @@ const ResumePage = () => {
                               const API_BASE =
                                 process.env.REACT_APP_API_URL ||
                                 "https://cvstomize-api-351889420459.us-central1.run.app";
+                              const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
                               const response = await fetch(
-                                `${API_BASE}/api/profile/uploaded-resumes/${resume.id}`,
+                                `${API_URL}/profile/uploaded-resumes/${resume.id}`,
                                 {
                                   method: "DELETE",
                                   headers: { Authorization: `Bearer ${token}` },
