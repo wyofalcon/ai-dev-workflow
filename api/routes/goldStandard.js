@@ -286,7 +286,7 @@ router.post('/complete', verifyFirebaseToken, checkGoldAccess, async (req, res) 
              personality_signals = $5,
              relevance_tags = $6,
              embedding = $7::vector
-         WHERE user_id = $8 AND profile_id = $9 AND question_type = $10`,
+         WHERE user_id = $8::uuid AND profile_id = $9::uuid AND question_type = $10`,
         story.story_summary,
         story.category,
         story.themes,
@@ -506,7 +506,7 @@ router.post('/generate-embeddings', verifyFirebaseToken, checkGoldAccess, async 
         await prisma.$executeRawUnsafe(
           `UPDATE profile_stories
            SET embedding = $1::vector
-           WHERE id = $2`,
+           WHERE id = $2::uuid`,
           embeddingStr,
           story.id
         );
