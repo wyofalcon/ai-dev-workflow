@@ -10,8 +10,8 @@
  * Uses @google-cloud/storage SDK
  */
 
-const { Storage } = require('@google-cloud/storage');
-const path = require('path');
+const { Storage } = require("@google-cloud/storage");
+const path = require("path");
 
 class CloudStorageService {
   constructor() {
@@ -19,15 +19,19 @@ class CloudStorageService {
     // Uses Application Default Credentials (ADC) in production
     // or GOOGLE_APPLICATION_CREDENTIALS environment variable
     this.storage = new Storage({
-      projectId: process.env.GCP_PROJECT_ID || 'cvstomize'
+      projectId: process.env.GCP_PROJECT_ID || "cvstomize",
     });
 
     // Bucket configuration
-    this.bucketName = process.env.GCS_RESUMES_BUCKET || 'cvstomize-resumes-prod';
+    this.bucketName =
+      process.env.GCS_RESUMES_BUCKET || "cvstomize-resumes-prod";
     this.bucket = this.storage.bucket(this.bucketName);
 
     // Signed URL expiration (7 days default)
-    this.signedUrlExpiryDays = parseInt(process.env.SIGNED_URL_EXPIRY_DAYS || '7', 10);
+    this.signedUrlExpiryDays = parseInt(
+      process.env.SIGNED_URL_EXPIRY_DAYS || "7",
+      10
+    );
 
     console.log(`✅ Cloud Storage initialized: ${this.bucketName}`);
   }
@@ -52,19 +56,19 @@ class CloudStorageService {
       // Upload with metadata
       await file.save(pdfBuffer, {
         metadata: {
-          contentType: 'application/pdf',
-          cacheControl: 'public, max-age=86400', // 24 hours
+          contentType: "application/pdf",
+          cacheControl: "public, max-age=86400", // 24 hours
           metadata: {
             userId,
             resumeId,
             originalFilename: sanitizedFilename,
-            uploadedAt: new Date().toISOString()
-          }
+            uploadedAt: new Date().toISOString(),
+          },
         },
         // Resume uploads can be publicly readable (via signed URLs)
         // or private (requires authentication)
         public: false, // Keep private, use signed URLs
-        validation: 'md5' // Verify upload integrity
+        validation: "md5", // Verify upload integrity
       });
 
       console.log(`✅ PDF uploaded: gs://${this.bucketName}/${storagePath}`);
@@ -73,12 +77,80 @@ class CloudStorageService {
         gsPath: storagePath,
         bucket: this.bucketName,
         size: pdfBuffer.length,
-        uploadedAt: new Date()
+        uploadedAt: new Date(),
       };
-
     } catch (error) {
-      console.error('PDF upload failed:', error);
-      throw new Error(`Failed to upload PDF to Cloud Storage: ${error.message}`);
+      console.error("PDF upload failed:", error);
+      throw new Error(
+        `Failed to upload PDF to Cloud Storage: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Upload original resume file to Cloud Storage (PDF, DOCX, TXT)
+   * Preserves original formatting for later download
+   * @param {Buffer} fileBuffer - File buffer
+   * @param {string} userId - User ID (for path organization)
+   * @param {string} uploadedResumeId - Uploaded resume ID
+   * @param {string} filename - Original filename
+   * @param {string} mimeType - File MIME type
+   * @returns {Promise<{gsPath, bucket, size, uploadedAt}>}
+   */
+  async uploadOriginalResume(
+    fileBuffer,
+    userId,
+    uploadedResumeId,
+    filename,
+    mimeType
+  ) {
+    try {
+      // Determine file extension from mime type
+      let fileExtension = ".pdf";
+      if (mimeType.includes("word") || mimeType.includes("docx")) {
+        fileExtension = ".docx";
+      } else if (mimeType === "text/plain") {
+        fileExtension = ".txt";
+      }
+
+      // Generate storage path: uploaded-resumes/{userId}/{uploadedResumeId}{extension}
+      const sanitizedFilename = this._sanitizeFilename(filename);
+      const storagePath = `uploaded-resumes/${userId}/${uploadedResumeId}${fileExtension}`;
+
+      // Create file reference
+      const file = this.bucket.file(storagePath);
+
+      // Upload with metadata
+      await file.save(fileBuffer, {
+        metadata: {
+          contentType: mimeType,
+          cacheControl: "private, max-age=86400", // 24 hours, private
+          metadata: {
+            userId,
+            uploadedResumeId,
+            originalFilename: sanitizedFilename,
+            uploadedAt: new Date().toISOString(),
+          },
+        },
+        public: false, // Keep private, use signed URLs
+        validation: "md5", // Verify upload integrity
+      });
+
+      console.log(
+        `✅ Original resume uploaded: gs://${this.bucketName}/${storagePath}`
+      );
+
+      return {
+        gsPath: storagePath,
+        bucket: this.bucketName,
+        size: fileBuffer.length,
+        uploadedAt: new Date(),
+      };
+    } catch (error) {
+      console.error("Original resume upload failed:", error);
+      throw new Error(
+        `Failed to upload original resume to Cloud Storage: ${error.message}`
+      );
     }
   }
 
@@ -100,22 +172,25 @@ class CloudStorageService {
 
       // Calculate expiry
       const expiry = expiryHours
-        ? Date.now() + (expiryHours * 60 * 60 * 1000)
-        : Date.now() + (this.signedUrlExpiryDays * 24 * 60 * 60 * 1000);
+        ? Date.now() + expiryHours * 60 * 60 * 1000
+        : Date.now() + this.signedUrlExpiryDays * 24 * 60 * 60 * 1000;
 
       // Generate signed URL
       const [signedUrl] = await file.getSignedUrl({
-        version: 'v4',
-        action: 'read',
-        expires: expiry
+        version: "v4",
+        action: "read",
+        expires: expiry,
       });
 
-      console.log(`✅ Signed URL generated for: ${gsPath} (expires in ${expiryHours || this.signedUrlExpiryDays * 24}h)`);
+      console.log(
+        `✅ Signed URL generated for: ${gsPath} (expires in ${
+          expiryHours || this.signedUrlExpiryDays * 24
+        }h)`
+      );
 
       return signedUrl;
-
     } catch (error) {
-      console.error('Signed URL generation failed:', error);
+      console.error("Signed URL generation failed:", error);
       throw new Error(`Failed to generate signed URL: ${error.message}`);
     }
   }
@@ -138,9 +213,8 @@ class CloudStorageService {
 
       await file.delete();
       console.log(`✅ PDF deleted: gs://${this.bucketName}/${gsPath}`);
-
     } catch (error) {
-      console.error('PDF deletion failed:', error);
+      console.error("PDF deletion failed:", error);
       throw new Error(`Failed to delete PDF: ${error.message}`);
     }
   }
@@ -156,7 +230,7 @@ class CloudStorageService {
       const [exists] = await file.exists();
       return exists;
     } catch (error) {
-      console.error('Error checking PDF existence:', error);
+      console.error("Error checking PDF existence:", error);
       return false;
     }
   }
@@ -178,11 +252,10 @@ class CloudStorageService {
         created: metadata.timeCreated,
         updated: metadata.updated,
         md5Hash: metadata.md5Hash,
-        customMetadata: metadata.metadata || {}
+        customMetadata: metadata.metadata || {},
       };
-
     } catch (error) {
-      console.error('Failed to get PDF metadata:', error);
+      console.error("Failed to get PDF metadata:", error);
       throw new Error(`Failed to retrieve PDF metadata: ${error.message}`);
     }
   }
@@ -197,11 +270,12 @@ class CloudStorageService {
       const file = this.bucket.file(gsPath);
       const [buffer] = await file.download();
 
-      console.log(`✅ PDF downloaded: ${gsPath} (${(buffer.length / 1024).toFixed(2)}KB)`);
+      console.log(
+        `✅ PDF downloaded: ${gsPath} (${(buffer.length / 1024).toFixed(2)}KB)`
+      );
       return buffer;
-
     } catch (error) {
-      console.error('PDF download failed:', error);
+      console.error("PDF download failed:", error);
       throw new Error(`Failed to download PDF: ${error.message}`);
     }
   }
@@ -217,18 +291,17 @@ class CloudStorageService {
       const prefix = `resumes/${userId}/`;
       const [files] = await this.bucket.getFiles({
         prefix,
-        maxResults
+        maxResults,
       });
 
-      return files.map(file => ({
+      return files.map((file) => ({
         name: file.name,
         size: parseInt(file.metadata.size, 10),
         created: file.metadata.timeCreated,
-        updated: file.metadata.updated
+        updated: file.metadata.updated,
       }));
-
     } catch (error) {
-      console.error('Failed to list user PDFs:', error);
+      console.error("Failed to list user PDFs:", error);
       throw new Error(`Failed to list PDFs: ${error.message}`);
     }
   }
@@ -250,9 +323,8 @@ class CloudStorageService {
 
       console.log(`✅ Cloud Storage health check passed: ${this.bucketName}`);
       return true;
-
     } catch (error) {
-      console.error('Cloud Storage health check failed:', error);
+      console.error("Cloud Storage health check failed:", error);
       return false;
     }
   }
@@ -265,8 +337,8 @@ class CloudStorageService {
    */
   _sanitizeFilename(filename) {
     return filename
-      .replace(/[^a-zA-Z0-9._-]/g, '_') // Replace special chars with underscore
-      .replace(/_{2,}/g, '_') // Collapse multiple underscores
+      .replace(/[^a-zA-Z0-9._-]/g, "_") // Replace special chars with underscore
+      .replace(/_{2,}/g, "_") // Collapse multiple underscores
       .substring(0, 255); // GCS filename limit
   }
 }

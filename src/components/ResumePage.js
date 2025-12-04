@@ -21,6 +21,11 @@ import {
   Tooltip,
   Tabs,
   Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Paper,
 } from "@mui/material";
 import {
   Visibility as VisibilityIcon,
@@ -189,6 +194,142 @@ const ResumePage = () => {
   // Handle download (navigate to view page with download intent)
   const handleDownload = (resumeId) => {
     navigate(`/resume/${resumeId}?download=true`);
+  };
+
+  // Format resume text with proper styling to preserve document structure
+  const formatResumeText = (text) => {
+    if (!text) return null;
+
+    // Split into lines and process
+    const lines = text.split("\n");
+    const elements = [];
+
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+
+      // Skip empty lines but add spacing
+      if (!trimmedLine) {
+        elements.push(<Box key={index} sx={{ height: 8 }} />);
+        return;
+      }
+
+      // Detect section headers (all caps, short lines, or lines ending with colon)
+      const isHeader =
+        (trimmedLine === trimmedLine.toUpperCase() &&
+          trimmedLine.length < 50 &&
+          trimmedLine.length > 2) ||
+        /^(EXPERIENCE|EDUCATION|SKILLS|SUMMARY|OBJECTIVE|WORK HISTORY|PROFESSIONAL EXPERIENCE|CERTIFICATIONS|PROJECTS|ACHIEVEMENTS|AWARDS|LANGUAGES|REFERENCES|CONTACT|PROFILE)/i.test(
+          trimmedLine
+        );
+
+      // Detect name (usually first non-empty line, larger font)
+      const isName =
+        index < 3 &&
+        !isHeader &&
+        trimmedLine.length < 60 &&
+        !/[@|•·]/.test(trimmedLine);
+
+      // Detect contact info (contains email, phone, or multiple separators)
+      const isContact =
+        /[@]|[\d]{3}[-.\s]?[\d]{3}[-.\s]?[\d]{4}|linkedin\.com|github\.com/.test(
+          trimmedLine
+        ) ||
+        (trimmedLine.includes("|") && trimmedLine.split("|").length >= 2);
+
+      // Detect bullet points
+      const isBullet =
+        /^[•·▪▸►◦‣⁃*-]/.test(trimmedLine) || /^\d+\./.test(trimmedLine);
+
+      // Detect job title / company lines (often has dates)
+      const hasDate =
+        /\b(19|20)\d{2}\b/.test(trimmedLine) ||
+        /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)\b/i.test(
+          trimmedLine
+        );
+      const isJobLine = hasDate && trimmedLine.length < 100;
+
+      if (isHeader) {
+        elements.push(
+          <Typography
+            key={index}
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              mt: 3,
+              mb: 1,
+              color: "primary.main",
+              borderBottom: "2px solid",
+              borderColor: "primary.main",
+              pb: 0.5,
+              textTransform: "uppercase",
+              letterSpacing: 1,
+            }}
+          >
+            {trimmedLine}
+          </Typography>
+        );
+      } else if (isName && elements.length < 2) {
+        elements.push(
+          <Typography
+            key={index}
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              mb: 0.5,
+              color: "text.primary",
+            }}
+          >
+            {trimmedLine}
+          </Typography>
+        );
+      } else if (isContact) {
+        elements.push(
+          <Typography
+            key={index}
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5,
+              textAlign: "center",
+            }}
+          >
+            {trimmedLine}
+          </Typography>
+        );
+      } else if (isJobLine) {
+        elements.push(
+          <Typography
+            key={index}
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
+              mt: 1.5,
+              mb: 0.5,
+            }}
+          >
+            {trimmedLine}
+          </Typography>
+        );
+      } else if (isBullet) {
+        const bulletContent = trimmedLine
+          .replace(/^[•·▪▸►◦‣⁃*-]\s*/, "")
+          .replace(/^\d+\.\s*/, "");
+        elements.push(
+          <Box key={index} sx={{ display: "flex", ml: 2, mb: 0.5 }}>
+            <Typography sx={{ mr: 1, color: "primary.main" }}>•</Typography>
+            <Typography variant="body2">{bulletContent}</Typography>
+          </Box>
+        );
+      } else {
+        elements.push(
+          <Typography key={index} variant="body2" sx={{ mb: 0.5 }}>
+            {trimmedLine}
+          </Typography>
+        );
+      }
+    });
+
+    return elements;
   };
 
   // Loading state
@@ -554,7 +695,7 @@ const ResumePage = () => {
                           </Tooltip>
                         )}
                         <Typography variant="h6" noWrap sx={{ flex: 1 }}>
-                          {resume.originalName || "Uploaded Resume"}
+                          {resume.filename || "Uploaded Resume"}
                         </Typography>
                       </Box>
 
@@ -562,7 +703,7 @@ const ResumePage = () => {
                       <Typography
                         variant="body2"
                         color="text.secondary"
-                        gutterBottom
+                        sx={{ mb: 1 }}
                       >
                         {resume.mimeType?.includes("pdf")
                           ? "PDF Document"
@@ -643,7 +784,7 @@ const ResumePage = () => {
                       </Tooltip>
 
                       {/* View Button */}
-                      <Tooltip title="View extracted text">
+                      <Tooltip title="View resume">
                         <IconButton
                           color="primary"
                           onClick={() => setViewingResume(resume)}
@@ -703,58 +844,89 @@ const ResumePage = () => {
           </>
         )}
 
-        {/* View Uploaded Resume Dialog */}
+        {/* View Uploaded Resume Dialog - Formatted Display */}
         {viewingResume && (
-          <Box
-            sx={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              bgcolor: "rgba(0,0,0,0.8)",
-              zIndex: 1300,
-              display: "flex",
-              flexDirection: "column",
-              p: 3,
+          <Dialog
+            open={!!viewingResume}
+            onClose={() => setViewingResume(null)}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+              sx: {
+                height: "90vh",
+                maxHeight: "90vh",
+              },
             }}
           >
-            <Box
+            <DialogTitle
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                mb: 2,
+                borderBottom: 1,
+                borderColor: "divider",
               }}
             >
-              <Typography variant="h6" color="white">
-                {viewingResume.originalName}
-              </Typography>
-              <IconButton
-                color="inherit"
-                onClick={() => setViewingResume(null)}
-                sx={{ color: "white" }}
-              >
-                ✕
-              </IconButton>
-            </Box>
-            <Box
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <ResumeIcon color="primary" />
+                <Typography variant="h6">
+                  {viewingResume.filename || "Uploaded Resume"}
+                </Typography>
+              </Box>
+              <Chip
+                label={
+                  viewingResume.mimeType?.includes("pdf")
+                    ? "PDF"
+                    : viewingResume.mimeType?.includes("word")
+                    ? "DOCX"
+                    : "TXT"
+                }
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            </DialogTitle>
+            <DialogContent
               sx={{
-                flex: 1,
-                bgcolor: "background.paper",
-                borderRadius: 2,
-                p: 3,
+                p: 0,
                 overflow: "auto",
+                bgcolor: "#fafafa",
               }}
             >
-              <Typography
-                variant="body1"
-                sx={{ whiteSpace: "pre-wrap", fontFamily: "monospace" }}
+              {/* Resume Paper - Styled like a printed document */}
+              <Paper
+                elevation={2}
+                sx={{
+                  maxWidth: 800,
+                  mx: "auto",
+                  my: 3,
+                  p: 5,
+                  minHeight: "100%",
+                  bgcolor: "white",
+                  borderRadius: 0,
+                  boxShadow: "0 0 20px rgba(0,0,0,0.1)",
+                }}
               >
-                {viewingResume.extractedText || "No text content available"}
-              </Typography>
-            </Box>
-          </Box>
+                {viewingResume.rawText ? (
+                  formatResumeText(viewingResume.rawText)
+                ) : (
+                  <Box sx={{ textAlign: "center", py: 4 }}>
+                    <ResumeIcon
+                      sx={{ fontSize: 60, color: "text.disabled", mb: 2 }}
+                    />
+                    <Typography color="text.secondary">
+                      No text content available
+                    </Typography>
+                  </Box>
+                )}
+              </Paper>
+            </DialogContent>
+            <DialogActions
+              sx={{ px: 3, py: 2, borderTop: 1, borderColor: "divider" }}
+            >
+              <Button onClick={() => setViewingResume(null)}>Close</Button>
+            </DialogActions>
+          </Dialog>
         )}
       </Container>
     </Box>

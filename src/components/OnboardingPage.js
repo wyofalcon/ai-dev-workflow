@@ -329,12 +329,19 @@ function OnboardingPage() {
           phone: formData.phone,
           location: formData.location,
           linkedinUrl: formData.linkedinUrl,
+          summary: formData.summary || null,
+          currentTitle: formData.currentTitle || null,
           yearsExperience: formData.yearsExperience
             ? parseInt(formData.yearsExperience)
             : null,
           careerLevel: formData.currentTitle ? "mid" : null,
           skills: formData.skills,
           industries: formData.industries,
+          education: formData.education?.length > 0 ? formData.education : null,
+          experience:
+            formData.experience?.length > 0 ? formData.experience : null,
+          certifications: formData.certifications || [],
+          languages: formData.languages || [],
           completeOnboarding: true, // Mark onboarding as complete
         }),
       });
@@ -405,29 +412,57 @@ function OnboardingPage() {
         information to get you started quickly.
       </Typography>
 
-      {/* Upload Resume - Primary Option */}
-      <Card
-        elevation={method === "upload" ? 8 : 3}
+      {/* Unified Upload Resume Dropzone */}
+      <Box
+        {...getRootProps()}
+        onClick={(e) => {
+          if (!method) {
+            handleSelectMethod("upload");
+          }
+          getRootProps().onClick?.(e);
+        }}
         sx={{
           maxWidth: 500,
           mx: "auto",
-          border: method === "upload" ? "2px solid" : "1px solid",
-          borderColor: method === "upload" ? "primary.main" : "divider",
+          border: "2px dashed",
+          borderColor: isDragActive
+            ? "primary.main"
+            : method === "upload"
+            ? "primary.main"
+            : "divider",
+          borderRadius: 2,
+          p: 4,
+          textAlign: "center",
+          cursor: "pointer",
+          bgcolor: isDragActive ? "action.hover" : "background.paper",
+          transition: "all 0.2s",
           mb: 3,
+          "&:hover": {
+            borderColor: "primary.main",
+            bgcolor: "action.hover",
+          },
         }}
       >
-        <CardActionArea
-          onClick={() => handleSelectMethod("upload")}
-          sx={{ p: 3 }}
-        >
-          <CardContent sx={{ textAlign: "center" }}>
+        <input {...getInputProps()} />
+        {parsing ? (
+          <Box>
+            <CircularProgress size={48} sx={{ mb: 2 }} />
+            <Typography variant="h6">Parsing your resume...</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Extracting your information with AI
+            </Typography>
+            <LinearProgress sx={{ mt: 2, maxWidth: 300, mx: "auto" }} />
+          </Box>
+        ) : (
+          <>
             <UploadIcon sx={{ fontSize: 64, color: "primary.main", mb: 2 }} />
             <Typography variant="h5" gutterBottom>
-              Upload Your Resume
+              {isDragActive ? "Drop your resume here" : "Upload Your Resume"}
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-              We'll automatically extract your contact info, skills, and
-              experience.
+              {isDragActive
+                ? "Release to upload"
+                : "Drag & drop or click to browse"}
             </Typography>
             <Box
               sx={{
@@ -435,6 +470,7 @@ function OnboardingPage() {
                 justifyContent: "center",
                 gap: 1,
                 flexWrap: "wrap",
+                mb: 2,
               }}
             >
               <Chip label="PDF" size="small" variant="outlined" />
@@ -445,60 +481,14 @@ function OnboardingPage() {
               label="Recommended • Saves Time"
               color="primary"
               size="small"
-              sx={{ mt: 2 }}
             />
-          </CardContent>
-        </CardActionArea>
-      </Card>
+          </>
+        )}
+      </Box>
 
-      {/* Upload Area (shown when upload is selected) */}
+      {/* Or paste text option */}
       {method === "upload" && (
-        <Box sx={{ mt: 4 }}>
-          <Divider sx={{ mb: 3 }} />
-
-          {/* Dropzone */}
-          <Box
-            {...getRootProps()}
-            sx={{
-              border: "2px dashed",
-              borderColor: isDragActive ? "primary.main" : "divider",
-              borderRadius: 2,
-              p: 4,
-              textAlign: "center",
-              cursor: "pointer",
-              bgcolor: isDragActive ? "action.hover" : "background.paper",
-              transition: "all 0.2s",
-              "&:hover": {
-                borderColor: "primary.main",
-                bgcolor: "action.hover",
-              },
-            }}
-          >
-            <input {...getInputProps()} />
-            {parsing ? (
-              <Box>
-                <CircularProgress size={40} sx={{ mb: 2 }} />
-                <Typography>Parsing your resume...</Typography>
-                <LinearProgress sx={{ mt: 2, maxWidth: 300, mx: "auto" }} />
-              </Box>
-            ) : (
-              <>
-                <UploadIcon
-                  sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
-                />
-                <Typography variant="h6" gutterBottom>
-                  {isDragActive
-                    ? "Drop your resume here"
-                    : "Drag & drop your resume here"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  or click to browse (PDF, DOCX, TXT - max 5MB)
-                </Typography>
-              </>
-            )}
-          </Box>
-
-          {/* Or paste text */}
+        <Box sx={{ maxWidth: 500, mx: "auto" }}>
           <Typography variant="body2" align="center" sx={{ my: 2 }}>
             — OR —
           </Typography>

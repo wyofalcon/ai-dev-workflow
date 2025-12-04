@@ -148,6 +148,7 @@ router.post("/login", async (req, res, next) => {
         subscriptionTier: user.subscriptionTier,
         resumesGenerated: user.resumesGenerated,
         resumesLimit: user.resumesLimit,
+        onboardingCompleted: user.onboardingCompleted || false,
       },
     });
   } catch (error) {

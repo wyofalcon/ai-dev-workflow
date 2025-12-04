@@ -56,12 +56,16 @@ model UserProfile {
   phone           String?
   location        String?
   linkedinUrl     String?  @map("linkedin_url")
+  summary         String?  @map("professional_summary")
   yearsExperience Int?     @map("years_experience")
   careerLevel     String?  @map("career_level")
+  currentTitle    String?  @map("current_title")
   targetRoles     String[] @map("target_roles")
   industries      String[]
   skills          String[]
   educationLevel  String?  @map("education_level")
+  education       Json?    @map("education_details")
+  experience      Json?    @map("experience_details")
   certifications  String[]
   languages       String[]
   workPreferences Json?    @map("work_preferences")

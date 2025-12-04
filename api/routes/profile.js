@@ -309,6 +309,7 @@ router.get("/uploaded-resumes", verifyFirebaseToken, async (req, res, next) => {
         isPrimary: true,
         label: true,
         parsedData: true,
+        rawText: true,
         createdAt: true,
         updatedAt: true,
       },

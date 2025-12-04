@@ -505,11 +505,17 @@ function UserProfilePage() {
       const sections = ["contact", "workExperience", "skills", "education"];
 
       // Load data for core sections
+      // Check both workPreferences (for edited data) and userProfile.experience (from onboarding)
       if (prefs.workExperience?.length > 0) {
         setWorkExperience(prefs.workExperience);
+      } else if (userProfile.experience?.length > 0) {
+        setWorkExperience(userProfile.experience);
       }
+      // Check both workPreferences (for edited data) and userProfile.education (from onboarding)
       if (prefs.education?.length > 0) {
         setEducation(prefs.education);
+      } else if (userProfile.education?.length > 0) {
+        setEducation(userProfile.education);
       }
       if (userProfile.skills?.length > 0 || prefs.skills?.length > 0) {
         setSkills(prefs.skills || userProfile.skills || []);

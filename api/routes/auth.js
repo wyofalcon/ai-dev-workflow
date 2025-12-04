@@ -1,7 +1,7 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const { verifyFirebaseToken } = require('../middleware/authMiddleware');
+const { PrismaClient } = require("@prisma/client");
+const { verifyFirebaseToken } = require("../middleware/authMiddleware");
 
 const prisma = new PrismaClient();
 
@@ -9,27 +9,28 @@ const prisma = new PrismaClient();
  * GET /api/auth/test/db
  * Test database connection (no auth required)
  */
-router.get('/test/db', async (req, res) => {
+router.get("/test/db", async (req, res) => {
   try {
-    console.log('🧪 Testing database connection...');
-    const result = await prisma.$queryRaw`SELECT 1 as test, NOW() as current_time`;
-    console.log('✅ Database query successful:', result);
+    console.log("🧪 Testing database connection...");
+    const result =
+      await prisma.$queryRaw`SELECT 1 as test, NOW() as current_time`;
+    console.log("✅ Database query successful:", result);
     res.json({
-      status: 'connected',
-      message: 'Database connection successful',
+      status: "connected",
+      message: "Database connection successful",
       result,
-      prismaVersion: require('@prisma/client').Prisma.prismaVersion,
+      prismaVersion: require("@prisma/client").Prisma.prismaVersion,
     });
   } catch (error) {
-    console.error('❌ Database connection failed:', {
+    console.error("❌ Database connection failed:", {
       message: error.message,
       stack: error.stack,
       code: error.code,
       name: error.name,
     });
     res.status(500).json({
-      status: 'failed',
-      message: 'Database connection failed',
+      status: "failed",
+      message: "Database connection failed",
       error: error.message,
       code: error.code,
     });
@@ -40,11 +41,11 @@ router.get('/test/db', async (req, res) => {
  * GET /api/auth/test/token
  * Test Firebase token verification (no database)
  */
-router.get('/test/token', verifyFirebaseToken, (req, res) => {
-  console.log('✅ Token verified successfully, user:', req.user);
+router.get("/test/token", verifyFirebaseToken, (req, res) => {
+  console.log("✅ Token verified successfully, user:", req.user);
   res.json({
-    status: 'success',
-    message: 'Firebase token verified successfully',
+    status: "success",
+    message: "Firebase token verified successfully",
     user: req.user,
   });
 });
@@ -54,24 +55,31 @@ router.get('/test/token', verifyFirebaseToken, (req, res) => {
  * Create user record in database after Firebase signup
  * Requires valid Firebase token
  */
-router.post('/register', verifyFirebaseToken, async (req, res, next) => {
+router.post("/register", verifyFirebaseToken, async (req, res, next) => {
   try {
-    console.log('📝 /api/auth/register - Starting registration');
-    console.log('👤 User from token:', JSON.stringify(req.user, null, 2));
+    console.log("📝 /api/auth/register - Starting registration");
+    console.log("👤 User from token:", JSON.stringify(req.user, null, 2));
 
-    const { firebaseUid, email, emailVerified, displayName, photoUrl, authProvider } = req.user;
+    const {
+      firebaseUid,
+      email,
+      emailVerified,
+      displayName,
+      photoUrl,
+      authProvider,
+    } = req.user;
 
     // Check if user already exists
-    console.log('🔍 Checking for existing user:', firebaseUid);
+    console.log("🔍 Checking for existing user:", firebaseUid);
     const existingUser = await prisma.user.findUnique({
       where: { firebaseUid },
     });
-    console.log('✅ Database query successful, existing user:', !!existingUser);
+    console.log("✅ Database query successful, existing user:", !!existingUser);
 
     if (existingUser) {
-      console.log('👤 User already exists, returning existing record');
+      console.log("👤 User already exists, returning existing record");
       return res.status(200).json({
-        message: 'User already registered',
+        message: "User already registered",
         user: {
           id: existingUser.id,
           email: existingUser.email,
@@ -84,7 +92,7 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
     }
 
     // Create new user
-    console.log('➕ Creating new user in database');
+    console.log("➕ Creating new user in database");
     const newUser = await prisma.user.create({
       data: {
         firebaseUid,
@@ -93,13 +101,13 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
         displayName,
         photoUrl,
         authProvider,
-        subscriptionTier: 'free',
+        subscriptionTier: "free",
         resumesGenerated: 0,
         resumesLimit: 1, // Free tier gets 1 resume
         lastLoginAt: new Date(),
       },
     });
-    console.log('✅ User created successfully, ID:', newUser.id);
+    console.log("✅ User created successfully, ID:", newUser.id);
 
     // TODO: Re-enable audit logging once audit_logs table is created
     // Log audit event
@@ -118,9 +126,9 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
     // });
     // console.log('✅ Audit log created');
 
-    console.log('🎉 Registration complete, sending response');
+    console.log("🎉 Registration complete, sending response");
     res.status(201).json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       user: {
         id: newUser.id,
         email: newUser.email,
@@ -131,7 +139,7 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.error('❌ ERROR in /api/auth/register:', {
+    console.error("❌ ERROR in /api/auth/register:", {
       message: error.message,
       stack: error.stack,
       code: error.code,
@@ -149,7 +157,7 @@ router.post('/register', verifyFirebaseToken, async (req, res, next) => {
  * Update last login timestamp and return user data
  * Requires valid Firebase token
  */
-router.post('/login', verifyFirebaseToken, async (req, res, next) => {
+router.post("/login", verifyFirebaseToken, async (req, res, next) => {
   try {
     const { firebaseUid } = req.user;
 
@@ -165,8 +173,8 @@ router.post('/login', verifyFirebaseToken, async (req, res, next) => {
 
     if (!user) {
       return res.status(404).json({
-        error: 'User Not Found',
-        message: 'User account not found. Please register first.',
+        error: "User Not Found",
+        message: "User account not found. Please register first.",
       });
     }
 
@@ -182,7 +190,7 @@ router.post('/login', verifyFirebaseToken, async (req, res, next) => {
     // });
 
     res.status(200).json({
-      message: 'Login successful',
+      message: "Login successful",
       user: {
         id: user.id,
         email: user.email,
@@ -206,7 +214,7 @@ router.post('/login', verifyFirebaseToken, async (req, res, next) => {
  * Verify token and return user info
  * Requires valid Firebase token
  */
-router.get('/verify', verifyFirebaseToken, async (req, res, next) => {
+router.get("/verify", verifyFirebaseToken, async (req, res, next) => {
   try {
     const { firebaseUid } = req.user;
 
@@ -226,8 +234,8 @@ router.get('/verify', verifyFirebaseToken, async (req, res, next) => {
 
     if (!user) {
       return res.status(404).json({
-        error: 'User Not Found',
-        message: 'User account not found in database',
+        error: "User Not Found",
+        message: "User account not found in database",
       });
     }
 
@@ -245,7 +253,7 @@ router.get('/verify', verifyFirebaseToken, async (req, res, next) => {
  * Log user logout (optional endpoint for tracking)
  * Requires valid Firebase token
  */
-router.post('/logout', verifyFirebaseToken, async (req, res, next) => {
+router.post("/logout", verifyFirebaseToken, async (req, res, next) => {
   try {
     const { firebaseUid } = req.user;
 
@@ -268,7 +276,7 @@ router.post('/logout', verifyFirebaseToken, async (req, res, next) => {
     }
 
     res.status(200).json({
-      message: 'Logout successful',
+      message: "Logout successful",
     });
   } catch (error) {
     next(error);
@@ -280,10 +288,10 @@ router.post('/logout', verifyFirebaseToken, async (req, res, next) => {
  * Get current user's complete profile
  * Requires valid Firebase token
  */
-router.get('/me', verifyFirebaseToken, async (req, res, next) => {
+router.get("/me", verifyFirebaseToken, async (req, res, next) => {
   try {
-    console.log('📋 /api/auth/me - Fetching user profile');
-    console.log('👤 Firebase UID:', req.user.firebaseUid);
+    console.log("📋 /api/auth/me - Fetching user profile");
+    console.log("👤 Firebase UID:", req.user.firebaseUid);
 
     const { firebaseUid } = req.user;
 
@@ -299,23 +307,45 @@ router.get('/me', verifyFirebaseToken, async (req, res, next) => {
         resumesLimit: true,
         emailVerified: true,
         onboardingCompleted: true,
+        profile: true, // Include full profile data
       },
     });
 
-    console.log('✅ Query completed, user found:', !!user);
+    console.log("✅ Query completed, user found:", !!user);
 
     if (!user) {
       return res.status(404).json({
-        error: 'User Not Found',
-        message: 'User account not found in database',
+        error: "User Not Found",
+        message: "User account not found in database",
       });
     }
 
+    // Flatten profile data into user response for backward compatibility
+    const userData = {
+      ...user,
+      // Include top-level profile fields for easy access
+      fullName: user.profile?.fullName || user.displayName,
+      phone: user.profile?.phone,
+      location: user.profile?.location,
+      linkedinUrl: user.profile?.linkedinUrl,
+      summary: user.profile?.summary,
+      currentTitle: user.profile?.currentTitle,
+      yearsExperience: user.profile?.yearsExperience,
+      careerLevel: user.profile?.careerLevel,
+      skills: user.profile?.skills || [],
+      industries: user.profile?.industries || [],
+      education: user.profile?.education,
+      experience: user.profile?.experience,
+      certifications: user.profile?.certifications || [],
+      languages: user.profile?.languages || [],
+      workPreferences: user.profile?.workPreferences,
+    };
+
     res.status(200).json({
-      user,
+      user: userData,
     });
   } catch (error) {
-    console.error('❌ ERROR in /api/auth/me:', {
+    console.error("❌ ERROR in /api/auth/me:", {
       message: error.message,
       code: error.code,
       meta: error.meta,
@@ -332,11 +362,12 @@ router.get('/me', verifyFirebaseToken, async (req, res, next) => {
  * SECURITY: Development/testing only - requires DEV_ADMIN_MODE=true
  * In production, this endpoint returns 403
  */
-const { requireDevAdmin, resetResumeCount } = require('../middleware/devTools');
+const { requireDevAdmin, resetResumeCount } = require("../middleware/devTools");
 
-router.post('/dev/upgrade-unlimited',
+router.post(
+  "/dev/upgrade-unlimited",
   verifyFirebaseToken,
-  requireDevAdmin,  // ✅ SECURITY: Only works in dev with DEV_ADMIN_MODE=true
+  requireDevAdmin, // ✅ SECURITY: Only works in dev with DEV_ADMIN_MODE=true
   resetResumeCount
 );
 
@@ -346,7 +377,8 @@ router.post('/dev/upgrade-unlimited',
  *
  * SECURITY: Development/testing only
  */
-router.post('/dev/reset-resumes',
+router.post(
+  "/dev/reset-resumes",
   verifyFirebaseToken,
   requireDevAdmin,
   async (req, res, next) => {
@@ -365,7 +397,7 @@ router.post('/dev/reset-resumes',
       });
 
       res.json({
-        message: 'Resume count reset (dev mode only)',
+        message: "Resume count reset (dev mode only)",
         user: updated,
       });
     } catch (error) {
