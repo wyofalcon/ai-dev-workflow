@@ -2,25 +2,22 @@
  * Embedding Generator - Vertex AI Text Embeddings
  *
  * Generates 768-dimensional vector embeddings for profile stories
- * Uses: textembedding-gecko@003 (Vertex AI)
+ * Uses: text-embedding-004 (Vertex AI)
  *
  * Purpose: Enable semantic search for RAG-powered resume/cover letter generation
  */
 
-const { VertexAI } = require('@google-cloud/vertexai');
-
-// Initialize Vertex AI client
-const vertexAI = new VertexAI({
-  project: process.env.GCP_PROJECT_ID || 'cvstomize',
-  location: 'us-central1'
-});
+const axios = require('axios');
+const { getFirebaseAdmin } = require('../config/firebase');
 
 // Embedding model configuration
 const EMBEDDING_MODEL = 'text-embedding-004'; // Latest Vertex AI embedding model
 const EMBEDDING_DIMENSION = 768;
+const PROJECT_ID = process.env.GCP_PROJECT_ID || 'cvstomize';
+const LOCATION = 'us-central1';
 
 /**
- * Generate embedding for a single text
+ * Generate embedding for a single text using Vertex AI REST API
  * @param {string} text - Text to embed (story, question, job description)
  * @returns {Promise<number[]>} 768-dimensional vector
  */
@@ -30,18 +27,30 @@ async function generateEmbedding(text) {
       throw new Error('Text cannot be empty');
     }
 
-    // Get the text embedding model (different from generative models)
-    const model = vertexAI.getGenerativeModel({
-      model: EMBEDDING_MODEL
-    });
-
     console.log(`🔢 Generating embedding for text (${text.length} chars)...`);
 
-    // Generate embedding using embedContent method with correct format
-    const result = await model.embedContent(text);
+    // Get access token from Firebase Admin (which has the right credentials)
+    const admin = getFirebaseAdmin();
+    const accessToken = await admin.credential.applicationDefault().getAccessToken();
 
-    // Extract embedding vector
-    const embedding = result.embedding?.values;
+    // Call Vertex AI Prediction API
+    const url = `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${EMBEDDING_MODEL}:predict`;
+
+    const response = await axios.post(
+      url,
+      {
+        instances: [{ content: text }]
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    // Extract embedding from response
+    const embedding = response.data?.predictions?.[0]?.embeddings?.values;
 
     if (!embedding || embedding.length !== EMBEDDING_DIMENSION) {
       throw new Error(`Invalid embedding dimension: expected ${EMBEDDING_DIMENSION}, got ${embedding?.length}`);
@@ -51,7 +60,7 @@ async function generateEmbedding(text) {
     return embedding;
 
   } catch (error) {
-    console.error('❌ Embedding generation failed:', error);
+    console.error('❌ Embedding generation failed:', error.response?.data || error.message);
     throw new Error(`Failed to generate embedding: ${error.message}`);
   }
 }
