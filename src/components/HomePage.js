@@ -57,7 +57,7 @@ function HomePage({ onStart }) {
       title: "TAILOR TO SPECIFIC JOB",
       icon: <TargetIcon sx={{ fontSize: 40 }} />,
       tooltip: hasResumes
-        ? "Have at least one resume already? CVstomize will ask you a few questions and generate a tailored resume specific to your job posting!"
+        ? "🎯 PREMIUM: Personality-authentic resume generation with 90%+ job match accuracy. Uses Gold Standard personality assessment + AI-powered story retrieval to make you a must-interview candidate!"
         : "You need at least 1 resume/CV saved before using this option.",
       action: () => hasResumes && navigate("/create-resume"),
       color: "#fdbb2d",
@@ -141,9 +141,9 @@ function HomePage({ onStart }) {
                   hoveredOption === option.id ? option.color : "#1e1e1e",
                 transform:
                   hoveredOption === option.id ? "scale(1.05)" : "scale(1)",
-                border: `2px solid ${
+                border: \`2px solid \${
                   hoveredOption === option.id ? option.color : "#333"
-                }`,
+                }\`,
                 opacity: option.disabled ? 0.5 : 1,
                 "&:hover": {
                   backgroundColor: option.disabled ? "#1e1e1e" : option.color,

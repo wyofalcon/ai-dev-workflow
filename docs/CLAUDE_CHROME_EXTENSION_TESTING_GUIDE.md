@@ -1,7 +1,15 @@
 # Claude Chrome Extension Testing Guide
 ## Sessions 29-30: Gold Standard + RAG Features
 
-**Date:** December 3, 2025
+**⚠️ NOTE:** This guide is **SUPERSEDED** by [COMPREHENSIVE_APP_TESTING_GUIDE.md](COMPREHENSIVE_APP_TESTING_GUIDE.md)
+
+**For complete app testing (all 120 tests), use:** [COMPREHENSIVE_APP_TESTING_GUIDE.md](COMPREHENSIVE_APP_TESTING_GUIDE.md)
+
+This guide covers **ONLY** Gold Standard personality assessment and RAG features (subset of comprehensive guide).
+
+---
+
+**Date:** December 3, 2025 (Updated: December 4, 2025)
 **Production URL:** https://cvstomize-frontend-351889420459.us-central1.run.app
 **API URL:** https://cvstomize-api-351889420459.us-central1.run.app
 **Features:** Gold Standard Personality Assessment + RAG Story Retrieval
