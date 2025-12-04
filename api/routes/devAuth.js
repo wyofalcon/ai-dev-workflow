@@ -12,6 +12,7 @@ const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
 const prisma = require("../config/database");
+const cloudStorage = require("../services/cloudStorage");
 
 // Security gate - block all routes in production
 const isDevMode = process.env.NODE_ENV === "development";
@@ -245,11 +246,51 @@ async function clearUserData(firebaseUid) {
 
   if (!user) return;
 
-  // Delete in order to respect foreign key constraints
-  // Prisma cascades should handle this, but being explicit
+  // First, get all uploaded resumes to delete their cloud storage files
+  const uploadedResumes = await prisma.uploadedResume.findMany({
+    where: { userId: user.id },
+    select: { storagePath: true },
+  });
+
+  // Delete uploaded resume files from cloud storage
+  for (const resume of uploadedResumes) {
+    if (resume.storagePath) {
+      try {
+        await cloudStorage.deletePDF(resume.storagePath);
+      } catch (error) {
+        console.warn(
+          `Failed to delete cloud storage file: ${resume.storagePath}`,
+          error.message
+        );
+      }
+    }
+  }
+
+  // Get generated resumes to delete their PDFs from cloud storage
+  const generatedResumes = await prisma.resume.findMany({
+    where: { userId: user.id },
+    select: { pdfPath: true },
+  });
+
+  // Delete generated resume PDFs from cloud storage
+  for (const resume of generatedResumes) {
+    if (resume.pdfPath) {
+      try {
+        await cloudStorage.deletePDF(resume.pdfPath);
+      } catch (error) {
+        console.warn(
+          `Failed to delete cloud storage file: ${resume.pdfPath}`,
+          error.message
+        );
+      }
+    }
+  }
+
+  // Delete database records in order to respect foreign key constraints
   await prisma.$transaction([
     prisma.conversation.deleteMany({ where: { userId: user.id } }),
     prisma.resume.deleteMany({ where: { userId: user.id } }),
+    prisma.uploadedResume.deleteMany({ where: { userId: user.id } }),
     prisma.profileStory.deleteMany({ where: { userId: user.id } }),
     prisma.personalityProfile.deleteMany({ where: { userId: user.id } }),
     prisma.personalityTraits.deleteMany({ where: { userId: user.id } }),

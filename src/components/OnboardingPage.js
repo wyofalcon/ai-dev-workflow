@@ -95,7 +95,8 @@ for (const industry of INDUSTRY_ORDER) {
   }
 }
 
-const steps = ["Choose Method", "Enter Details", "Review & Complete"];
+const stepsOnboarding = ["Choose Method", "Enter Details", "Review & Complete"];
+const stepsUpload = ["Upload Resume", "Review Details", "Save Resume"];
 
 function OnboardingPage() {
   const navigate = useNavigate();
@@ -106,7 +107,11 @@ function OnboardingPage() {
     API_URL,
     fetchUserProfile,
     logout,
+    onboardingCompleted,
   } = useAuth();
+
+  // Check if user is returning (already completed onboarding before)
+  const isReturningUser = onboardingCompleted === true;
 
   const [activeStep, setActiveStep] = useState(0);
   const [method, setMethod] = useState(null); // 'upload' or 'manual'
@@ -355,11 +360,15 @@ function OnboardingPage() {
       // Refresh user profile to get updated onboardingCompleted status
       await fetchUserProfile(currentUser);
 
-      setSuccess("Profile saved successfully!");
+      setSuccess(
+        isReturningUser
+          ? "Resume uploaded successfully!"
+          : "Profile saved successfully!"
+      );
 
-      // Navigate to home after short delay
+      // Navigate after short delay - resumes page for returning users, home for new users
       setTimeout(() => {
-        navigate("/");
+        navigate(isReturningUser ? "/resume" : "/");
       }, 1000);
     } catch (err) {
       console.error("Profile save error:", err);
@@ -381,7 +390,8 @@ function OnboardingPage() {
       setError("Please choose a method to continue");
       return;
     }
-    if (activeStep < steps.length - 1) {
+    const currentSteps = isReturningUser ? stepsUpload : stepsOnboarding;
+    if (activeStep < currentSteps.length - 1) {
       setActiveStep((prev) => prev + 1);
       setError("");
       setSuccess("");
@@ -400,7 +410,7 @@ function OnboardingPage() {
   const renderMethodSelection = () => (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h5" align="center" gutterBottom>
-        Let's Set Up Your Profile
+        {isReturningUser ? "Upload Your Resume" : "Let's Set Up Your Profile"}
       </Typography>
       <Typography
         variant="body1"
@@ -408,8 +418,9 @@ function OnboardingPage() {
         color="text.secondary"
         sx={{ mb: 4 }}
       >
-        Upload your existing resume and we'll automatically extract your
-        information to get you started quickly.
+        {isReturningUser
+          ? "Drop your resume file below and we'll extract your information."
+          : "Upload your existing resume and we'll automatically extract your information to get you started quickly."}
       </Typography>
 
       {/* Unified Upload Resume Dropzone */}
@@ -758,7 +769,7 @@ function OnboardingPage() {
   const renderReview = () => (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h5" align="center" gutterBottom>
-        Review Your Profile
+        {isReturningUser ? "Review Your Resume" : "Review Your Profile"}
       </Typography>
       <Typography
         variant="body1"
@@ -766,7 +777,9 @@ function OnboardingPage() {
         color="text.secondary"
         sx={{ mb: 4 }}
       >
-        Make sure everything looks correct before completing your profile setup.
+        {isReturningUser
+          ? "Review the extracted information before saving your resume."
+          : "Make sure everything looks correct before completing your profile setup."}
       </Typography>
 
       <Paper elevation={2} sx={{ p: 3 }}>
@@ -1004,10 +1017,22 @@ function OnboardingPage() {
           color="primary"
           onClick={handleSubmit}
           disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} /> : <CheckIcon />}
+          startIcon={
+            loading ? (
+              <CircularProgress size={20} />
+            ) : isReturningUser ? (
+              <UploadIcon />
+            ) : (
+              <CheckIcon />
+            )
+          }
           size="large"
         >
-          {loading ? "Saving..." : "Complete Setup"}
+          {loading
+            ? "Saving..."
+            : isReturningUser
+            ? "Save Resume"
+            : "Complete Setup"}
         </Button>
       </Box>
     </Box>
@@ -1023,7 +1048,7 @@ function OnboardingPage() {
           py: 4,
         }}
       >
-        {/* Header with Logo and Logout */}
+        {/* Header with Logo and Back/Logout */}
         <Box
           sx={{
             display: "flex",
@@ -1032,7 +1057,23 @@ function OnboardingPage() {
             mb: 4,
           }}
         >
-          <Box sx={{ width: 100 }} /> {/* Spacer for centering */}
+          {isReturningUser ? (
+            <Button
+              variant="text"
+              color="inherit"
+              size="small"
+              onClick={() => navigate("/")}
+              startIcon={<BackIcon />}
+              sx={{
+                opacity: 0.7,
+                "&:hover": { opacity: 1 },
+              }}
+            >
+              Back
+            </Button>
+          ) : (
+            <Box sx={{ width: 100 }} /> /* Spacer for centering */
+          )}
           <img src={logo} alt="CVstomize Logo" style={{ width: "120px" }} />
           <Button
             variant="text"
@@ -1051,7 +1092,7 @@ function OnboardingPage() {
 
         {/* Welcome Message */}
         <Typography variant="h4" align="center" gutterBottom>
-          Welcome to CVstomize! 🎉
+          {isReturningUser ? "Upload a Resume" : "Welcome to CVstomize! 🎉"}
         </Typography>
         <Typography
           variant="body1"
@@ -1059,13 +1100,14 @@ function OnboardingPage() {
           color="text.secondary"
           sx={{ mb: 4 }}
         >
-          Let's get you set up so you can start creating amazing, personalized
-          resumes.
+          {isReturningUser
+            ? "Add another resume to your collection. We'll extract and save your information."
+            : "Let's get you set up so you can start creating amazing, personalized resumes."}
         </Typography>
 
         {/* Stepper */}
         <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
-          {steps.map((label) => (
+          {(isReturningUser ? stepsUpload : stepsOnboarding).map((label) => (
             <Step key={label}>
               <StepLabel>{label}</StepLabel>
             </Step>

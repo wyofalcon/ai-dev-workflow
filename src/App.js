@@ -1,20 +1,27 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext.js';
-import { useCvState } from './hooks/useCvState.js';
-import HomePage from './components/HomePage.js';
-import TutorialModal from './components/TutorialModal.js';
-import ResumePage from './components/ResumePage.js';
-import ResumeViewPage from './components/ResumeViewPage.js';
-import ConversationalResumePage from './components/ConversationalResumePage.js';
-import UserProfilePage from './components/UserProfilePage.js';
-import ProcessModal from './components/ProcessModal.js';
-import Footer from './components/Footer.js';
-import LoginPage from './components/LoginPage.js';
-import SignupPage from './components/SignupPage.js';
-import ResetPasswordPage from './components/ResetPasswordPage.js';
-import OnboardingPage from './components/OnboardingPage.js';
-import GoldStandardWizard from './components/GoldStandardWizard.js';
+import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext.js";
+import { useCvState } from "./hooks/useCvState.js";
+import HomePage from "./components/HomePage.js";
+import TutorialModal from "./components/TutorialModal.js";
+import ResumePage from "./components/ResumePage.js";
+import ResumeViewPage from "./components/ResumeViewPage.js";
+import ConversationalResumePage from "./components/ConversationalResumePage.js";
+import UserProfilePage from "./components/UserProfilePage.js";
+import ProcessModal from "./components/ProcessModal.js";
+import Footer from "./components/Footer.js";
+import LoginPage from "./components/LoginPage.js";
+import SignupPage from "./components/SignupPage.js";
+import ResetPasswordPage from "./components/ResetPasswordPage.js";
+import OnboardingPage from "./components/OnboardingPage.js";
+import GoldStandardWizard from "./components/GoldStandardWizard.js";
 import {
   Container,
   Button,
@@ -26,10 +33,10 @@ import {
   MenuItem,
   Avatar,
   Typography,
-} from '@mui/material';
-import { AccountCircle } from '@mui/icons-material';
-import logo from './components/logo.png';
-import './App.css';
+} from "@mui/material";
+import { AccountCircle } from "@mui/icons-material";
+import logo from "./components/logo.png";
+import "./App.css";
 
 // Protected Route wrapper - redirects to login if not authenticated, or to onboarding if not completed
 function ProtectedRoute({ children }) {
@@ -41,24 +48,19 @@ function ProtectedRoute({ children }) {
   }
 
   // Redirect to onboarding if not completed (but not if already on onboarding page)
-  if (onboardingCompleted === false && location.pathname !== '/onboarding') {
+  if (onboardingCompleted === false && location.pathname !== "/onboarding") {
     return <Navigate to="/onboarding" replace />;
   }
 
   return children;
 }
 
-// Onboarding Route wrapper - only accessible if logged in but onboarding not completed
+// Onboarding Route wrapper - accessible to any logged in user
 function OnboardingRoute({ children }) {
-  const { currentUser, onboardingCompleted } = useAuth();
+  const { currentUser } = useAuth();
 
   if (!currentUser) {
     return <Navigate to="/login" replace />;
-  }
-
-  // If onboarding is already completed, redirect to home
-  if (onboardingCompleted === true) {
-    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -109,9 +111,13 @@ function MainLayout() {
 
     // Fallback to Firebase currentUser.photoURL and proxy it
     if (currentUser?.photoURL) {
-      const API_URL = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
-      if (currentUser.photoURL.includes('googleusercontent.com')) {
-        return `${API_URL}/proxy/avatar?url=${encodeURIComponent(currentUser.photoURL)}`;
+      const API_URL =
+        process.env.REACT_APP_API_URL ||
+        "https://cvstomize-api-351889420459.us-central1.run.app";
+      if (currentUser.photoURL.includes("googleusercontent.com")) {
+        return `${API_URL}/proxy/avatar?url=${encodeURIComponent(
+          currentUser.photoURL
+        )}`;
       }
       return currentUser.photoURL;
     }
@@ -123,9 +129,9 @@ function MainLayout() {
     handleMenuClose();
     try {
       await logout();
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
@@ -133,40 +139,57 @@ function MainLayout() {
     handleMenuClose();
     try {
       const token = await currentUser.getIdToken();
-      const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
-      const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
+      const API_BASE =
+        process.env.REACT_APP_API_URL ||
+        "https://cvstomize-api-351889420459.us-central1.run.app";
+      const API_URL = API_BASE.includes("/api") ? API_BASE : `${API_BASE}/api`;
 
       const response = await fetch(`${API_URL}/auth/upgrade-unlimited`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       const data = await response.json();
 
       if (data.user) {
-        alert(`✅ Account upgraded to unlimited resumes!\n\nYou now have ${data.user.resumesLimit} resume generations.`);
+        alert(
+          `✅ Account upgraded to unlimited resumes!\n\nYou now have ${data.user.resumesLimit} resume generations.`
+        );
         window.location.reload();
       } else {
-        alert('❌ Upgrade failed: ' + (data.message || 'Unknown error'));
+        alert("❌ Upgrade failed: " + (data.message || "Unknown error"));
       }
     } catch (error) {
-      console.error('Upgrade error:', error);
-      alert('❌ Upgrade failed: ' + error.message);
+      console.error("Upgrade error:", error);
+      alert("❌ Upgrade failed: " + error.message);
     }
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid #333' }}>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <AppBar
+        position="static"
+        color="transparent"
+        elevation={0}
+        sx={{ borderBottom: "1px solid #333" }}
+      >
         <Toolbar>
-          <img src={logo} alt="logo" style={{ width: '80px', marginRight: '10px' }} />
+          <img
+            src={logo}
+            alt="logo"
+            style={{ width: "80px", marginRight: "10px" }}
+          />
           <Box sx={{ flexGrow: 1 }} />
 
           {/* How to Use Button */}
-          <Button color="primary" onClick={() => setIsTutorialOpen(true)} sx={{ mr: 2 }}>
+          <Button
+            color="primary"
+            onClick={() => setIsTutorialOpen(true)}
+            sx={{ mr: 2 }}
+          >
             How to Use
           </Button>
 
@@ -174,8 +197,12 @@ function MainLayout() {
           {currentUser ? (
             <>
               {/* User Info */}
-              <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
-                {userProfile?.resumesGenerated || 0} / {userProfile?.resumesLimit || 1} resumes
+              <Typography
+                variant="body2"
+                sx={{ mr: 2, display: { xs: "none", sm: "block" } }}
+              >
+                {userProfile?.resumesGenerated || 0} /{" "}
+                {userProfile?.resumesLimit || 1} resumes
               </Typography>
 
               {/* User Menu */}
@@ -184,7 +211,7 @@ function MainLayout() {
                   <Avatar
                     src={getAvatarUrl()}
                     sx={{ width: 32, height: 32 }}
-                    alt={currentUser?.displayName || 'User'}
+                    alt={currentUser?.displayName || "User"}
                   />
                 ) : (
                   <AccountCircle />
@@ -200,23 +227,39 @@ function MainLayout() {
                     {currentUser.email}
                   </Typography>
                 </MenuItem>
-                <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose();
+                    navigate("/profile");
+                  }}
+                >
                   User Profile
                 </MenuItem>
-                <MenuItem onClick={() => { handleMenuClose(); navigate('/resume'); }}>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose();
+                    navigate("/resume");
+                  }}
+                >
                   My Resumes
                 </MenuItem>
-                <MenuItem onClick={handleLogout}>
-                  Logout
-                </MenuItem>
+                <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </Menu>
             </>
           ) : (
             <>
-              <Button color="primary" onClick={() => navigate('/login')} sx={{ mr: 1 }}>
+              <Button
+                color="primary"
+                onClick={() => navigate("/login")}
+                sx={{ mr: 1 }}
+              >
                 Login
               </Button>
-              <Button variant="contained" color="primary" onClick={() => navigate('/signup')}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate("/signup")}
+              >
                 Sign Up
               </Button>
             </>
@@ -228,7 +271,11 @@ function MainLayout() {
         <HomePage onStart={handleStart} />
         {isTutorialOpen && <TutorialModal setIsOpen={setIsTutorialOpen} />}
         {isProcessStarted && (
-          <ProcessModal open={isProcessStarted} handleClose={handleClose} cvState={cvState} />
+          <ProcessModal
+            open={isProcessStarted}
+            handleClose={handleClose}
+            cvState={cvState}
+          />
         )}
       </Container>
       <Footer />
