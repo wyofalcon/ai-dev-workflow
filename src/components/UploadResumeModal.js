@@ -180,11 +180,13 @@ function UploadResumeModal({ open, onClose }) {
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
-              Upload Your Existing Resume
+              Upload or Paste Your Existing Resume
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Upload your resume (PDF, DOC, or DOCX) and we'll extract the information to create an enhanced, tailored version.
+              Upload your resume file or paste the text directly below. We'll extract the information to create an enhanced, tailored version.
             </Typography>
+
+            {/* File Upload Section */}
             <Box
               component="label"
               sx={{
@@ -194,15 +196,15 @@ function UploadResumeModal({ open, onClose }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 textAlign: 'center',
-                border: formData.extractedText ? '2px solid #4caf50' : '2px dashed #333',
+                border: formData.extractedText && formData.uploadedFile ? '2px solid #4caf50' : '2px dashed #333',
                 borderRadius: 1,
-                backgroundColor: formData.extractedText ? '#1a2e1a' : '#1a1a1a',
+                backgroundColor: formData.extractedText && formData.uploadedFile ? '#1a2e1a' : '#1a1a1a',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 userSelect: 'none',
                 '&:hover': {
-                  borderColor: formData.extractedText ? '#4caf50' : '#fdbb2d',
-                  backgroundColor: formData.extractedText ? '#1a2e1a' : '#252525',
+                  borderColor: formData.extractedText && formData.uploadedFile ? '#4caf50' : '#fdbb2d',
+                  backgroundColor: formData.extractedText && formData.uploadedFile ? '#1a2e1a' : '#252525',
                 },
               }}
             >
@@ -213,7 +215,7 @@ function UploadResumeModal({ open, onClose }) {
                 onChange={handleFileUpload}
                 disabled={loading}
               />
-              {formData.extractedText ? (
+              {formData.extractedText && formData.uploadedFile ? (
                 <>
                   <CheckCircleIcon sx={{ fontSize: 80, color: '#4caf50', mb: 2 }} />
                   <Typography variant="h6" sx={{ mb: 1, color: '#4caf50' }}>
@@ -248,12 +250,55 @@ function UploadResumeModal({ open, onClose }) {
                 <>
                   <CloudUploadIcon sx={{ fontSize: 80, color: '#fdbb2d', mb: 2 }} />
                   <Typography variant="h6" sx={{ mb: 0.5 }}>
-                    Click to upload
+                    Click to upload file
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     PDF, DOC, or DOCX (Max 25MB)
                   </Typography>
                 </>
+              )}
+            </Box>
+
+            {/* OR Divider */}
+            <Box sx={{ display: 'flex', alignItems: 'center', my: 3 }}>
+              <Box sx={{ flex: 1, height: '1px', backgroundColor: '#333' }} />
+              <Typography variant="body2" color="text.secondary" sx={{ mx: 2 }}>
+                OR
+              </Typography>
+              <Box sx={{ flex: 1, height: '1px', backgroundColor: '#333' }} />
+            </Box>
+
+            {/* Text Paste Section */}
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                Paste your resume text directly:
+              </Typography>
+              <TextField
+                fullWidth
+                multiline
+                rows={8}
+                placeholder="Paste your existing resume here...&#10;&#10;Include all sections: work experience, education, skills, etc."
+                value={formData.extractedText && !formData.uploadedFile ? formData.extractedText : ''}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    extractedText: e.target.value,
+                    uploadedFile: null // Clear file upload if pasting text
+                  }));
+                }}
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: formData.extractedText && !formData.uploadedFile ? '#1a2e1a' : 'transparent',
+                    borderColor: formData.extractedText && !formData.uploadedFile ? '#4caf50' : '#333',
+                  }
+                }}
+                disabled={loading}
+              />
+              {formData.extractedText && !formData.uploadedFile && (
+                <Typography variant="caption" color="success.main" sx={{ mt: 1, display: 'block' }}>
+                  ✅ {(formData.extractedText.length / 1000).toFixed(1)}k characters pasted
+                </Typography>
               )}
             </Box>
           </Box>

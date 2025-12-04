@@ -393,11 +393,25 @@ function ConversationalWizard({ onComplete }) {
 
       {/* NEW: Existing Resume Input (Optional) */}
       <Box sx={{ mb: 3 }}>
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+            💡 Optional but Highly Recommended
+          </Typography>
+          <Typography variant="body2">
+            Providing your existing resume will significantly improve your results:
+          </Typography>
+          <Box component="ul" sx={{ mt: 1, mb: 0, pl: 2 }}>
+            <li><strong>Better Quality:</strong> I'll ask more targeted questions based on your actual experience</li>
+            <li><strong>Faster Process:</strong> Save 50% of your time (5-8 min vs 10-15 min)</li>
+            <li><strong>Gap Analysis:</strong> I'll focus only on what's missing for the target job</li>
+          </Box>
+          <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+            Without a resume, questions will be more generic and results may not be as tailored.
+          </Typography>
+        </Alert>
+
         <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
-          Existing Resume (Optional - Highly Recommended)
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          💡 Upload or paste your current resume to skip redundant questions and save 50% of your time (5-8 min vs 10-15 min)
+          Upload or Paste Your Resume
         </Typography>
 
         {/* File Upload Section */}

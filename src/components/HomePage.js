@@ -23,7 +23,7 @@ function HomePage({ onStart }) {
     const checkResumes = async () => {
       try {
         const axiosInstance = await createAuthAxios();
-        const response = await axiosInstance.get('/resume');
+        const response = await axiosInstance.get('/resume/list');
         setHasResumes(response.data.resumes && response.data.resumes.length > 0);
       } catch (error) {
         console.error('Error checking resumes:', error);
