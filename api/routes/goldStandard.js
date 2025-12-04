@@ -283,7 +283,7 @@ router.post('/complete', verifyFirebaseToken, checkGoldAccess, async (req, res) 
              category = $2,
              themes = $3,
              skills_demonstrated = $4,
-             personality_signals = $5,
+             personality_signals = $5::jsonb,
              relevance_tags = $6,
              embedding = $7::vector
          WHERE user_id = $8::uuid AND profile_id = $9::uuid AND question_type = $10`,
