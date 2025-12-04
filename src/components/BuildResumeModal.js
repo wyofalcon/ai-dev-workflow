@@ -20,7 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.js';
 import { useNavigate } from 'react-router-dom';
 
 const RESUME_SECTIONS = [
