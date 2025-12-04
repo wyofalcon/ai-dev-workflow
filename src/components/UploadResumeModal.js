@@ -20,6 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,30 +37,23 @@ const RESUME_SECTIONS = [
   'Languages',
 ];
 
-function BuildResumeModal({ open, onClose }) {
+function UploadResumeModal({ open, onClose }) {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
+    uploadedFile: null,
+    extractedText: '',
     jobPosting: '',
-    uploadedResume: null,
-    uploadedResumeText: '',
     selectedSections: ['Professional Summary', 'Work Experience', 'Education', 'Skills'],
-    personalInfo: {
-      fullName: '',
-      email: '',
-      phone: '',
-      location: '',
-    },
   });
 
   const steps = [
-    'Job Posting',
-    'Upload Resume (Optional)',
+    'Upload Resume',
+    'Target Job Posting',
     'Select Sections',
-    'Personal Information',
     'Review & Generate',
   ];
 
@@ -76,16 +70,10 @@ function BuildResumeModal({ open, onClose }) {
     setLoading(false);
     setError(null);
     setFormData({
+      uploadedFile: null,
+      extractedText: '',
       jobPosting: '',
-      uploadedResume: null,
-      uploadedResumeText: '',
       selectedSections: ['Professional Summary', 'Work Experience', 'Education', 'Skills'],
-      personalInfo: {
-        fullName: '',
-        email: '',
-        phone: '',
-        location: '',
-      },
     });
     onClose();
   };
@@ -101,42 +89,47 @@ function BuildResumeModal({ open, onClose }) {
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      setFormData((prev) => ({ ...prev, uploadedResume: file }));
+    if (!file) return;
 
-      // Extract text from uploaded resume
-      try {
-        setLoading(true);
-        setError(null);
+    setFormData((prev) => ({ ...prev, uploadedFile: file }));
 
-        const token = await currentUser.getIdToken();
-        const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
-        const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
+    // Extract text from uploaded resume
+    try {
+      setLoading(true);
+      setError(null);
 
-        const formData = new FormData();
-        formData.append('resumes', file);
+      const token = await currentUser.getIdToken();
+      const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
+      const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
 
-        const response = await fetch(`${API_URL}/resume/extract-text`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-          body: formData
-        });
+      const formDataUpload = new FormData();
+      formDataUpload.append('resumes', file);
 
-        if (!response.ok) {
-          throw new Error('Failed to extract text from resume');
-        }
+      const response = await fetch(`${API_URL}/resume/extract-text`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataUpload
+      });
 
-        const data = await response.json();
-        setFormData((prev) => ({ ...prev, uploadedResumeText: data.text }));
-
-      } catch (err) {
-        console.error('Error extracting resume text:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error('Failed to extract text from resume');
       }
+
+      const data = await response.json();
+      setFormData((prev) => ({ ...prev, extractedText: data.text }));
+
+      // Auto-advance to next step on successful upload
+      setTimeout(() => {
+        setActiveStep(1);
+      }, 500);
+
+    } catch (err) {
+      console.error('Error extracting resume text:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -149,23 +142,22 @@ function BuildResumeModal({ open, onClose }) {
       const API_BASE = process.env.REACT_APP_API_URL || 'https://cvstomize-api-351889420459.us-central1.run.app';
       const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
 
-      const response = await fetch(`${API_URL}/resume/build-new`, {
+      const response = await fetch(`${API_URL}/resume/enhance-uploaded`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          extractedResumeText: formData.extractedText,
           jobPosting: formData.jobPosting,
-          selectedSections: formData.selectedSections,
-          personalInfo: formData.personalInfo,
-          uploadedResumeText: formData.uploadedResumeText || null
+          selectedSections: formData.selectedSections
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate resume');
+        throw new Error(errorData.error || 'Failed to enhance resume');
       }
 
       const data = await response.json();
@@ -175,7 +167,7 @@ function BuildResumeModal({ open, onClose }) {
       navigate(`/resume/${data.resume.id}`);
 
     } catch (err) {
-      console.error('Error generating resume:', err);
+      console.error('Error enhancing resume:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -188,50 +180,29 @@ function BuildResumeModal({ open, onClose }) {
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
-              Paste the Job Posting
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Copy and paste the full job description you're applying for. This helps CVstomize tailor your resume perfectly.
-            </Typography>
-            <TextField
-              fullWidth
-              multiline
-              rows={12}
-              placeholder="Paste the job posting here..."
-              value={formData.jobPosting}
-              onChange={(e) => setFormData({ ...formData, jobPosting: e.target.value })}
-              variant="outlined"
-            />
-          </Box>
-        );
-
-      case 1:
-        return (
-          <Box>
-            <Typography variant="h6" gutterBottom>
-              Upload Existing Resume (Optional)
+              Upload Your Existing Resume
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Have an existing resume? Upload it and we'll extract the information. Otherwise, we'll guide you through creating one from scratch.
+              Upload your resume (PDF, DOC, or DOCX) and we'll extract the information to create an enhanced, tailored version.
             </Typography>
             <Box
               component="label"
               sx={{
-                p: 4,
+                p: 6,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 textAlign: 'center',
-                border: '2px dashed #333',
+                border: formData.extractedText ? '2px solid #4caf50' : '2px dashed #333',
                 borderRadius: 1,
-                backgroundColor: '#1a1a1a',
+                backgroundColor: formData.extractedText ? '#1a2e1a' : '#1a1a1a',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 userSelect: 'none',
                 '&:hover': {
-                  borderColor: '#fdbb2d',
-                  backgroundColor: '#252525',
+                  borderColor: formData.extractedText ? '#4caf50' : '#fdbb2d',
+                  backgroundColor: formData.extractedText ? '#1a2e1a' : '#252525',
                 },
               }}
             >
@@ -240,17 +211,72 @@ function BuildResumeModal({ open, onClose }) {
                 hidden
                 accept=".pdf,.doc,.docx"
                 onChange={handleFileUpload}
+                disabled={loading}
               />
-              <CloudUploadIcon sx={{ fontSize: 60, color: '#fdbb2d', mb: 2 }} />
-              <Typography variant="body1" sx={{ mb: 0.5 }}>
-                {formData.uploadedResume
-                  ? `Selected: ${formData.uploadedResume.name}`
-                  : 'Click to upload'}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                PDF, DOC, or DOCX (Max 10MB)
-              </Typography>
+              {formData.extractedText ? (
+                <>
+                  <CheckCircleIcon sx={{ fontSize: 80, color: '#4caf50', mb: 2 }} />
+                  <Typography variant="h6" sx={{ mb: 1, color: '#4caf50' }}>
+                    Resume Uploaded Successfully!
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 0.5 }}>
+                    {formData.uploadedFile.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(formData.extractedText.length / 1000).toFixed(1)}k characters extracted
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    sx={{ mt: 2 }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setFormData((prev) => ({ ...prev, uploadedFile: null, extractedText: '' }));
+                    }}
+                  >
+                    Upload Different File
+                  </Button>
+                </>
+              ) : loading ? (
+                <>
+                  <CircularProgress size={60} sx={{ mb: 2 }} />
+                  <Typography variant="body1">
+                    Extracting text from resume...
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <CloudUploadIcon sx={{ fontSize: 80, color: '#fdbb2d', mb: 2 }} />
+                  <Typography variant="h6" sx={{ mb: 0.5 }}>
+                    Click to upload
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    PDF, DOC, or DOCX (Max 25MB)
+                  </Typography>
+                </>
+              )}
             </Box>
+          </Box>
+        );
+
+      case 1:
+        return (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Target Job Posting
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Paste the full job description you're applying for. We'll tailor your resume to match this role.
+            </Typography>
+            <TextField
+              fullWidth
+              multiline
+              rows={14}
+              placeholder="Paste the job posting here..."
+              value={formData.jobPosting}
+              onChange={(e) => setFormData({ ...formData, jobPosting: e.target.value })}
+              variant="outlined"
+            />
           </Box>
         );
 
@@ -261,7 +287,7 @@ function BuildResumeModal({ open, onClose }) {
               Select Resume Sections
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Choose which sections you want to include in your resume. You can always customize this later.
+              Choose which sections to include in your enhanced resume.
             </Typography>
             <FormGroup>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -284,93 +310,28 @@ function BuildResumeModal({ open, onClose }) {
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
-              Personal Information
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Provide your contact information. This will appear at the top of your resume.
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
-                fullWidth
-                label="Full Name"
-                value={formData.personalInfo.fullName}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    personalInfo: { ...formData.personalInfo, fullName: e.target.value },
-                  })
-                }
-              />
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={formData.personalInfo.email}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    personalInfo: { ...formData.personalInfo, email: e.target.value },
-                  })
-                }
-              />
-              <TextField
-                fullWidth
-                label="Phone Number"
-                value={formData.personalInfo.phone}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    personalInfo: { ...formData.personalInfo, phone: e.target.value },
-                  })
-                }
-              />
-              <TextField
-                fullWidth
-                label="Location (City, State)"
-                value={formData.personalInfo.location}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    personalInfo: { ...formData.personalInfo, location: e.target.value },
-                  })
-                }
-              />
-            </Box>
-          </Box>
-        );
-
-      case 4:
-        return (
-          <Box>
-            <Typography variant="h6" gutterBottom>
               Review & Generate
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Review your selections and click "Generate Resume" to create your AI-powered resume.
+              Review your selections and click "Enhance Resume" to generate your optimized resume.
             </Typography>
             <Paper sx={{ p: 2, backgroundColor: '#1a1a1a', mb: 2 }}>
+              <Typography variant="subtitle2" color="secondary">Uploaded Resume:</Typography>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                {formData.uploadedFile?.name || 'None'}
+              </Typography>
+
               <Typography variant="subtitle2" color="secondary">Job Posting:</Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
+              <Typography variant="body2" sx={{ mb: 2 }}>
                 {formData.jobPosting ? `${formData.jobPosting.substring(0, 100)}...` : 'Not provided'}
               </Typography>
-              
-              <Typography variant="subtitle2" color="secondary" sx={{ mt: 2 }}>Uploaded Resume:</Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                {formData.uploadedResume ? formData.uploadedResume.name : 'None'}
-              </Typography>
-              
-              <Typography variant="subtitle2" color="secondary" sx={{ mt: 2 }}>Selected Sections:</Typography>
+
+              <Typography variant="subtitle2" color="secondary">Selected Sections:</Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
                 {formData.selectedSections.map((section) => (
                   <Chip key={section} label={section} size="small" color="secondary" />
                 ))}
               </Box>
-              
-              <Typography variant="subtitle2" color="secondary" sx={{ mt: 2 }}>Personal Info:</Typography>
-              <Typography variant="body2">
-                {formData.personalInfo.fullName || 'Not provided'}
-                {formData.personalInfo.email && ` • ${formData.personalInfo.email}`}
-              </Typography>
             </Paper>
           </Box>
         );
@@ -394,17 +355,17 @@ function BuildResumeModal({ open, onClose }) {
       }}
     >
       <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333' }}>
-        <Typography variant="h6">Build New Resume</Typography>
+        <Typography variant="h6">Upload & Enhance Resume</Typography>
         <IconButton onClick={handleClose}>
           <CloseIcon />
         </IconButton>
       </Box>
 
-      <Stepper 
-        activeStep={activeStep} 
-        sx={{ 
-          pt: 3, 
-          pb: 2, 
+      <Stepper
+        activeStep={activeStep}
+        sx={{
+          pt: 3,
+          pb: 2,
           px: 2,
           '& .MuiStepConnector-line': {
             borderColor: '#333',
@@ -441,15 +402,15 @@ function BuildResumeModal({ open, onClose }) {
         <Button
           variant="contained"
           color="secondary"
-          disabled={loading}
+          disabled={loading || (activeStep === 0 && !formData.extractedText) || (activeStep === 1 && !formData.jobPosting)}
           onClick={activeStep === steps.length - 1 ? handleGenerate : handleNext}
           endIcon={loading ? <CircularProgress size={20} /> : (activeStep === steps.length - 1 ? null : <ArrowForwardIcon />)}
         >
-          {activeStep === steps.length - 1 ? 'Generate Resume' : 'Next'}
+          {activeStep === steps.length - 1 ? 'Enhance Resume' : 'Next'}
         </Button>
       </Box>
     </Dialog>
   );
 }
 
-export default BuildResumeModal;
+export default UploadResumeModal;

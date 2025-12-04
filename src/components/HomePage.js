@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Box, Button, Typography, Tooltip, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import BuildIcon from '@mui/icons-material/Build';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import TargetIcon from '@mui/icons-material/TrackChanges';
 import HomeGraphic from './HomeGraphic.js';
 import BuildResumeModal from './BuildResumeModal.js';
+import UploadResumeModal from './UploadResumeModal.js';
 import { useAuth } from '../contexts/AuthContext.js';
 
 function HomePage({ onStart }) {
@@ -12,6 +14,7 @@ function HomePage({ onStart }) {
   const { createAuthAxios } = useAuth();
   const [hoveredOption, setHoveredOption] = useState(null);
   const [showBuildModal, setShowBuildModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [hasResumes, setHasResumes] = useState(false);
   const [loadingResumes, setLoadingResumes] = useState(true);
 
@@ -38,7 +41,7 @@ function HomePage({ onStart }) {
       id: 'build',
       title: 'BUILD NEW RESUME/CV',
       icon: <BuildIcon sx={{ fontSize: 40 }} />,
-      tooltip: "Start from scratch! CVstomize will guide you through building a professional resume step-by-step.",
+      tooltip: "Start from scratch! CVstomize will guide you through building a professional resume step-by-step. Great for creating your first resume.",
       action: () => setShowBuildModal(true),
       color: '#9d99e5',
       disabled: false,
@@ -46,18 +49,18 @@ function HomePage({ onStart }) {
     {
       id: 'upload',
       title: 'UPLOAD EXISTING RESUME/CV',
-      icon: <BuildIcon sx={{ fontSize: 40 }} />,
-      tooltip: "Already have a resume? Upload it and CVstomize will extract your information to create optimized versions.",
-      action: () => setShowBuildModal(true),
+      icon: <CloudUploadIcon sx={{ fontSize: 40 }} />,
+      tooltip: "Already have a resume? Upload it (PDF, DOC, DOCX) and CVstomize will extract your information and create an enhanced, ATS-optimized version tailored to your target job.",
+      action: () => setShowUploadModal(true),
       color: '#7c78d8',
       disabled: false,
     },
     {
       id: 'tailor',
-      title: 'TAILOR TO SPECIFIC JOB',
+      title: 'TAILOR TO SPECIFIC JOB (GOLD STANDARD)',
       icon: <TargetIcon sx={{ fontSize: 40 }} />,
-      tooltip: hasResumes 
-        ? "Have at least one resume already? CVstomize will ask you a few questions and generate a tailored resume specific to your job posting!"
+      tooltip: hasResumes
+        ? "🎯 PREMIUM: Personality-authentic resume generation with 90%+ job match accuracy. Uses Gold Standard personality assessment + AI-powered story retrieval to make you a must-interview candidate!"
         : "You need at least 1 resume/CV saved before using this option.",
       action: () => hasResumes && navigate('/create-resume'),
       color: '#fdbb2d',
@@ -170,6 +173,7 @@ function HomePage({ onStart }) {
       </Typography>
 
       <BuildResumeModal open={showBuildModal} onClose={() => setShowBuildModal(false)} />
+      <UploadResumeModal open={showUploadModal} onClose={() => setShowUploadModal(false)} />
     </Box>
   );
 }

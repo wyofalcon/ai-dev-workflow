@@ -539,6 +539,342 @@ router.post('/generate',
 });
 
 /**
+ * POST /api/resume/build-new
+ * Build a generic resume from scratch without personality assessment
+ * Used by "Build New Resume" flow in BuildResumeModal
+ */
+router.post('/build-new',
+  verifyFirebaseToken,
+  isDevUnlimitedEnabled() ? bypassResumeLimit : (req, res, next) => next(),
+  async (req, res, next) => {
+    try {
+      const { user } = req;
+
+      // Check resume limit
+      const userRecord = await prisma.user.findUnique({
+        where: { firebaseUid: user.firebaseUid },
+        select: {
+          id: true,
+          resumesGenerated: true,
+          resumesLimit: true,
+          subscriptionTier: true,
+          email: true,
+          displayName: true
+        }
+      });
+
+      if (userRecord.resumesGenerated >= userRecord.resumesLimit) {
+        return res.status(403).json({
+          error: 'Resume limit reached',
+          message: `You've used ${userRecord.resumesGenerated}/${userRecord.resumesLimit} resumes. Upgrade for unlimited.`,
+          upgradeUrl: '/pricing'
+        });
+      }
+
+      // Extract input from BuildResumeModal
+      const { jobPosting, selectedSections, personalInfo, uploadedResumeText } = req.body;
+
+      if (!jobPosting || !selectedSections || selectedSections.length === 0) {
+        return res.status(400).json({ error: 'Job posting and sections required' });
+      }
+
+      const startTime = Date.now();
+
+      // Load user profile (if exists)
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { userId: userRecord.id },
+        select: {
+          fullName: true,
+          phone: true,
+          location: true,
+          linkedinUrl: true
+        }
+      });
+
+      // Merge personal info from modal with user profile (modal takes precedence)
+      const contactInfo = {
+        name: personalInfo?.fullName || userRecord.displayName || userProfile?.fullName || 'Professional',
+        email: personalInfo?.email || userRecord.email || 'your.email@example.com',
+        phone: personalInfo?.phone || userProfile?.phone || '',
+        location: personalInfo?.location || userProfile?.location || '',
+        linkedin: userProfile?.linkedinUrl || ''
+      };
+
+      // Build generic resume prompt (NO personality assessment)
+      const prompt = `You are an expert resume writer. Create a professional ATS-optimized resume for the following job posting.
+
+**CONTACT INFORMATION:**
+${contactInfo.name}
+${[contactInfo.location, contactInfo.phone, contactInfo.email, contactInfo.linkedin].filter(x => x).join(' | ')}
+
+**JOB POSTING:**
+${jobPosting}
+
+**SECTIONS TO INCLUDE:**
+${selectedSections.join(', ')}
+
+${uploadedResumeText ? `**EXISTING RESUME CONTENT (for reference):**\n${uploadedResumeText}\n\n` : ''}
+
+**INSTRUCTIONS:**
+1. Create a professional, ATS-friendly resume targeting this job posting
+2. Include ONLY these sections: ${selectedSections.join(', ')}
+3. Use strong action verbs and quantify achievements where possible
+4. Optimize for ATS by using keywords from the job description
+5. Keep format simple: Use markdown with clear headers (# for name, ## for sections)
+6. ${uploadedResumeText ? 'Use the existing resume content as a foundation, but enhance and tailor it for this job' : 'Create compelling content from scratch based on typical requirements for this role'}
+
+**FORMAT:**
+\`\`\`markdown
+# ${contactInfo.name}
+${[contactInfo.location, contactInfo.phone, contactInfo.email, contactInfo.linkedin].filter(x => x).join(' | ')}
+
+---
+
+## Professional Summary
+[2-3 sentence compelling summary]
+
+[Additional sections as specified]
+\`\`\`
+
+Return ONLY the markdown resume. NO preamble, NO explanations.`;
+
+      // Generate with Gemini Flash (faster, cheaper for generic resumes)
+      console.log('Generating generic resume with Gemini 2.0 Flash...');
+      const model = geminiServiceVertex.getFlashModel();
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+
+      let resumeMarkdown = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (!resumeMarkdown) throw new Error('No content generated');
+
+      // Clean Gemini response
+      resumeMarkdown = resumeMarkdown.replace(/^```markdown\n?/i, '').replace(/\n?```$/i, '');
+      resumeMarkdown = resumeMarkdown.replace(/^(Of course\.|Sure\.|Here is|Here's|I've created|I'll create|Let me create).*?(\n---|\n#)/is, '$2');
+      resumeMarkdown = resumeMarkdown.trim();
+
+      const tokensUsed = response.usageMetadata?.totalTokenCount || 0;
+      const generationTime = Date.now() - startTime;
+
+      // ATS Analysis
+      console.log('Analyzing ATS keyword coverage...');
+      const jobKeywords = atsOptimizer.extractKeywords(jobPosting);
+      const atsAnalysis = atsOptimizer.calculateCoverage(jobKeywords, resumeMarkdown);
+      const atsFormatting = atsOptimizer.validateATSFormatting(resumeMarkdown);
+
+      // Save to database
+      const resume = await prisma.resume.create({
+        data: {
+          userId: userRecord.id,
+          title: 'Generic Resume',
+          jobDescription: jobPosting,
+          resumeMarkdown,
+          modelUsed: 'gemini-2.0-flash',
+          tokensUsed,
+          generationTimeMs: generationTime,
+          costUsd: (tokensUsed / 1000000) * 0.15,
+          status: 'generated'
+        }
+      });
+
+      // Increment counter
+      await prisma.user.update({
+        where: { id: userRecord.id },
+        data: { resumesGenerated: { increment: 1 }, updatedAt: new Date() }
+      });
+
+      console.log('Generic resume saved:', resume.id);
+
+      return res.status(201).json({
+        success: true,
+        resume: {
+          id: resume.id,
+          title: resume.title,
+          markdown: resumeMarkdown,
+          createdAt: resume.createdAt
+        },
+        atsAnalysis: {
+          coverage: atsAnalysis.coveragePercentage,
+          score: atsFormatting.score,
+          isATSFriendly: atsFormatting.isATSFriendly
+        },
+        usage: {
+          resumesGenerated: userRecord.resumesGenerated + 1,
+          resumesLimit: userRecord.resumesLimit,
+          remaining: Math.max(0, userRecord.resumesLimit - userRecord.resumesGenerated - 1)
+        },
+        metadata: {
+          tokensUsed,
+          generationTimeMs: generationTime,
+          personalityUsed: false,
+          atsOptimized: true,
+          type: 'generic-build'
+        }
+      });
+
+    } catch (error) {
+      console.error('Build new resume error:', error);
+      next(error);
+    }
+  });
+
+/**
+ * POST /api/resume/enhance-uploaded
+ * Upload existing resume → extract text → enhance and tailor to job posting
+ * Used by "Upload Existing Resume" flow
+ */
+router.post('/enhance-uploaded',
+  verifyFirebaseToken,
+  isDevUnlimitedEnabled() ? bypassResumeLimit : (req, res, next) => next(),
+  async (req, res, next) => {
+    try {
+      const { user } = req;
+
+      // Check resume limit
+      const userRecord = await prisma.user.findUnique({
+        where: { firebaseUid: user.firebaseUid },
+        select: {
+          id: true,
+          resumesGenerated: true,
+          resumesLimit: true,
+          subscriptionTier: true,
+          email: true,
+          displayName: true
+        }
+      });
+
+      if (userRecord.resumesGenerated >= userRecord.resumesLimit) {
+        return res.status(403).json({
+          error: 'Resume limit reached',
+          message: `You've used ${userRecord.resumesGenerated}/${userRecord.resumesLimit} resumes. Upgrade for unlimited.`,
+          upgradeUrl: '/pricing'
+        });
+      }
+
+      // Extract input
+      const { extractedResumeText, jobPosting, selectedSections } = req.body;
+
+      if (!extractedResumeText || !jobPosting || !selectedSections || selectedSections.length === 0) {
+        return res.status(400).json({ error: 'Extracted resume text, job posting, and sections required' });
+      }
+
+      const startTime = Date.now();
+
+      // Build enhancement prompt (NO personality assessment)
+      const prompt = `You are an expert resume writer. You are given an EXISTING RESUME and a TARGET JOB POSTING. Your task is to enhance and tailor the resume for the job.
+
+**EXISTING RESUME:**
+${extractedResumeText}
+
+**TARGET JOB POSTING:**
+${jobPosting}
+
+**SECTIONS TO INCLUDE:**
+${selectedSections.join(', ')}
+
+**INSTRUCTIONS:**
+1. Extract the candidate's name, contact info, work experience, education, and skills from the existing resume
+2. Enhance and rewrite the content to align with the target job posting
+3. Optimize for ATS by incorporating keywords from the job description
+4. Strengthen bullet points with action verbs and quantified achievements
+5. Reorder and emphasize experience relevant to the target role
+6. Include ONLY these sections: ${selectedSections.join(', ')}
+7. Keep format simple: Use markdown with clear headers (# for name, ## for sections)
+
+**FORMAT:**
+\`\`\`markdown
+# [Candidate Name]
+[Contact Information]
+
+---
+
+## Professional Summary
+[Enhanced 2-3 sentence summary targeting this job]
+
+[Additional sections as specified]
+\`\`\`
+
+Return ONLY the markdown resume. NO preamble, NO explanations.`;
+
+      // Generate with Gemini Flash (faster, cheaper)
+      console.log('Enhancing uploaded resume with Gemini 2.0 Flash...');
+      const model = geminiServiceVertex.getFlashModel();
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+
+      let resumeMarkdown = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (!resumeMarkdown) throw new Error('No content generated');
+
+      // Clean Gemini response
+      resumeMarkdown = resumeMarkdown.replace(/^```markdown\n?/i, '').replace(/\n?```$/i, '');
+      resumeMarkdown = resumeMarkdown.replace(/^(Of course\.|Sure\.|Here is|Here's|I've created|I'll create|Let me create).*?(\n---|\n#)/is, '$2');
+      resumeMarkdown = resumeMarkdown.trim();
+
+      const tokensUsed = response.usageMetadata?.totalTokenCount || 0;
+      const generationTime = Date.now() - startTime;
+
+      // ATS Analysis
+      console.log('Analyzing ATS keyword coverage...');
+      const jobKeywords = atsOptimizer.extractKeywords(jobPosting);
+      const atsAnalysis = atsOptimizer.calculateCoverage(jobKeywords, resumeMarkdown);
+      const atsFormatting = atsOptimizer.validateATSFormatting(resumeMarkdown);
+
+      // Save to database
+      const resume = await prisma.resume.create({
+        data: {
+          userId: userRecord.id,
+          title: 'Enhanced Resume',
+          jobDescription: jobPosting,
+          resumeMarkdown,
+          modelUsed: 'gemini-2.0-flash',
+          tokensUsed,
+          generationTimeMs: generationTime,
+          costUsd: (tokensUsed / 1000000) * 0.15,
+          status: 'generated'
+        }
+      });
+
+      // Increment counter
+      await prisma.user.update({
+        where: { id: userRecord.id },
+        data: { resumesGenerated: { increment: 1 }, updatedAt: new Date() }
+      });
+
+      console.log('Enhanced resume saved:', resume.id);
+
+      return res.status(201).json({
+        success: true,
+        resume: {
+          id: resume.id,
+          title: resume.title,
+          markdown: resumeMarkdown,
+          createdAt: resume.createdAt
+        },
+        atsAnalysis: {
+          coverage: atsAnalysis.coveragePercentage,
+          score: atsFormatting.score,
+          isATSFriendly: atsFormatting.isATSFriendly
+        },
+        usage: {
+          resumesGenerated: userRecord.resumesGenerated + 1,
+          resumesLimit: userRecord.resumesLimit,
+          remaining: Math.max(0, userRecord.resumesLimit - userRecord.resumesGenerated - 1)
+        },
+        metadata: {
+          tokensUsed,
+          generationTimeMs: generationTime,
+          personalityUsed: false,
+          atsOptimized: true,
+          type: 'enhanced-upload'
+        }
+      });
+
+    } catch (error) {
+      console.error('Enhance uploaded resume error:', error);
+      next(error);
+    }
+  });
+
+/**
  * POST /api/resume/analyze-jd
  * Analyze job description and generate targeted questions
  */
