@@ -30,20 +30,15 @@ async function generateEmbedding(text) {
       throw new Error('Text cannot be empty');
     }
 
-    // Get the embedding model
-    const model = vertexAI.preview.getGenerativeModel({
+    // Get the text embedding model (different from generative models)
+    const model = vertexAI.getGenerativeModel({
       model: EMBEDDING_MODEL
     });
 
     console.log(`🔢 Generating embedding for text (${text.length} chars)...`);
 
-    // Generate embedding using embedContent method
-    const result = await model.embedContent({
-      content: [{
-        role: 'user',
-        parts: [{ text }]
-      }]
-    });
+    // Generate embedding using embedContent method with correct format
+    const result = await model.embedContent(text);
 
     // Extract embedding vector
     const embedding = result.embedding?.values;
