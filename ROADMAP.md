@@ -10,11 +10,15 @@
 
 ## 📍 CURRENT STATUS
 
-### ✅ SESSION 34: Critical Timeout Bug Fixed - Gold Standard Now Production Ready (Dec 5, 2025)
+### ✅ SESSION 34: Critical Bugs Fixed - Gold Standard Backend Validated (Dec 5, 2025)
 
-**Status:** ✅ PRODUCTION BUG FIXED | ✅ DEPLOYED | ✅ READY FOR USER TESTING
+**Status:** ✅ PRODUCTION BUG FIXED | ✅ BACKEND TESTED | ✅ ROUTING FIXED | ⚠️ UX ISSUES DISCOVERED
 
-**Critical Fix:** Resume generation timeout at `/api/conversation/complete` endpoint - **RESOLVED**
+**Critical Fixes Completed:**
+
+1. **Timeout Bug Fixed** - Resume generation timeout at `/api/conversation/complete` endpoint - **RESOLVED**
+2. **Database Schema Fixed** - Added missing columns to `user_profiles` table - **RESOLVED**
+3. **Gold Standard Routing Fixed** - HomePage now routes to `/gold-standard` instead of `/create-resume` - **RESOLVED**
 
 **What Was Fixed:**
 
@@ -52,10 +56,133 @@
 - ✅ Production Gold Standard feature now usable end-to-end
 - ✅ Session 33 critical blocker resolved
 
-**Next Steps:**
-1. User testing with test account (claude.test.20250403@example.com)
-2. Monitor Cloud Run logs for Gemini API performance
-3. Optional: Implement Phase 2-4 personality enhancements
+**Backend Testing Completed:**
+- ✅ BFI-20 Likert scoring algorithm validated
+- ✅ Weighted fusion (70% Likert + 30% Narrative) working correctly
+- ✅ Derived work preferences calculating properly
+- ✅ Test output: Openness 81, Conscientiousness 85, Extraversion 59, Agreeableness 85, Neuroticism 33
+
+**Deployment:**
+- Backend API: cvstomize-api-00144-pjg ✅ (with timeout fix + schema fix)
+- Frontend: cvstomize-frontend-00036-d5c ✅ (with Gold Standard routing fix)
+- Database: 4 columns added to user_profiles table
+- URL: https://cvstomize-frontend-351889420459.us-central1.run.app
+
+**UX Issues Discovered During Testing:**
+
+1. **❌ CRITICAL: Redundant Personality Assessment**
+   - Problem: Gold Standard wizard ALWAYS runs full 35-question assessment
+   - Impact: Users waste 20-30 minutes every time they generate a resume
+   - Root Cause: Frontend doesn't check `personality_profiles.is_complete` flag
+   - Backend Already Supports: `/api/gold-standard/start` returns `already_complete` status
+   - Fix Required: Frontend needs to skip to resume generation if profile exists
+
+2. **❌ ENHANCEMENT: No Resume Context Integration**
+   - Problem: Gold Standard doesn't pull from uploaded/generated resumes
+   - Impact: Missing valuable context from user's work history
+   - Current: Only uses 8 stories from personality assessment
+   - Should Use: User's `uploaded_resumes` and `resumes` tables (limit 3-5 recent)
+   - Benefit: More comprehensive resume content with consistency across versions
+
+**Documents Created:**
+- [GOLD_STANDARD_TEST_RESULTS.md](GOLD_STANDARD_TEST_RESULTS.md) - Backend validation results
+- [GOLD_STANDARD_UI_TEST_PLAN.md](GOLD_STANDARD_UI_TEST_PLAN.md) - Comprehensive UI testing guide
+- [GOLD_VS_FREE_COMPARISON_TEST.md](GOLD_VS_FREE_COMPARISON_TEST.md) - Side-by-side comparison test
+- [TIMEOUT_FIX_TEST_PLAN.md](TIMEOUT_FIX_TEST_PLAN.md) - Updated with all fixes
+
+---
+
+### 📋 SESSION 35: Gold Standard UX Improvements (NEXT SESSION)
+
+**Priority:** HIGH - Critical UX issues blocking optimal user experience
+
+**Tasks:**
+
+**1. Fix Redundant Personality Assessment (Priority 1 - Critical)**
+- **Estimated Time:** 2-3 hours
+- **Files to Modify:**
+  - `src/components/GoldStandardWizard.js` - Add profile completion check
+  - `src/components/HomePage.js` - Show "Profile Complete" status
+  - `src/components/UserProfilePage.js` - Add "Retake Assessment" option
+- **Implementation:**
+  ```javascript
+  // GoldStandardWizard.js - Check on mount
+  useEffect(() => {
+    const checkProfileStatus = async () => {
+      const response = await createAuthAxios().get('/gold-standard/status');
+      if (response.data.isComplete) {
+        setShowResults(true);
+        setResults(response.data.profile);
+        // Skip to resume generation
+      }
+    };
+    checkProfileStatus();
+  }, []);
+  ```
+- **User Flow After Fix:**
+  - First time: Complete 35-question assessment
+  - Subsequent times: Skip directly to job description + resume generation
+  - Optional: "Retake Assessment" button in profile settings
+- **Success Criteria:**
+  - ✅ User completes assessment once only
+  - ✅ Resume generation takes <5 minutes (not 25+ minutes)
+  - ✅ Clear messaging: "Using your existing personality profile"
+
+**2. Integrate Resume Context Pool (Priority 2 - Enhancement)**
+- **Estimated Time:** 3-4 hours
+- **Files to Modify:**
+  - `api/routes/goldStandard.js` - Add resume context fetching
+  - `api/services/resumeGenerator.js` - Include resume history in prompts
+- **Implementation:**
+  ```javascript
+  // Fetch recent resume context
+  const recentResumes = await prisma.uploadedResume.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+    take: 3,
+    select: { parsedData: true, rawText: true }
+  });
+
+  // Extract and deduplicate skills/experience
+  const resumeContext = {
+    skills: [...new Set(recentResumes.flatMap(r => r.parsedData?.skills || []))],
+    experience: recentResumes.flatMap(r => r.parsedData?.experience || []),
+    achievements: recentResumes.flatMap(r => r.parsedData?.achievements || [])
+  };
+
+  // Include in resume generation prompt
+  const prompt = buildResumePrompt({
+    jobDescription,
+    personalityProfile,
+    stories,
+    resumeContext  // NEW
+  });
+  ```
+- **Success Criteria:**
+  - ✅ Resume generation includes skills from uploaded resumes
+  - ✅ Experience bullets reference past resume content
+  - ✅ Consistency across resume versions
+  - ✅ Token usage <15k (limit to 3 resumes max)
+
+**3. Add Profile Management UI (Priority 3 - Optional)**
+- **Estimated Time:** 1-2 hours
+- **Features:**
+  - View OCEAN scores in user profile
+  - Show assessment completion date
+  - "Retake Assessment" button with confirmation dialog
+  - Display derived traits (work style, communication, etc.)
+- **Success Criteria:**
+  - ✅ Users can view their personality profile
+  - ✅ Clear option to retake if desired
+  - ✅ Profile shows confidence score
+
+**Total Estimated Time:** 6-9 hours
+
+**Testing Requirements:**
+1. Test profile completion flow with existing user
+2. Test new user assessment flow
+3. Verify resume context integration improves quality
+4. Compare Gold vs Free tier with fixes applied
 
 ---
 
