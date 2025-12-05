@@ -667,14 +667,49 @@ function ConversationalWizard({ onComplete }) {
   // Render completion message
   const renderComplete = () => (
     <Box sx={{ textAlign: 'center', py: 4 }}>
-      <CheckCircleIcon sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
-      <Typography variant="h4" gutterBottom>
-        Profile Complete! 🎉
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Generating your tailored resume...
-      </Typography>
-      <CircularProgress />
+      {error ? (
+        // Show error state with retry option
+        <>
+          <Alert
+            severity="error"
+            sx={{ mb: 3, textAlign: 'left' }}
+            action={
+              <Button color="inherit" size="small" onClick={() => {
+                setError(null);
+                setLoading(false);
+                setIsComplete(false); // Go back to questions to retry
+              }}>
+                Retry
+              </Button>
+            }
+          >
+            <strong>Resume Generation Failed</strong><br/>
+            {error}
+          </Alert>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setError(null);
+              setIsComplete(false);
+            }}
+            sx={{ mt: 2 }}
+          >
+            Go Back to Questions
+          </Button>
+        </>
+      ) : (
+        // Show loading state
+        <>
+          <CheckCircleIcon sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
+          <Typography variant="h4" gutterBottom>
+            Profile Complete! 🎉
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            {loading ? 'Generating your tailored resume...' : 'Resume generated successfully!'}
+          </Typography>
+          {loading && <CircularProgress />}
+        </>
+      )}
     </Box>
   );
 
