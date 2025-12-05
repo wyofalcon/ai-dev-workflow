@@ -12,12 +12,13 @@
 **Email:** `claude.test.20250403@example.com`
 **Password:** `TestGold2025!`
 **Subscription Tier:** Gold (verified in database)
-**Frontend URL:** https://cvstomize-frontend-q4mdi7os3q-uc.a.run.app
+**Frontend URL:** https://cvstomize-frontend-351889420459.us-central1.run.app
 
 **Deployment Info:**
-- Backend API: cvstomize-api-00143-8t7 (with timeout fix)
-- Frontend: cvstomize-frontend-00032-d9m (with retry button)
+- Backend API: cvstomize-api-00144-pjg (with timeout fix + schema fix)
+- Frontend: cvstomize-frontend-00035-xd4 (with retry button)
 - Deployed: December 5, 2025
+- Status: ✅ ALL FIXES DEPLOYED (timeout protection, error UI, schema mismatch resolved)
 
 ---
 
@@ -42,8 +43,21 @@ Verify that the `/api/conversation/complete` endpoint timeout bug is fixed and u
 
 **Steps:**
 
+0. **IMPORTANT: Complete Profile Setup First**
+   - If redirected to profile setup after login, complete it with:
+     - Full Name: "Test User"
+     - Phone: "555-1234" (optional, can skip)
+     - Location: "San Francisco, CA"
+     - LinkedIn: (skip)
+     - Years Experience: 5
+     - Career Level: Mid-level
+     - Skills: Add any 3 skills (e.g., "JavaScript", "React", "Node.js")
+   - Click "Save Profile" to complete onboarding
+   - ✅ Profile setup completed, redirected to home page
+   - ✅ Home page should now show **`0 / 999999 resumes`** (not 0/1)
+
 1. **Navigate to Application**
-   - Go to: https://cvstomize-frontend-q4mdi7os3q-uc.a.run.app
+   - Go to: https://cvstomize-frontend-351889420459.us-central1.run.app
    - ✅ Page loads successfully
 
 2. **Login**
@@ -335,6 +349,26 @@ If you encounter any issues during testing:
 - Note exact error messages
 - Record time when issue occurred
 - Do NOT retry more than 3 times if stuck
+
+---
+
+## ⚠️ SESSION 34 FIXES APPLIED
+
+**All Critical Issues Fixed:**
+
+1. ✅ **Timeout Protection** - 45s backend + 60s frontend timeout with 3-tier fallback
+2. ✅ **Error Alert Display** - Errors now show on screen with Retry button (not just console)
+3. ✅ **Gold Tier Limits** - Gold users have 999,999 resume limit (not 1)
+4. ✅ **API URL Corrected** - Frontend using correct production API URL
+5. ✅ **Schema Mismatch Fixed** - /api/auth/me no longer queries missing columns
+
+**Expected After Fixes:**
+- ✅ Login works
+- ✅ `/api/auth/me` returns **200** (not 400)
+- ✅ Home page shows: **`0 / 999999 resumes`** (not 0/1)
+- ✅ Profile setup required on first login
+- ✅ Gold Standard card visible after profile completion
+- ✅ Resume generation completes or shows clear error with Retry
 
 ---
 
