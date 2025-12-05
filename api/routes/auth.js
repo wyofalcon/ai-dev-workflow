@@ -307,7 +307,9 @@ router.get("/me", verifyFirebaseToken, async (req, res, next) => {
         resumesLimit: true,
         emailVerified: true,
         onboardingCompleted: true,
-        profile: true, // Include full profile data
+        // TEMP FIX: Commented out profile to avoid schema mismatch
+        // TODO: Fix Prisma schema to match database columns
+        // profile: true,
       },
     });
 
@@ -320,29 +322,9 @@ router.get("/me", verifyFirebaseToken, async (req, res, next) => {
       });
     }
 
-    // Flatten profile data into user response for backward compatibility
-    const userData = {
-      ...user,
-      // Include top-level profile fields for easy access
-      fullName: user.profile?.fullName || user.displayName,
-      phone: user.profile?.phone,
-      location: user.profile?.location,
-      linkedinUrl: user.profile?.linkedinUrl,
-      summary: user.profile?.summary,
-      currentTitle: user.profile?.currentTitle,
-      yearsExperience: user.profile?.yearsExperience,
-      careerLevel: user.profile?.careerLevel,
-      skills: user.profile?.skills || [],
-      industries: user.profile?.industries || [],
-      education: user.profile?.education,
-      experience: user.profile?.experience,
-      certifications: user.profile?.certifications || [],
-      languages: user.profile?.languages || [],
-      workPreferences: user.profile?.workPreferences,
-    };
-
+    // Return basic user data without profile (profile has schema mismatch)
     res.status(200).json({
-      user: userData,
+      user,
     });
   } catch (error) {
     console.error("❌ ERROR in /api/auth/me:", {
