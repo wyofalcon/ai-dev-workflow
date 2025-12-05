@@ -62,7 +62,7 @@ function HomePage({ onStart }) {
       tooltip: hasResumes
         ? "🎯 PREMIUM: Personality-authentic resume generation with 90%+ job match accuracy. Uses Gold Standard personality assessment + AI-powered story retrieval to make you a must-interview candidate!"
         : "You need at least 1 resume/CV saved before using this option.",
-      action: () => hasResumes && navigate('/create-resume'),
+      action: () => hasResumes && navigate('/gold-standard'),
       color: '#fdbb2d',
       disabled: !hasResumes,
     },
