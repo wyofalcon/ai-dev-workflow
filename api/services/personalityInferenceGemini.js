@@ -117,18 +117,36 @@ Analyze now:`;
 }
 
 /**
- * Infer personality using Gemini AI
+ * Infer personality using Gemini AI with timeout protection
  * @param {Array} conversationMessages - Array of {role: 'user'|'assistant', content: string}
+ * @param {number} timeoutMs - Timeout in milliseconds (default: 45000ms = 45s)
  * @returns {Promise<Object>} Big Five traits and derived preferences
  */
-async function inferPersonalityWithGemini(conversationMessages) {
+async function inferPersonalityWithGemini(conversationMessages, timeoutMs = 45000) {
   try {
     const prompt = buildBig5Prompt(conversationMessages);
 
-    console.log('🧠 Analyzing personality with Gemini...');
+    console.log('🧠 Analyzing personality with Gemini (timeout: ' + timeoutMs + 'ms)...');
+    const startTime = Date.now();
 
     const model = geminiService.getFlashModel();
-    const result = await model.generateContent(prompt);
+
+    // Create timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Gemini API timeout after ${timeoutMs}ms`));
+      }, timeoutMs);
+    });
+
+    // Race between Gemini API call and timeout
+    const result = await Promise.race([
+      model.generateContent(prompt),
+      timeoutPromise
+    ]);
+
+    const elapsedTime = Date.now() - startTime;
+    console.log(`✅ Gemini responded in ${elapsedTime}ms`);
+
     const response = result.response;
 
     // Handle Vertex AI response format
@@ -182,16 +200,51 @@ async function inferPersonalityWithGemini(conversationMessages) {
     return personalityProfile;
 
   } catch (error) {
-    console.error('❌ Gemini personality inference failed:', error);
-    console.error('Error details:', error.message);
+    const errorType = error.message.includes('timeout') ? 'TIMEOUT' : 'API_ERROR';
+    console.error(`❌ Gemini personality inference failed (${errorType}):`, error.message);
 
     // Fallback to keyword-based approach (old method)
     console.log('⚠️ Falling back to keyword-based personality inference');
-    const { inferPersonality } = require('./personalityInference');
-    return inferPersonality(conversationMessages.map(msg => ({
-      messageRole: msg.role,
-      messageContent: msg.content
-    })));
+    try {
+      const { inferPersonality } = require('./personalityInference');
+      const fallbackResult = inferPersonality(conversationMessages.map(msg => ({
+        messageRole: msg.role,
+        messageContent: msg.content
+      })));
+
+      console.log('✅ Fallback personality inference successful');
+      return fallbackResult;
+    } catch (fallbackError) {
+      console.error('❌ Fallback inference also failed:', fallbackError.message);
+
+      // Last resort: return neutral personality profile
+      console.log('⚠️ Returning neutral/default personality profile');
+      return {
+        openness: 50,
+        conscientiousness: 50,
+        extraversion: 50,
+        agreeableness: 50,
+        neuroticism: 50,
+        workStyle: 'hybrid',
+        leadershipStyle: 'democratic',
+        communicationStyle: 'professional',
+        motivationType: 'achievement',
+        decisionMaking: 'consultative',
+        inferenceConfidence: 0.3,
+        analysisVersion: '1.0-fallback-neutral',
+        reasoning: {
+          openness: 'Insufficient data for accurate inference',
+          conscientiousness: 'Insufficient data for accurate inference',
+          extraversion: 'Insufficient data for accurate inference',
+          agreeableness: 'Insufficient data for accurate inference',
+          neuroticism: 'Insufficient data for accurate inference'
+        },
+        keyInsights: [
+          'Personality analysis failed - using neutral baseline profile',
+          'Resume quality may be reduced - consider retaking assessment'
+        ]
+      };
+    }
   }
 }
 

@@ -285,32 +285,53 @@ function ConversationalWizard({ onComplete }) {
       console.log('🏁 Completing conversation...');
 
       // First, complete the conversation (saves personality traits)
-      const completeResponse = await fetch(`${API_URL}/conversation/complete`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ sessionId })
-      });
+      // Add timeout to prevent infinite hanging on frontend
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s frontend timeout
 
-      const completeData = await completeResponse.json();
+      try {
+        const completeResponse = await fetch(`${API_URL}/conversation/complete`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ sessionId }),
+          signal: controller.signal
+        });
 
-      if (!completeResponse.ok) {
-        throw new Error(completeData.error || 'Failed to complete conversation');
+        clearTimeout(timeoutId);
+
+        const completeData = await completeResponse.json();
+
+        if (!completeResponse.ok) {
+          // Check if backend suggests retry
+          if (completeData.canRetry) {
+            throw new Error(completeData.message + ' (Click "Retry" below to try again)');
+          }
+          throw new Error(completeData.message || 'Failed to complete conversation');
+        }
+
+        console.log('✅ Conversation completed, personality inferred:', completeData.personality);
+
+        // NEW: Check profile completeness before generating resume (Option B)
+        if (!checkProfileCompleteness()) {
+          setShowProfileModal(true);
+          setLoading(false);
+          return;
+        }
+
+        // Profile is complete, proceed with generation
+        await generateResumeAfterCompletion();
+
+      } catch (fetchErr) {
+        clearTimeout(timeoutId);
+
+        if (fetchErr.name === 'AbortError') {
+          throw new Error('Request timed out after 60 seconds. The server may be experiencing high load. Please try again.');
+        }
+        throw fetchErr;
       }
-
-      console.log('✅ Conversation completed, personality inferred:', completeData.personality);
-
-      // NEW: Check profile completeness before generating resume (Option B)
-      if (!checkProfileCompleteness()) {
-        setShowProfileModal(true);
-        setLoading(false);
-        return;
-      }
-
-      // Profile is complete, proceed with generation
-      await generateResumeAfterCompletion();
 
     } catch (err) {
       console.error('❌ Complete conversation error:', err);
@@ -611,7 +632,17 @@ function ConversationalWizard({ onComplete }) {
         />
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert
+            severity="error"
+            sx={{ mb: 2 }}
+            action={
+              error.includes('timed out') || error.includes('try again') ? (
+                <Button color="inherit" size="small" onClick={handleNext}>
+                  Retry
+                </Button>
+              ) : null
+            }
+          >
             {error}
           </Alert>
         )}
@@ -626,7 +657,7 @@ function ConversationalWizard({ onComplete }) {
             endIcon={loading ? <CircularProgress size={20} /> : <ArrowForwardIcon />}
             fullWidth
           >
-            {loading ? 'Submitting...' : progress.current === progress.total - 1 ? 'Complete & Generate Resume' : 'Next Question'}
+            {loading ? 'Processing... (this may take up to 60 seconds)' : progress.current === progress.total - 1 ? 'Complete & Generate Resume' : 'Next Question'}
           </Button>
         </Box>
       </Box>

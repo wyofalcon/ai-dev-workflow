@@ -523,9 +523,12 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
       });
     }
 
-    // Infer personality traits from conversation using Gemini
+    // Infer personality traits from conversation using Gemini (with 45s timeout)
     console.log('🧠 Starting Gemini-based personality inference...');
-    const personality = await inferPersonalityWithGemini(messages);
+    const inferenceStartTime = Date.now();
+    const personality = await inferPersonalityWithGemini(messages, 45000);
+    const inferenceTime = Date.now() - inferenceStartTime;
+    console.log(`⏱️ Personality inference completed in ${inferenceTime}ms (confidence: ${personality.inferenceConfidence})`);
 
     // Calculate profile completeness based on answered questions
     const userMessages = messages.filter((msg) => msg.role === 'user');
@@ -589,10 +592,28 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
       message: 'Profile completed successfully',
       personality,
       nextStep: 'generate_resume',
+      metadata: {
+        inferenceTime,
+        confidence: personality.inferenceConfidence,
+        analysisVersion: personality.analysisVersion
+      }
     });
   } catch (error) {
     console.error('❌ Error completing profile:', error);
-    next(error);
+    console.error('Error stack:', error.stack);
+
+    // Return user-friendly error with fallback suggestion
+    const errorMessage = error.message.includes('timeout')
+      ? 'Personality analysis is taking longer than expected. Please try again, or skip to use a generic profile.'
+      : 'Unable to complete personality analysis. Please try again.';
+
+    res.status(500).json({
+      error: 'Profile Completion Error',
+      message: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      canRetry: true,
+      fallbackAvailable: true
+    });
   }
 });
 
