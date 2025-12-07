@@ -1,0 +1,71 @@
+# CVstomize Code Ownership
+# Enforces required reviewers for critical shared components
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# =============================================================================
+# DOMAIN A: Resume Parsing + Onboarding + Profile (wyofalcon)
+# =============================================================================
+
+# Resume parsing service - used by onboarding, wizard, profile, landing page
+/api/services/resumeParser.js                    @wyofalcon
+
+# Profile routes (parsing endpoints, onboarding)
+/api/routes/profile.js                           @wyofalcon
+
+# Onboarding and profile components
+/src/components/OnboardingPage.js                @wyofalcon
+/src/components/UserProfilePage.js               @wyofalcon
+/src/components/ProfileCompletionModal.js        @wyofalcon
+
+# Core UI pages (non-generation)
+/src/components/HomePage.js                      @wyofalcon
+
+# =============================================================================
+# DOMAIN B: Resume Generation + Auth + Database (Uchpa85)
+# =============================================================================
+
+# Authentication layer
+/src/contexts/AuthContext.js                     @Uchpa85
+/api/middleware/authMiddleware.js                @Uchpa85
+/api/routes/auth.js                              @Uchpa85
+/src/components/LoginPage.js                     @Uchpa85
+/src/components/SignupPage.js                    @Uchpa85
+
+# Gemini AI service - ALL AI calls go through here
+/api/services/geminiServiceVertex.js             @Uchpa85
+
+# Job description analyzer + question generation (both review - wyofalcon verifies flow)
+/api/services/jobDescriptionAnalyzer.js          @wyofalcon @Uchpa85
+/api/services/questionFramework.js               @wyofalcon @Uchpa85
+/api/services/personalityInference.js            @wyofalcon @Uchpa85
+/api/services/personalityInferenceGemini.js      @wyofalcon @Uchpa85
+
+# PDF generation pipeline
+/api/services/pdfGenerator.js                    @Uchpa85
+/api/services/resumeService.js                   @Uchpa85
+
+# Conversation flow routes (both review - wyofalcon verifies flow)
+/api/routes/conversation.js                      @wyofalcon @Uchpa85
+
+# Resume generation routes
+/api/routes/resume.js                            @Uchpa85
+
+# Conversational wizard component (both review - wyofalcon verifies flow)
+/src/components/ConversationalWizard.js          @wyofalcon @Uchpa85
+/src/components/ConversationalResumePage.js      @wyofalcon @Uchpa85
+/src/components/ResumePage.js                    @Uchpa85
+/src/components/ResumeViewPage.js                @Uchpa85
+
+# =============================================================================
+# SHARED: Both must review
+# =============================================================================
+
+# Database schema changes affect everything
+/api/prisma/schema.prisma                        @wyofalcon @Uchpa85
+
+# CI/CD configuration
+/ci/                                             @wyofalcon @Uchpa85
+/.github/                                        @wyofalcon @Uchpa85
+
+# Instructions files
+/.github/copilot-instructions.md                 @wyofalcon @Uchpa85

@@ -1,42 +1,69 @@
+# =================================
 # Dependencies
+# =================================
 node_modules
 npm-debug.log
 yarn-error.log
 
-# Environment files
+# =================================
+# Environment & Secrets
+# =================================
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
+**/gcp-key.json
+**/firebase-admin-key.json
+**/cvstomize-deployer-key.json
+**/service-account*.json
 
+# =================================
 # Logs
+# =================================
 *.log
-error.log
-combined.log
 logs/
 
-# OS files
+# =================================
+# Testing (not needed in prod image)
+# =================================
+__tests__/
+tests/
+coverage/
+jest.config.js
+
+# =================================
+# OS & IDE
+# =================================
 .DS_Store
 Thumbs.db
-
-# IDE
 .vscode
 .idea
 
+# =================================
 # Git
+# =================================
 .git
 .gitignore
 
-# Documentation
-README.md
-*.md
-
-# Prisma migrations (schema is included)
-prisma/migrations
-
-# Cloud SQL Proxy
+# =================================
+# Database Tools
+# =================================
 cloud-sql-proxy
 proxy.log
 
-# Backup files
+# =================================
+# Prisma Migrations
+# =================================
+# Include schema, exclude migrations
+prisma/migrations
+
+# =================================
+# Development Scripts
+# =================================
+*.sh
+scripts/
+
+# =================================
+# Backup Files
+# =================================
 *.backup
 *.bak

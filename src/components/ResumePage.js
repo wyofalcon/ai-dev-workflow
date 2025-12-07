@@ -37,11 +37,15 @@ import {
   CloudUpload as UploadIcon,
   Star as StarIcon,
   StarBorder as StarBorderIcon,
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Sync as SyncIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 
 const ResumePage = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, getIdToken } = useAuth();
   const [resumes, setResumes] = useState([]);
   const [filteredResumes, setFilteredResumes] = useState([]);
   const [uploadedResumes, setUploadedResumes] = useState([]);
@@ -52,6 +56,13 @@ const ResumePage = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [viewingResume, setViewingResume] = useState(null);
 
+  // Editing state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedText, setEditedText] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   // Fetch resumes from API
   useEffect(() => {
     const fetchResumes = async () => {
@@ -59,11 +70,13 @@ const ResumePage = () => {
         setLoading(true);
         setError(null);
 
-        const token = await currentUser.getIdToken();
+        const token = await getIdToken();
         const API_BASE =
           process.env.REACT_APP_API_URL ||
           "https://cvstomize-api-351889420459.us-central1.run.app";
-        const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
+        const API_URL = API_BASE.includes("/api")
+          ? API_BASE
+          : `${API_BASE}/api`;
 
         // Fetch both generated and uploaded resumes in parallel
         const [generatedResponse, uploadedResponse] = await Promise.all([
@@ -164,11 +177,11 @@ const ResumePage = () => {
     }
 
     try {
-      const token = await currentUser.getIdToken();
+      const token = await getIdToken();
       const API_BASE =
         process.env.REACT_APP_API_URL ||
         "https://cvstomize-api-351889420459.us-central1.run.app";
-      const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
+      const API_URL = API_BASE.includes("/api") ? API_BASE : `${API_BASE}/api`;
 
       const response = await fetch(`${API_URL}/resume/${resumeId}`, {
         method: "DELETE",
@@ -194,6 +207,85 @@ const ResumePage = () => {
   // Handle download (navigate to view page with download intent)
   const handleDownload = (resumeId) => {
     navigate(`/resume/${resumeId}?download=true`);
+  };
+
+  // Handle edit mode toggle
+  const handleStartEdit = () => {
+    setEditedText(viewingResume?.rawText || "");
+    setIsEditing(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedText("");
+    setSaveError(null);
+  };
+
+  // Handle save edited resume
+  const handleSaveResume = async (syncToProfile = false) => {
+    if (!viewingResume?.id || !editedText.trim()) return;
+
+    try {
+      setIsSaving(true);
+      setSaveError(null);
+      setSaveSuccess(false);
+
+      const token = await getIdToken();
+      const API_BASE =
+        process.env.REACT_APP_API_URL ||
+        "https://cvstomize-api-351889420459.us-central1.run.app";
+      const API_URL = API_BASE.includes("/api") ? API_BASE : `${API_BASE}/api`;
+
+      const response = await fetch(
+        `${API_URL}/profile/uploaded-resumes/${viewingResume.id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            rawText: editedText,
+            syncToProfile,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to save resume");
+      }
+
+      // Update local state
+      setViewingResume((prev) => ({
+        ...prev,
+        rawText: editedText,
+      }));
+      setUploadedResumes((prev) =>
+        prev.map((r) =>
+          r.id === viewingResume.id ? { ...r, rawText: editedText } : r
+        )
+      );
+
+      setIsEditing(false);
+      setSaveSuccess(true);
+
+      // Show success message
+      if (syncToProfile && data.profileUpdated) {
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        setTimeout(() => setSaveSuccess(false), 2000);
+      }
+    } catch (err) {
+      console.error("Error saving resume:", err);
+      setSaveError(err.message || "Failed to save resume");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Format resume text with proper styling to preserve document structure
@@ -749,15 +841,17 @@ const ResumePage = () => {
                           color={resume.isPrimary ? "primary" : "default"}
                           onClick={async () => {
                             try {
-                              const token = await currentUser.getIdToken();
+                              const token = await getIdToken();
                               const API_BASE =
                                 process.env.REACT_APP_API_URL ||
                                 "https://cvstomize-api-351889420459.us-central1.run.app";
-                              const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
+                              const API_URL = API_BASE.includes("/api")
+                                ? API_BASE
+                                : `${API_BASE}/api`;
                               const response = await fetch(
                                 `${API_URL}/profile/uploaded-resumes/${resume.id}/primary`,
                                 {
-                                  method: "PUT",
+                                  method: "PATCH",
                                   headers: { Authorization: `Bearer ${token}` },
                                 }
                               );
@@ -772,9 +866,23 @@ const ResumePage = () => {
                                         : false,
                                   }))
                                 );
+                              } else {
+                                const errorData = await response
+                                  .json()
+                                  .catch(() => ({}));
+                                console.error(
+                                  "Failed to set primary:",
+                                  errorData
+                                );
+                                alert(
+                                  `Failed to set primary resume: ${
+                                    errorData.message || response.statusText
+                                  }`
+                                );
                               }
                             } catch (err) {
                               console.error("Error setting primary:", err);
+                              alert("Failed to set primary resume");
                             }
                           }}
                           size="small"
@@ -794,47 +902,75 @@ const ResumePage = () => {
                         </IconButton>
                       </Tooltip>
 
-                      {/* Delete Button */}
-                      <Tooltip title="Delete resume">
-                        <IconButton
-                          color="error"
-                          onClick={async () => {
-                            if (
-                              !window.confirm(
-                                "Are you sure you want to delete this uploaded resume?"
-                              )
-                            ) {
-                              return;
-                            }
-                            try {
-                              const token = await currentUser.getIdToken();
-                              const API_BASE =
-                                process.env.REACT_APP_API_URL ||
-                                "https://cvstomize-api-351889420459.us-central1.run.app";
-                              const API_URL = API_BASE.includes('/api') ? API_BASE : `${API_BASE}/api`;
-                              const response = await fetch(
-                                `${API_URL}/profile/uploaded-resumes/${resume.id}`,
-                                {
-                                  method: "DELETE",
-                                  headers: { Authorization: `Bearer ${token}` },
-                                }
-                              );
-                              if (response.ok) {
-                                setUploadedResumes((prev) =>
-                                  prev.filter((r) => r.id !== resume.id)
-                                );
-                              } else {
-                                alert("Failed to delete resume");
+                      {/* Delete Button - disabled for primary resume */}
+                      <Tooltip
+                        title={
+                          resume.isPrimary
+                            ? "Cannot delete primary resume"
+                            : "Delete resume"
+                        }
+                      >
+                        <span>
+                          <IconButton
+                            color="error"
+                            disabled={resume.isPrimary}
+                            onClick={async () => {
+                              if (
+                                !window.confirm(
+                                  "Are you sure you want to delete this uploaded resume?"
+                                )
+                              ) {
+                                return;
                               }
-                            } catch (err) {
-                              console.error("Error deleting resume:", err);
-                              alert("Failed to delete resume");
-                            }
-                          }}
-                          size="small"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
+                              try {
+                                const token = await getIdToken();
+                                const API_BASE =
+                                  process.env.REACT_APP_API_URL ||
+                                  "https://cvstomize-api-351889420459.us-central1.run.app";
+                                const API_URL = API_BASE.includes("/api")
+                                  ? API_BASE
+                                  : `${API_BASE}/api`;
+                                console.log("Deleting resume:", resume.id);
+                                const response = await fetch(
+                                  `${API_URL}/profile/uploaded-resumes/${resume.id}`,
+                                  {
+                                    method: "DELETE",
+                                    headers: {
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                  }
+                                );
+                                console.log(
+                                  "Delete response status:",
+                                  response.status
+                                );
+                                if (response.ok) {
+                                  setUploadedResumes((prev) =>
+                                    prev.filter((r) => r.id !== resume.id)
+                                  );
+                                } else {
+                                  const errorData = await response
+                                    .json()
+                                    .catch(() => ({}));
+                                  console.error("Delete failed:", errorData);
+                                  alert(
+                                    `Failed to delete resume: ${
+                                      errorData.message || response.statusText
+                                    }`
+                                  );
+                                }
+                              } catch (err) {
+                                console.error("Error deleting resume:", err);
+                                alert(
+                                  `Failed to delete resume: ${err.message}`
+                                );
+                              }
+                            }}
+                            size="small"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                     </CardActions>
                   </Card>
@@ -844,11 +980,19 @@ const ResumePage = () => {
           </>
         )}
 
-        {/* View Uploaded Resume Dialog - Formatted Display */}
+        {/* View/Edit Uploaded Resume Dialog */}
         {viewingResume && (
           <Dialog
             open={!!viewingResume}
-            onClose={() => setViewingResume(null)}
+            onClose={() => {
+              if (!isSaving) {
+                setViewingResume(null);
+                setIsEditing(false);
+                setEditedText("");
+                setSaveError(null);
+                setSaveSuccess(false);
+              }
+            }}
             maxWidth="md"
             fullWidth
             PaperProps={{
@@ -870,61 +1014,183 @@ const ResumePage = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <ResumeIcon color="primary" />
                 <Typography variant="h6">
-                  {viewingResume.filename || "Uploaded Resume"}
+                  {isEditing
+                    ? "Edit Resume"
+                    : viewingResume.filename || "Uploaded Resume"}
                 </Typography>
+                {isEditing && (
+                  <Chip label="Editing" size="small" color="warning" />
+                )}
               </Box>
-              <Chip
-                label={
-                  viewingResume.mimeType?.includes("pdf")
-                    ? "PDF"
-                    : viewingResume.mimeType?.includes("word")
-                    ? "DOCX"
-                    : "TXT"
-                }
-                size="small"
-                color="primary"
-                variant="outlined"
-              />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Chip
+                  label={
+                    viewingResume.mimeType?.includes("pdf")
+                      ? "PDF"
+                      : viewingResume.mimeType?.includes("word")
+                      ? "DOCX"
+                      : "TXT"
+                  }
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+                {!isEditing && (
+                  <Tooltip title="Edit Resume">
+                    <IconButton
+                      onClick={handleStartEdit}
+                      color="primary"
+                      size="small"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
             </DialogTitle>
             <DialogContent
               sx={{
                 p: 0,
                 overflow: "auto",
-                bgcolor: "#fafafa",
+                bgcolor: isEditing ? "#f5f5f5" : "#fafafa",
               }}
             >
-              {/* Resume Paper - Styled like a printed document */}
-              <Paper
-                elevation={2}
-                sx={{
-                  maxWidth: 800,
-                  mx: "auto",
-                  my: 3,
-                  p: 5,
-                  minHeight: "100%",
-                  bgcolor: "white",
-                  borderRadius: 0,
-                  boxShadow: "0 0 20px rgba(0,0,0,0.1)",
-                }}
-              >
-                {viewingResume.rawText ? (
-                  formatResumeText(viewingResume.rawText)
-                ) : (
-                  <Box sx={{ textAlign: "center", py: 4 }}>
-                    <ResumeIcon
-                      sx={{ fontSize: 60, color: "text.disabled", mb: 2 }}
-                    />
-                    <Typography color="text.secondary">
-                      No text content available
-                    </Typography>
-                  </Box>
-                )}
-              </Paper>
+              {/* Error/Success Alerts */}
+              {saveError && (
+                <Alert
+                  severity="error"
+                  sx={{ m: 2 }}
+                  onClose={() => setSaveError(null)}
+                >
+                  {saveError}
+                </Alert>
+              )}
+              {saveSuccess && (
+                <Alert severity="success" sx={{ m: 2 }}>
+                  Resume saved successfully!
+                </Alert>
+              )}
+
+              {isEditing ? (
+                /* Edit Mode - Plain text editor */
+                <Box sx={{ p: 3, height: "100%" }}>
+                  <TextField
+                    multiline
+                    fullWidth
+                    value={editedText}
+                    onChange={(e) => setEditedText(e.target.value)}
+                    placeholder="Edit your resume content..."
+                    variant="outlined"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "white",
+                        fontFamily: "monospace",
+                        fontSize: "0.9rem",
+                        lineHeight: 1.6,
+                      },
+                      "& .MuiInputBase-input": {
+                        minHeight: "60vh",
+                      },
+                    }}
+                    disabled={isSaving}
+                  />
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 1, display: "block" }}
+                  >
+                    Tip: You can edit the text and save. Use "Save & Sync to
+                    Profile" to update your profile with the changes.
+                  </Typography>
+                </Box>
+              ) : (
+                /* View Mode - Formatted display */
+                <Paper
+                  elevation={2}
+                  sx={{
+                    maxWidth: 800,
+                    mx: "auto",
+                    my: 3,
+                    p: 5,
+                    minHeight: "100%",
+                    bgcolor: "white",
+                    borderRadius: 0,
+                    boxShadow: "0 0 20px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {viewingResume.rawText ? (
+                    formatResumeText(viewingResume.rawText)
+                  ) : (
+                    <Box sx={{ textAlign: "center", py: 4 }}>
+                      <ResumeIcon
+                        sx={{ fontSize: 60, color: "text.disabled", mb: 2 }}
+                      />
+                      <Typography color="text.secondary">
+                        No text content available
+                      </Typography>
+                    </Box>
+                  )}
+                </Paper>
+              )}
             </DialogContent>
             <DialogActions
-              sx={{ px: 3, py: 2, borderTop: 1, borderColor: "divider" }}
+              sx={{
+                px: 3,
+                py: 2,
+                borderTop: 1,
+                borderColor: "divider",
+                justifyContent: isEditing ? "space-between" : "flex-end",
+              }}
             >
-              <Button onClick={() => setViewingResume(null)}>Close</Button>
+              {isEditing ? (
+                <>
+                  <Button
+                    onClick={handleCancelEdit}
+                    disabled={isSaving}
+                    startIcon={<CloseIcon />}
+                  >
+                    Cancel
+                  </Button>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      onClick={() => handleSaveResume(false)}
+                      disabled={isSaving || !editedText.trim()}
+                      startIcon={
+                        isSaving ? <CircularProgress size={16} /> : <SaveIcon />
+                      }
+                    >
+                      Save
+                    </Button>
+                    <Tooltip title="Save changes and update your profile with extracted information">
+                      <Button
+                        variant="contained"
+                        onClick={() => handleSaveResume(true)}
+                        disabled={isSaving || !editedText.trim()}
+                        startIcon={
+                          isSaving ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <SyncIcon />
+                          )
+                        }
+                        color="primary"
+                      >
+                        Save & Sync to Profile
+                      </Button>
+                    </Tooltip>
+                  </Box>
+                </>
+              ) : (
+                <Button
+                  onClick={() => {
+                    setViewingResume(null);
+                    setSaveSuccess(false);
+                  }}
+                >
+                  Close
+                </Button>
+              )}
             </DialogActions>
           </Dialog>
         )}

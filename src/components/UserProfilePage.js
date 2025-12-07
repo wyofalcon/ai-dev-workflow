@@ -504,21 +504,60 @@ function UserProfilePage() {
       // Always include core resume sections: Contact, Work Experience, Skills, Education
       const sections = ["contact", "workExperience", "skills", "education"];
 
+      // Helper: Transform parsed resume experience format to UserProfilePage format
+      // Parsed format: { highlights: [...], title, company, ... }
+      // UserProfilePage format: { description: "...", title, company, ... }
+      const transformExperience = (exp) => {
+        if (!exp) return [];
+        return exp.map((item) => ({
+          company: item.company || "",
+          title: item.title || "",
+          location: item.location || "",
+          startDate: item.startDate || "",
+          endDate: item.endDate || "",
+          current: item.endDate === "Present" || item.current || false,
+          // Convert highlights array to description string if needed
+          description:
+            item.description ||
+            (item.highlights?.join("\n• ")
+              ? "• " + item.highlights.join("\n• ")
+              : ""),
+        }));
+      };
+
+      // Helper: Transform parsed resume education format to UserProfilePage format
+      const transformEducation = (edu) => {
+        if (!edu) return [];
+        return edu.map((item) => ({
+          institution: item.institution || item.school || "",
+          degree: item.degree || "",
+          field: item.field || item.major || "",
+          startDate: item.startDate || "",
+          endDate: item.endDate || item.graduationDate || item.year || "",
+          gpa: item.gpa || "",
+          achievements: item.achievements || item.honors || "",
+        }));
+      };
+
       // Load data for core sections
       // Check both workPreferences (for edited data) and userProfile.experience (from onboarding)
       if (prefs.workExperience?.length > 0) {
         setWorkExperience(prefs.workExperience);
       } else if (userProfile.experience?.length > 0) {
-        setWorkExperience(userProfile.experience);
+        // Transform from parsed resume format to UserProfilePage format
+        setWorkExperience(transformExperience(userProfile.experience));
       }
       // Check both workPreferences (for edited data) and userProfile.education (from onboarding)
       if (prefs.education?.length > 0) {
         setEducation(prefs.education);
       } else if (userProfile.education?.length > 0) {
-        setEducation(userProfile.education);
+        // Transform from parsed resume format to UserProfilePage format
+        setEducation(transformEducation(userProfile.education));
       }
       if (userProfile.skills?.length > 0 || prefs.skills?.length > 0) {
-        setSkills(prefs.skills || userProfile.skills || []);
+        setSkills(
+          prefs.skills?.length > 0 ? prefs.skills : userProfile.skills || []
+        );
       }
 
       // Add optional sections based on data

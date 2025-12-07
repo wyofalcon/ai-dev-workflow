@@ -1,24 +1,39 @@
+# =================================
 # Dependencies
+# =================================
 node_modules/
-package-lock.json
 
-# Environment variables
+# =================================
+# Environment & Secrets
+# =================================
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
+**/gcp-key.json
+**/firebase-admin-key.json
+**/cvstomize-deployer-key.json
+**/service-account*.json
 
+# =================================
 # Logs
+# =================================
 *.log
-error.log
-combined.log
+logs/
 
-# OS files
+# =================================
+# Testing
+# =================================
+coverage/
+
+# =================================
+# OS & IDE
+# =================================
 .DS_Store
 Thumbs.db
-
-# IDE
 .vscode/
 .idea/
 
-# Prisma
-prisma/migrations/
+# =================================
+# Database
+# =================================
+cloud-sql-proxy

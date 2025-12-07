@@ -1,63 +1,161 @@
 {
   "name": "CVstomize Dev Container",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
+  
+  // Container features
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest",
       "enableNonRootDocker": "true",
-      "moby": "true"
+      "moby": "true",
+      "dockerDashComposeVersion": "v2"
     },
-    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest",
+      "ppa": false
+    },
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
+
+  // VS Code customizations
   "customizations": {
     "vscode": {
       "extensions": [
+        // Core development
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "ms-azuretools.vscode-docker",
         "ms-vscode.vscode-typescript-next",
+        
+        // Database & backend
         "prisma.prisma",
+        "cweijan.vscode-database-client2",
+        
+        // Testing
         "ms-playwright.playwright",
+        
+        // AI assistance
         "github.copilot",
         "github.copilot-chat",
-        "bradlc.vscode-tailwindcss",
+        
+        // React development
         "formulahendry.auto-rename-tag",
+        "dsznajder.es7-react-js-snippets",
+        
+        // Productivity
         "christian-kohler.path-intellisense",
         "usernamehw.errorlens",
         "eamodio.gitlens",
         "pkief.material-icon-theme",
         "streetsidesoftware.code-spell-checker",
+        
+        // Documentation
         "yzhang.markdown-all-in-one",
         "redhat.vscode-yaml",
         "mikestead.dotenv"
       ],
       "settings": {
+        // Editor settings
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.codeActionsOnSave": {
           "source.fixAll.eslint": "explicit"
         },
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.wordWrap": "on",
+        "editor.minimap.enabled": false,
+        
+        // File handling
         "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 1000,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        
+        // Terminal
         "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.scrollback": 10000,
+        
+        // Git
         "git.autofetch": true,
+        "git.confirmSync": false,
+        "git.enableSmartCommit": true,
+        
+        // UI
         "workbench.iconTheme": "material-icon-theme",
-        "typescript.preferences.importModuleSpecifier": "relative"
+        "workbench.startupEditor": "readme",
+        
+        // Language-specific
+        "typescript.preferences.importModuleSpecifier": "relative",
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[markdown]": {
+          "editor.wordWrap": "on",
+          "editor.quickSuggestions": {
+            "other": true,
+            "comments": false,
+            "strings": false
+          }
+        },
+        
+        // Extension settings
+        "errorLens.enabledDiagnosticLevels": ["error", "warning"],
+        "cSpell.words": ["cvstomize", "prisma", "gemini", "vertex"]
       }
     }
   },
+
+  // Port forwarding
   "forwardPorts": [3000, 3001, 5432, 6379, 9229],
   "portsAttributes": {
-    "3000": { "label": "Frontend (React)", "onAutoForward": "notify" },
-    "3001": { "label": "Backend (API)", "onAutoForward": "silent" },
-    "5432": { "label": "PostgreSQL", "onAutoForward": "silent" },
-    "6379": { "label": "Redis", "onAutoForward": "silent" },
-    "9229": { "label": "Node Debugger", "onAutoForward": "silent" }
+    "3000": { 
+      "label": "Frontend (React)", 
+      "onAutoForward": "notify",
+      "protocol": "http"
+    },
+    "3001": { 
+      "label": "Backend (API)", 
+      "onAutoForward": "silent",
+      "protocol": "http"
+    },
+    "5432": { 
+      "label": "PostgreSQL", 
+      "onAutoForward": "silent" 
+    },
+    "6379": { 
+      "label": "Redis", 
+      "onAutoForward": "silent" 
+    },
+    "9229": { 
+      "label": "Node Debugger", 
+      "onAutoForward": "silent" 
+    }
   },
+
+  // Lifecycle scripts
   "postCreateCommand": "bash .devcontainer/post-create.sh",
-  "postStartCommand": "echo '\n🚀 Run ./start-local.sh to start the dev environment!\n'",
+  "postStartCommand": "docker compose up -d && echo '\\n🚀 Dev environment is starting! Frontend: http://localhost:3000\\n'",
+  
+  // Container settings
   "remoteUser": "node",
   "containerEnv": {
-    "NODE_ENV": "development"
+    "NODE_ENV": "development",
+    "TERM": "xterm-256color"
+  },
+
+  // Mount settings for better performance
+  "mounts": [
+    "source=${localWorkspaceFolder}/node_modules,target=/workspaces/cvstomize/node_modules,type=volume",
+    "source=${localWorkspaceFolder}/api/node_modules,target=/workspaces/cvstomize/api/node_modules,type=volume"
+  ],
+
+  // Host requirements
+  "hostRequirements": {
+    "memory": "8gb",
+    "cpus": 4
   }
 }
