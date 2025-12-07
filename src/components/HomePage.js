@@ -141,9 +141,9 @@ function HomePage({ onStart }) {
                   hoveredOption === option.id ? option.color : "#1e1e1e",
                 transform:
                   hoveredOption === option.id ? "scale(1.05)" : "scale(1)",
-                border: \`2px solid \${
+                border: `2px solid ${
                   hoveredOption === option.id ? option.color : "#333"
-                }\`,
+                }`,
                 opacity: option.disabled ? 0.5 : 1,
                 "&:hover": {
                   backgroundColor: option.disabled ? "#1e1e1e" : option.color,

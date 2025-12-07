@@ -1,12 +1,35 @@
 {
   "recommendations": [
-    "ms-playwright.playwright",
+    // Core development
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
-    "google.geminicodeassist",
-    "redhat.vscode-yaml",
+    "ms-azuretools.vscode-docker",
+    "ms-vscode.vscode-typescript-next",
+    
+    // Database
+    "prisma.prisma",
+    
+    // Testing
+    "ms-playwright.playwright",
+    
+    // AI assistance
+    "github.copilot",
+    "github.copilot-chat",
+    
+    // React development
+    "formulahendry.auto-rename-tag",
+    "dsznajder.es7-react-js-snippets",
+    
+    // Productivity
+    "christian-kohler.path-intellisense",
+    "usernamehw.errorlens",
+    "eamodio.gitlens",
+    "pkief.material-icon-theme",
+    
+    // Documentation
     "yzhang.markdown-all-in-one",
-    "ms-vscode.vscode-typescript-next"
+    "redhat.vscode-yaml",
+    "mikestead.dotenv"
   ],
   "unwantedRecommendations": []
 }

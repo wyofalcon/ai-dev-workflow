@@ -1,13 +1,84 @@
+# =================================
+# Dependencies (will be installed in container)
+# =================================
 node_modules
+api/node_modules
+
+# =================================
+# Build & Output
+# =================================
 build
-.git
-.env
-.env.local
-.env.*.local
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.DS_Store
+dist
 coverage
+api/coverage
+
+# =================================
+# Git
+# =================================
+.git
+.gitignore
+.gitattributes
+
+# =================================
+# Environment & Secrets
+# =================================
+.env
+.env.*
+!.env.example
+**/gcp-key.json
+**/firebase-admin-key.json
+**/cvstomize-deployer-key.json
+**/service-account*.json
+secrets/
+
+# =================================
+# IDE & Development
+# =================================
 .vscode
+.vs
+.devcontainer
+.idea
+*.swp
+*.swo
+
+# =================================
+# Testing (not needed in production image)
+# =================================
+tests/
+api/__tests__/
+playwright.config.js
+playwright-report/
+test-results/
+
+# =================================
+# Documentation (not needed in image)
+# =================================
+docs/
+*.md
+!README.md
+
+# =================================
+# Logs
+# =================================
 *.log
+logs/
+data/logs/
+
+# =================================
+# OS Files
+# =================================
+.DS_Store
+Thumbs.db
+
+# =================================
+# CI/CD (not needed in image)
+# =================================
+ci/
+.github/
+cloudbuild.yaml
+
+# =================================
+# Development Scripts
+# =================================
+scripts/
+*.sh

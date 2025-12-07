@@ -1,64 +1,88 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
+# =================================
+# Dependencies
+# =================================
+node_modules/
 /.pnp
 .pnp.js
 
-# testing
-/coverage
-
-# production
+# =================================
+# Build Output
+# =================================
 /build
+/dist
 
-# Environment variables - NEVER commit these!
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.production
-api/.env
-api/.env.local
-api/.env.production
-
-# Firebase credentials
-**/firebase-admin-key.json
-**/firebase-service-account.json
-**/cvstomize-deployer-key.json
-secrets/
-.secrets/
-
-# Database tools
-**/cloud-sql-proxy
-
-# misc
-.DS_Store
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-*.log
-combined.log
-error.log
-.vercel
-/data/logs/
-/data/generated_resumes/
+# =================================
+# Testing
+# =================================
+/coverage
 api/coverage/
-
-.gemini/
-gha-creds-*.json
-
-# Testing artifacts
 tests/reports/
 test-results/
 playwright-report/
 playwright/.cache/
 tests/test-progress.backup.json
-
-# Test screenshots (keep only error screenshots in git)
+# Keep only error screenshots
 tests/reports/screenshots/*
 !tests/reports/screenshots/*error*.png
 !tests/reports/screenshots/.gitkeep
-openJdk-25/
+
+# =================================
+# Environment & Secrets - NEVER COMMIT!
+# =================================
+.env
+.env.*
+!.env.example
+api/.env
+api/.env.*
+!api/.env.example
+
+# GCP/Firebase credentials
+**/gcp-key.json
+**/firebase-admin-key.json
+**/firebase-service-account.json
+**/cvstomize-deployer-key.json
+**/service-account*.json
+gha-creds-*.json
+secrets/
+.secrets/
+
+# =================================
+# Database & Infrastructure
+# =================================
+**/cloud-sql-proxy
+*.sqlite
+
+# =================================
+# Logs
+# =================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+combined.log
+error.log
+/logs/
+/data/logs/
+/data/generated_resumes/
+
+# =================================
+# IDE & Editor
+# =================================
+.vs/
+*.swp
+*.swo
+*~
+
+# =================================
+# OS Files
+# =================================
+.DS_Store
+Thumbs.db
+
+# =================================
+# Misc
+# =================================
+.vercel
+.gemini/
