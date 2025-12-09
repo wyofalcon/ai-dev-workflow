@@ -1,15 +1,72 @@
 # 🚀 CVstomize v2.0 - Complete Roadmap
 
-**Last Updated:** December 5, 2025
+**Last Updated:** December 9, 2025
 **Branch:** dev
-**Status:** ✅ SESSION 34 COMPLETE - TIMEOUT BUG FIXED + PRODUCTION READY
+**Status:** ✅ SESSION 35 IN PROGRESS - 2 PRs READY FOR REVIEW
 **Production:** ✅ Deployed (Frontend 00036-d5c, API 00144-pjg)
 **Testing:** 307 tests, 75% coverage
-**Next Session:** Session 35 - Gold Standard UX Improvements (Est. 5-7 hours)
+**Next Session:** Session 35 - Merge PRs, Deploy, and Test (Est. 2-3 hours)
 
 ---
 
 ## 📍 CURRENT STATUS
+
+### 🚧 SESSION 35: Gold Standard UX Improvements - 2 PRs READY (Dec 9, 2025)
+
+**Status:** 🚧 IN PROGRESS - Code Complete, Pending Deployment
+
+**Pull Requests Created:**
+1. **PR #23:** Auto-Skip Completed Personality Assessment
+   - Branch: `feature/35-fix-redundant-assessment`
+   - Status: ✅ Open, awaiting review
+   - Impact: Reduces time-to-resume from 25+ min → <5 min for returning users
+   - URL: https://github.com/wyofalcon/cvstomize/pull/23
+
+2. **PR #24:** Integrate Resume Context from Resume Pool
+   - Branch: `feature/35-resume-context-integration`
+   - Status: ✅ Open, awaiting review
+   - Impact: Ensures resume continuity by pulling from latest 5 resumes
+   - URL: https://github.com/wyofalcon/cvstomize/pull/24
+
+**What Was Built:**
+
+1. ✅ **Auto-Skip Assessment Feature (PR #23)**
+   - Added automatic profile completion check on `GoldStandardWizard` mount
+   - Calls `/api/gold-standard/start` to verify if profile exists
+   - Skips 35-question assessment if `is_complete === true`
+   - Added `checkingProfile` loading state with spinner UI
+   - Files: `src/components/GoldStandardWizard.js` (+65, -14)
+
+2. ✅ **Resume Context Aggregator (PR #24)**
+   - Created `api/services/resumeContextAggregator.js` service (211 lines)
+   - Fetches latest 5 resumes from `uploaded_resumes` + `resumes` tables
+   - Aggregates: skills (50 max), experience (10), achievements (15), certifications, education (5)
+   - Formats context for Gemini prompt inclusion
+   - Integrated into `api/routes/resume.js` resume generation flow
+   - Files: `api/services/resumeContextAggregator.js` (NEW), `api/routes/resume.js` (+15)
+
+**Impact:**
+- ✅ Fixes critical UX issue: redundant 35-question assessments
+- ✅ Adds resume continuity across versions
+- ✅ Token-efficient (5 resume limit, deduplication)
+- ✅ Better user experience for Gold tier users
+
+**Next Steps:**
+1. **Review & Approve PRs** - Both PRs ready for review
+2. **Merge to dev branch** - After approval
+3. **Deploy to production:**
+   ```bash
+   gcloud run deploy cvstomize-api --source ./api --region us-central1
+   gcloud run deploy cvstomize-frontend --source . --region us-central1
+   ```
+4. **Test with Claude Chrome Extension** - Use `GOLD_VS_FREE_COMPARISON_TEST.md` guide
+5. **Optional:** Local testing first using `SESSION_35_LOCAL_TESTING_PLAN.md`
+
+**Testing Documentation:**
+- [SESSION_35_LOCAL_TESTING_PLAN.md](SESSION_35_LOCAL_TESTING_PLAN.md) - Local testing guide (created)
+- [GOLD_VS_FREE_COMPARISON_TEST.md](GOLD_VS_FREE_COMPARISON_TEST.md) - Production testing with Claude extension
+
+---
 
 ### ✅ SESSION 34: Critical Bugs Fixed - Gold Standard Backend Validated (Dec 5, 2025)
 

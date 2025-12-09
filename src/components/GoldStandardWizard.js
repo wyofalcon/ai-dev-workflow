@@ -233,6 +233,7 @@ function GoldStandardWizard() {
   // Results
   const [results, setResults] = useState(null);
   const [showResults, setShowResults] = useState(false);
+  const [checkingProfile, setCheckingProfile] = useState(true);
 
   // Check Gold access on mount
   useEffect(() => {
@@ -240,6 +241,44 @@ function GoldStandardWizard() {
       setError('Gold Standard assessment requires a Gold subscription or higher.');
     }
   }, [userProfile]);
+
+  // Check for existing completed profile on mount
+  useEffect(() => {
+    const checkProfileStatus = async () => {
+      if (!userProfile) {
+        setCheckingProfile(false);
+        return;
+      }
+
+      setCheckingProfile(true);
+
+      try {
+        const token = await getIdToken();
+        const response = await fetch(`${API_URL}/gold-standard/start`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.status === 'already_complete') {
+          // Profile already exists - skip to results
+          console.log('Gold Standard profile already complete, loading results...');
+          fetchResults();
+        }
+      } catch (err) {
+        // If check fails, user can still click "Start Assessment" button
+        console.error('Failed to check profile status:', err);
+      } finally {
+        setCheckingProfile(false);
+      }
+    };
+
+    checkProfileStatus();
+  }, [userProfile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startAssessment = async () => {
     setLoading(true);
@@ -690,21 +729,33 @@ function GoldStandardWizard() {
           <Typography variant="h4" gutterBottom>
             Gold Standard Personality Assessment
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Get 90%+ accurate insights into your personality with our scientifically validated assessment.
-            This takes 20-25 minutes and unlocks premium features.
-          </Typography>
 
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {checkingProfile ? (
+            <>
+              <CircularProgress sx={{ my: 3 }} />
+              <Typography variant="body1" color="text.secondary">
+                Checking your profile status...
+              </Typography>
+            </>
+          ) : (
+            <>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                Get 90%+ accurate insights into your personality with our scientifically validated assessment.
+                This takes 20-25 minutes and unlocks premium features.
+              </Typography>
 
-          <Button
-            variant="contained"
-            size="large"
-            onClick={startAssessment}
-            disabled={loading || error}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Start Assessment'}
-          </Button>
+              {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+              <Button
+                variant="contained"
+                size="large"
+                onClick={startAssessment}
+                disabled={loading || error}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Start Assessment'}
+              </Button>
+            </>
+          )}
         </Paper>
       </Container>
     );
