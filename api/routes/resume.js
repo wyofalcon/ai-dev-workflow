@@ -10,9 +10,10 @@ const atsOptimizer = require('../services/atsOptimizer');
 const pdfGenerator = require('../services/pdfGenerator');
 const cloudStorageService = require('../services/cloudStorage');
 const { retrieveStoriesForResume, incrementStoryUsage } = require('../services/storyRetriever');
+const { fetchResumeContext, formatResumeContextForPrompt } = require('../services/resumeContextAggregator');
 
 // Helper: Build personality-enhanced Gemini prompt
-function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality, gapAnalysis, existingResume, userProfile, userEmail, userDisplayName, ragStories }) {
+function buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality, gapAnalysis, existingResume, userProfile, userEmail, userDisplayName, ragStories, resumeContext }) {
   // Build contact information from user profile with Google account fallbacks
   console.log('🔍 Contact info inputs:', {
     userProfileFullName: userProfile?.fullName,
@@ -151,6 +152,9 @@ ${idx + 1}. **${story.questionType.toUpperCase()} STORY** (${(story.similarity *
 `;
   }
 
+  // NEW: Resume context from user's resume pool (uploaded + generated resumes)
+  const resumeContextFormatted = formatResumeContextForPrompt(resumeContext);
+
   // NEW: Gap analysis guidance for resume-first mode
   let gapAnalysisGuidance = '';
   if (gapAnalysis && existingResume) {
@@ -186,6 +190,8 @@ ${personalStories || 'No additional information provided'}
 ${personalityGuidance}
 
 ${ragStoryContext}
+
+${resumeContextFormatted}
 
 ${gapAnalysisGuidance}
 
@@ -395,6 +401,15 @@ router.post('/generate',
       }
     }
 
+    // NEW: Fetch resume context from user's resume pool (uploaded + generated resumes)
+    let resumeContext = null;
+    try {
+      console.log('📚 Fetching resume context from user\'s resume pool...');
+      resumeContext = await fetchResumeContext(userRecord.id, 5);
+    } catch (error) {
+      console.error('❌ Resume context fetching failed (continuing without):', error.message);
+    }
+
     // CRITICAL FIX: Load gap analysis from DATABASE (not volatile Map)
     // This prevents data loss when Cloud Run scales/restarts (Bug #1 fix)
     let gapAnalysis = null;
@@ -442,7 +457,8 @@ router.post('/generate',
       userProfile, // NEW: User profile for contact information
       userEmail: userRecord.email, // Use Firebase email as fallback
       userDisplayName: userRecord.displayName, // Use Firebase display name as fallback
-      ragStories // NEW: RAG-retrieved relevant stories for Gold tier
+      ragStories, // NEW: RAG-retrieved relevant stories for Gold tier
+      resumeContext // NEW: Resume context from user's resume pool (5 latest resumes)
     });
 
     // Generate with Gemini Pro
