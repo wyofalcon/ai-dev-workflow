@@ -1,9 +1,14 @@
 # 🧪 Session 35 - Claude Chrome Extension Testing Plan
 
-**Test Date:** December 9, 2025 (After Deployment)
+**Test Date:** December 9, 2025 ✅ **DEPLOYED TO PRODUCTION**
 **Tester:** Claude Chrome Extension
 **Test Account:** claude.test.20250403@example.com (Gold Tier, Unlimited)
 **Objective:** Validate Session 35 UX improvements (Auto-skip assessment + Resume context)
+
+**Deployment Status:** ✅ COMPLETE
+- API Revision: cvstomize-api-00145-6k2
+- Frontend Revision: cvstomize-frontend-00037-sqn
+- Traffic: 100% to latest revisions
 
 ---
 
@@ -12,12 +17,19 @@
 **Account:** claude.test.20250403@example.com
 **Password:** TestGold2025!
 **Tier:** Gold (999,999 resume limit)
-**Current Status:**
-- ✅ Has completed personality profile (OCEAN scores calculated)
-- ✅ Has previous resumes in database
-- ✅ Perfect candidate for testing both features
+
+**Current Status (Verified):**
+- ✅ **Has completed personality profile** - User took full 35-question assessment in previous sessions
+- ✅ **OCEAN scores calculated** - Profile stored in `personality_profiles` table with `is_complete = true`
+- ✅ **Has previous resumes in database** - Multiple resumes generated (uploaded + created)
+- ✅ **Perfect candidate for testing both features**
 
 **Production URL:** https://cvstomize-frontend-351889420459.us-central1.run.app
+
+**Expected Behavior:**
+- ✅ This account **SHOULD skip** the personality assessment automatically
+- ✅ Should see loading spinner: "Checking your profile status..."
+- ✅ Should proceed directly to resume generation (time savings: ~25 minutes)
 
 ---
 
@@ -321,4 +333,31 @@ Validate end-to-end Gold Standard experience with both improvements
 
 ---
 
-**Ready to test after PRs are merged and deployed to production!** 🚀
+## 🎯 Quick Start Testing Instructions
+
+**READY TO TEST NOW! ✅ Both PRs merged and deployed to production**
+
+### Fastest Way to Test (5-minute verification):
+
+1. **Open Claude Chrome Extension**
+2. **Navigate to production:** https://cvstomize-frontend-351889420459.us-central1.run.app
+3. **Login:**
+   - Email: `claude.test.20250403@example.com`
+   - Password: `TestGold2025!`
+4. **Click:** "TAILOR TO SPECIFIC JOB (GOLD STANDARD)" card
+5. **Expected Result:**
+   - ✅ See "Checking your profile status..." spinner (1-2 sec)
+   - ✅ **Auto-skip** to resume generation (NO 35 questions!)
+   - ✅ Total time to resume: <5 minutes (vs 25+ min before)
+6. **Verify Resume Context:**
+   - Paste any job description
+   - Generate resume
+   - Check that resume includes skills from previous resumes
+
+### Test Result: PASS or FAIL?
+- ✅ **PASS:** Assessment auto-skipped, resume shows context from past resumes
+- ❌ **FAIL:** Still shows "Start Assessment" button, or resume missing past skills
+
+---
+
+**Ready to test! PRs #23 and #24 are live in production** 🚀
