@@ -87,7 +87,8 @@ gcloud run deploy cvstomize-frontend \
   --project cvstomize
 
 # 7. Test with Claude Chrome Extension
-# Use: GOLD_VS_FREE_COMPARISON_TEST.md
+# Use: SESSION_35_CHROME_EXTENSION_TEST.md
+# Test Account: claude.test.20250403@example.com (Gold, Unlimited)
 # URL: https://cvstomize-frontend-351889420459.us-central1.run.app
 ```
 
