@@ -1,11 +1,11 @@
 # 🚀 CVstomize v2.0 - Complete Roadmap
 
-**Last Updated:** December 9, 2025
+**Last Updated:** December 10, 2025
 **Branch:** dev
-**Status:** ✅ SESSION 35 COMPLETE - PRODUCTION READY
+**Status:** ✅ SESSION 35 COMPLETE - PRODUCTION READY | ✅ ALL PRs MERGED & CLOSED
 **Production:** ✅ Deployed (Frontend 00037-sqn, API 00145-6k2)
 **Testing:** 307 tests, 75% coverage
-**Next Session:** Session 36 - Optional Profile Management UI (Est. 1-2 hours)
+**Next Session:** Session 36 - Profile Management UI OR Cover Letter Generation (Est. 4-6 hours)
 
 ---
 
@@ -167,107 +167,93 @@
 
 ## 🎯 NEXT SESSION
 
-### 📋 SESSION 35: Gold Standard UX Improvements
+### 📋 SESSION 36: Profile Management UI OR Cover Letter Generation
 
-**Priority:** HIGH - Critical UX issues blocking optimal user experience
-**Estimated Time:** 6-9 hours
-**Current Branch:** dev
-**Prerequisites:** Session 34 complete ✅
-
-**Objectives:**
-1. Fix redundant personality assessment (users retake 35 questions every time)
-2. Integrate resume context pool (pull from uploaded/generated resumes)
-3. Add profile management UI (optional)
+**Status:** ✅ Ready to start
+**Prerequisites:** Session 35 complete ✅
+**Estimated Time:** 4-6 hours
+**Priority:** MEDIUM - Enhancement features
 
 ---
 
-**Tasks:**
+**Option A: Profile Management UI (Recommended - 4-6 hours)**
 
-**1. Fix Redundant Personality Assessment (Priority 1 - Critical)**
-- **Estimated Time:** 2-3 hours
-- **Files to Modify:**
-  - `src/components/GoldStandardWizard.js` - Add profile completion check
-  - `src/components/HomePage.js` - Show "Profile Complete" status
-  - `src/components/UserProfilePage.js` - Add "Retake Assessment" option
-- **Implementation:**
-  ```javascript
-  // GoldStandardWizard.js - Check on mount
-  useEffect(() => {
-    const checkProfileStatus = async () => {
-      const response = await createAuthAxios().get('/gold-standard/status');
-      if (response.data.isComplete) {
-        setShowResults(true);
-        setResults(response.data.profile);
-        // Skip to resume generation
-      }
-    };
-    checkProfileStatus();
-  }, []);
-  ```
-- **User Flow After Fix:**
-  - First time: Complete 35-question assessment
-  - Subsequent times: Skip directly to job description + resume generation
-  - Optional: "Retake Assessment" button in profile settings
-- **Success Criteria:**
-  - ✅ User completes assessment once only
-  - ✅ Resume generation takes <5 minutes (not 25+ minutes)
-  - ✅ Clear messaging: "Using your existing personality profile"
+**What to Build:**
+1. **Personality Profile Dashboard** (2-3 hours)
+   - Display OCEAN scores with visualizations (radar chart or progress bars)
+   - Show assessment completion date
+   - Display derived traits (work style, leadership, communication preferences)
+   - Show confidence score and assessment version
 
-**2. Integrate Resume Context Pool (Priority 2 - Enhancement)**
-- **Estimated Time:** 3-4 hours
-- **Files to Modify:**
-  - `api/routes/goldStandard.js` - Add resume context fetching
-  - `api/services/resumeGenerator.js` - Include resume history in prompts
-- **Implementation:**
-  ```javascript
-  // Fetch recent resume context
-  const recentResumes = await prisma.uploadedResume.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: 'desc' },
-    take: 3,
-    select: { parsedData: true, rawText: true }
-  });
+2. **Story Library Management** (1-2 hours)
+   - View all 15 categorized stories from assessment
+   - Edit story content (re-save triggers embedding regeneration)
+   - View story usage analytics (how many times used in resumes)
+   - Add new stories manually (optional enhancement)
 
-  // Extract and deduplicate skills/experience
-  const resumeContext = {
-    skills: [...new Set(recentResumes.flatMap(r => r.parsedData?.skills || []))],
-    experience: recentResumes.flatMap(r => r.parsedData?.experience || []),
-    achievements: recentResumes.flatMap(r => r.parsedData?.achievements || [])
-  };
+3. **Profile Actions** (1 hour)
+   - "Retake Assessment" button with warning dialog ("This will replace your existing profile")
+   - "Download Profile Report" (PDF with OCEAN scores + stories)
+   - Option to make profile private/public (future social features)
 
-  // Include in resume generation prompt
-  const prompt = buildResumePrompt({
-    jobDescription,
-    personalityProfile,
-    stories,
-    resumeContext  // NEW
-  });
-  ```
-- **Success Criteria:**
-  - ✅ Resume generation includes skills from uploaded resumes
-  - ✅ Experience bullets reference past resume content
-  - ✅ Consistency across resume versions
-  - ✅ Token usage <15k (limit to 3 resumes max)
+**Files to Create/Modify:**
+- `src/components/ProfileDashboard.js` (NEW - 300+ lines)
+- `src/components/StoryLibrary.js` (NEW - 250+ lines)
+- `api/routes/profile.js` - Add GET /profile/full endpoint
+- `api/routes/goldStandard.js` - Add POST /gold-standard/retake endpoint
 
-**3. Add Profile Management UI (Priority 3 - Optional)**
-- **Estimated Time:** 1-2 hours
-- **Features:**
-  - View OCEAN scores in user profile
-  - Show assessment completion date
-  - "Retake Assessment" button with confirmation dialog
-  - Display derived traits (work style, communication, etc.)
-- **Success Criteria:**
-  - ✅ Users can view their personality profile
-  - ✅ Clear option to retake if desired
-  - ✅ Profile shows confidence score
+**Success Criteria:**
+- ✅ Users can view their complete personality profile
+- ✅ Story library shows usage statistics
+- ✅ Retake assessment clears old profile and starts fresh
+- ✅ Profile dashboard is visually appealing and informative
 
-**Total Estimated Time:** 6-9 hours
+---
 
-**Testing Requirements:**
-1. Test profile completion flow with existing user
-2. Test new user assessment flow
-3. Verify resume context integration improves quality
-4. Compare Gold vs Free tier with fixes applied
+**Option B: Cover Letter Generation (Alternative - 4-6 hours)**
+
+**What to Build:**
+1. **Cover Letter Endpoint** (2 hours)
+   - Create POST /api/resume/generate-cover-letter
+   - Use RAG to retrieve relevant stories for company/role
+   - Integrate personality profile for authentic tone
+   - Generate 3-4 paragraph cover letter
+
+2. **Cover Letter Wizard UI** (2 hours)
+   - Simple 3-step wizard: Company Info → Review Stories → Generate
+   - Option to customize tone (Formal, Casual, Enthusiastic)
+   - Live preview with editing capability
+   - Download as PDF or copy to clipboard
+
+3. **RAG Integration** (1-2 hours)
+   - Reuse existing story retrieval service
+   - Match stories to company values and role requirements
+   - Integrate OCEAN scores for tone calibration
+
+**Files to Create/Modify:**
+- `api/routes/resume.js` - Add cover letter endpoint
+- `src/components/CoverLetterWizard.js` (NEW - 400+ lines)
+- `api/services/coverLetterGenerator.js` (NEW - 250+ lines)
+
+**Success Criteria:**
+- ✅ Cover letter includes relevant stories from assessment
+- ✅ Tone matches personality profile
+- ✅ Company research integration (optional)
+- ✅ High-quality, professional output
+
+---
+
+**Recommendation:** Start with **Option A (Profile Management UI)** because:
+1. Completes the Gold Standard feature set
+2. Provides immediate value to existing users
+3. Enables story editing and analytics
+4. Foundation for future features (public profiles, sharing)
+5. Lower complexity than cover letter generation
+
+**Next Session After 36:**
+- **Session 37:** Implement whichever option wasn't chosen in Session 36
+- **Session 38:** Homepage marketing integration (Gold Standard CTA, pricing page)
+- **Session 39:** Production hardening (monitoring, error tracking, performance optimization)
 
 ---
 
