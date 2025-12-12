@@ -1,0 +1,204 @@
+## {/* src/ComponentShowcase.mdx */}
+
+## title: Components Overview
+
+# 📦 Component Overview
+
+Quick reference for all CVstomize UI components with usage examples.
+
+---
+
+## Feature Cards
+
+The main action cards on the homepage. Used for primary user actions.
+
+**Component:** `FeatureCard`
+**Location:** [src/components/FeatureCard.js](src/components/FeatureCard.js)
+
+```jsx
+import FeatureCard from "./components/FeatureCard";
+import BuildIcon from "@mui/icons-material/Build";
+
+<FeatureCard
+  title="BUILD NEW RESUME"
+  icon={<BuildIcon sx={{ fontSize: 40 }} />}
+  tooltip="Start building a new resume from scratch"
+  color="#9d99e5"
+  onClick={() => handleBuild()}
+  disabled={false}
+/>;
+```
+
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `title` | string | required | Card label text |
+| `icon` | ReactNode | required | MUI icon component |
+| `tooltip` | string | required | Hover tooltip text |
+| `color` | string | `#9d99e5` | Accent color for hover |
+| `onClick` | function | - | Click handler |
+| `disabled` | boolean | `false` | Disable interactions |
+
+---
+
+## Step Header
+
+Header component for multi-step wizards. Shows current step with icon.
+
+**Component:** `StepHeader`
+**Location:** [src/components/StepHeader.js](src/components/StepHeader.js)
+
+```jsx
+import StepHeader from "./components/StepHeader";
+import DescriptionIcon from "@mui/icons-material/Description";
+
+<StepHeader
+  title="Job Description"
+  icon={<DescriptionIcon sx={{ mr: 1, color: "#9d99e5" }} />}
+  graphic={<JobDescriptionGraphic />}
+/>;
+```
+
+---
+
+## Text Input
+
+Multi-line text input for job descriptions and personal stories.
+
+**Component:** `TextInput`
+**Location:** [src/components/TextInput.js](src/components/TextInput.js)
+
+```jsx
+import TextInput from "./components/TextInput";
+
+<TextInput
+  title="Job Description"
+  placeholder="Paste the job posting here..."
+  value={jobDescription}
+  onChange={(e) => setJobDescription(e.target.value)}
+/>;
+```
+
+---
+
+## Section Selector
+
+Checkbox list for selecting resume sections.
+
+**Component:** `SectionSelector`
+**Location:** [src/components/SectionSelector.js](src/components/SectionSelector.js)
+
+```jsx
+import SectionSelector from "./components/SectionSelector";
+
+const sections = [
+  "Professional Summary",
+  "Work Experience",
+  "Education",
+  "Skills",
+];
+
+<SectionSelector
+  allSections={sections}
+  recommendedSections={["Work Experience", "Skills"]}
+  selectedSections={selectedSections}
+  setSelectedSections={setSelectedSections}
+/>;
+```
+
+---
+
+## File Upload
+
+Drag-and-drop file upload for resumes.
+
+**Component:** `FileUpload`
+**Location:** [src/components/FileUpload.js](src/components/FileUpload.js)
+
+```jsx
+import FileUpload from "./components/FileUpload";
+
+<FileUpload
+  onFileAccepted={(file) => handleFile(file)}
+  accept={{ "application/pdf": [".pdf"] }}
+/>;
+```
+
+---
+
+## Modals
+
+### Build Resume Modal
+
+Multi-step wizard for creating a new resume.
+
+**Component:** `BuildResumeModal`
+
+```jsx
+<BuildResumeModal open={showModal} onClose={() => setShowModal(false)} />
+```
+
+### Upload Resume Modal
+
+Upload and parse existing resume.
+
+**Component:** `UploadResumeModal`
+
+```jsx
+<UploadResumeModal open={showUpload} onClose={() => setShowUpload(false)} />
+```
+
+### Tutorial Modal
+
+First-time user instructions.
+
+**Component:** `TutorialModal`
+
+```jsx
+<TutorialModal setIsOpen={setShowTutorial} />
+```
+
+---
+
+## Graphics
+
+SVG graphics used throughout the app.
+
+| Component               | Usage                        |
+| ----------------------- | ---------------------------- |
+| `HomeGraphic`           | Homepage header illustration |
+| `JobDescriptionGraphic` | Job description step         |
+| `UploadGraphic`         | File upload step             |
+| `SectionsGraphic`       | Section selection step       |
+| `StoriesGraphic`        | Personal stories step        |
+
+---
+
+## Layout Components
+
+### Footer
+
+Application footer with links.
+
+**Component:** `Footer`
+
+```jsx
+import Footer from "./components/Footer";
+
+<Footer />;
+```
+
+---
+
+## Pages
+
+Full page components (require Router and Auth context):
+
+| Page                 | Route            | Description            |
+| -------------------- | ---------------- | ---------------------- |
+| `LoginPage`          | `/login`         | User authentication    |
+| `SignupPage`         | `/signup`        | New user registration  |
+| `HomePage`           | `/`              | Main dashboard         |
+| `UserProfilePage`    | `/profile`       | Profile management     |
+| `ResumePage`         | `/resume/:id`    | Resume display         |
+| `GoldStandardWizard` | `/gold-standard` | Premium resume builder |

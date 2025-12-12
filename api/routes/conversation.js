@@ -1,19 +1,21 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const { verifyFirebaseToken } = require('../middleware/authMiddleware');
-// Use Vertex AI service (GCP native, no API key needed)
-const geminiService = require('../services/geminiServiceVertex');
+const { PrismaClient } = require("@prisma/client");
+const { verifyFirebaseToken } = require("../middleware/authMiddleware");
+// Use factory to auto-switch between mock (free) and Vertex AI (GCP)
+const { geminiService } = require("../services/geminiServiceFactory");
 const {
   getNextQuestion,
   getQuestionById,
   getTotalQuestions,
   getProgress,
-} = require('../services/questionFramework');
-const { inferPersonality } = require('../services/personalityInference');
-const { inferPersonalityWithGemini } = require('../services/personalityInferenceGemini');
-const JobDescriptionAnalyzer = require('../services/jobDescriptionAnalyzer');
-const { v4: uuidv4 } = require('uuid');
+} = require("../services/questionFramework");
+const { inferPersonality } = require("../services/personalityInference");
+const {
+  inferPersonalityWithGemini,
+} = require("../services/personalityInferenceGemini");
+const JobDescriptionAnalyzer = require("../services/jobDescriptionAnalyzer");
+const { v4: uuidv4 } = require("uuid");
 
 const prisma = new PrismaClient();
 
@@ -25,7 +27,7 @@ const jdSessions = new Map();
  * Start a new conversational profile building session
  * NOW SUPPORTS: jobDescription parameter for JD-specific questions
  */
-router.post('/start', verifyFirebaseToken, async (req, res, next) => {
+router.post("/start", verifyFirebaseToken, async (req, res, next) => {
   try {
     const { firebaseUid } = req.user;
     const { jobDescription, existingResume } = req.body; // NEW: Accept existingResume for gap analysis
@@ -37,8 +39,8 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
 
     if (!user) {
       return res.status(404).json({
-        error: 'User Not Found',
-        message: 'User account not found',
+        error: "User Not Found",
+        message: "User account not found",
       });
     }
 
@@ -47,7 +49,7 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
 
     let firstQuestion;
     let jdAnalysis = null;
-    let questionsToUse = 'generic';
+    let questionsToUse = "generic";
 
     // If job description provided, analyze it and use JD-specific questions
     // If existingResume also provided, perform gap analysis for targeted questions
@@ -56,9 +58,11 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
         const hasResume = existingResume && existingResume.trim().length >= 100;
 
         if (hasResume) {
-          console.log('📋 Analyzing job description + existing resume for gap-filling questions...');
+          console.log(
+            "📋 Analyzing job description + existing resume for gap-filling questions..."
+          );
         } else {
-          console.log('📋 Analyzing job description for targeted questions...');
+          console.log("📋 Analyzing job description for targeted questions...");
         }
 
         const analyzer = new JobDescriptionAnalyzer(geminiService);
@@ -66,7 +70,10 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
 
         if (validation.valid) {
           // Pass existingResume to analyzer for gap analysis
-          const analysis = await analyzer.analyze(jobDescription, existingResume || null);
+          const analysis = await analyzer.analyze(
+            jobDescription,
+            existingResume || null
+          );
           jdAnalysis = analysis;
 
           // Store JD analysis, questions, and existing resume for this session
@@ -76,7 +83,7 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
             currentQuestionIndex: 0,
             jobDescription,
             existingResume: existingResume || null, // Store for resume generation
-            hasResume: !!existingResume
+            hasResume: !!existingResume,
           });
 
           // Use first JD-specific question
@@ -87,23 +94,26 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
             order: 1,
             purpose: analysis.questions[0].purpose,
             keywords: analysis.questions[0].keywords,
-            followUp: analysis.questions[0].followUp
+            followUp: analysis.questions[0].followUp,
           };
 
-          questionsToUse = 'jd-specific';
+          questionsToUse = "jd-specific";
 
-          console.log('✅ JD analysis complete:', {
+          console.log("✅ JD analysis complete:", {
             jobTitle: analysis.analysis.jobTitle,
             experienceLevel: analysis.analysis.experienceLevel,
-            questionsGenerated: analysis.questions.length
+            questionsGenerated: analysis.questions.length,
           });
         } else {
-          console.warn('⚠️ JD validation failed:', validation.reason);
+          console.warn("⚠️ JD validation failed:", validation.reason);
           // Fall back to generic questions
           firstQuestion = getNextQuestion(-1);
         }
       } catch (error) {
-        console.error('❌ JD analysis failed, falling back to generic questions:', error);
+        console.error(
+          "❌ JD analysis failed, falling back to generic questions:",
+          error
+        );
         // Fall back to generic questions
         firstQuestion = getNextQuestion(-1);
       }
@@ -114,8 +124,8 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
 
     if (!firstQuestion) {
       return res.status(500).json({
-        error: 'Question Framework Error',
-        message: 'Unable to load first question',
+        error: "Question Framework Error",
+        message: "Unable to load first question",
       });
     }
 
@@ -123,18 +133,25 @@ router.post('/start', verifyFirebaseToken, async (req, res, next) => {
     const hasResumeGapAnalysis = jdAnalysis?.hasResume;
     const gapAnalysis = jdAnalysis?.analysis?.resumeGapAnalysis;
 
-    const welcomeMessage = `Hi ${user.displayName || 'there'}! 👋
+    const welcomeMessage = `Hi ${user.displayName || "there"}! 👋
 
 I'm here to help you build an amazing resume that showcases your unique strengths and personality.
 
-${jdAnalysis
-  ? hasResumeGapAnalysis
-    ? `Great news! I analyzed the **${jdAnalysis.analysis.jobTitle}** position and compared it to your existing resume. I found ${gapAnalysis?.questionCount || jdAnalysis.questions.length} key areas where we can strengthen your application with specific examples.`
-    : `Great news! I analyzed the **${jdAnalysis.analysis.jobTitle}** position and will ask you ${jdAnalysis.questions.length} targeted questions specifically about this role.`
-  : 'I\'ll ask you about 16 questions covering your experience, achievements, and work style.'
+${
+  jdAnalysis
+    ? hasResumeGapAnalysis
+      ? `Great news! I analyzed the **${
+          jdAnalysis.analysis.jobTitle
+        }** position and compared it to your existing resume. I found ${
+          gapAnalysis?.questionCount || jdAnalysis.questions.length
+        } key areas where we can strengthen your application with specific examples.`
+      : `Great news! I analyzed the **${jdAnalysis.analysis.jobTitle}** position and will ask you ${jdAnalysis.questions.length} targeted questions specifically about this role.`
+    : "I'll ask you about 16 questions covering your experience, achievements, and work style."
 }
 
-This should take about ${hasResumeGapAnalysis ? '5-8 minutes' : '10-15 minutes'}. You can save and continue later anytime.
+This should take about ${
+      hasResumeGapAnalysis ? "5-8 minutes" : "10-15 minutes"
+    }. You can save and continue later anytime.
 
 Ready to get started?`;
 
@@ -147,17 +164,17 @@ Ready to get started?`;
         sessionId: sessionId,
         messages: [
           {
-            role: 'assistant',
+            role: "assistant",
             content: welcomeMessage,
             timestamp: new Date().toISOString(),
           },
           {
-            role: 'assistant',
+            role: "assistant",
             content: firstQuestion.questionText,
             questionId: firstQuestion.id,
             questionCategory: firstQuestion.category,
             timestamp: new Date().toISOString(),
-          }
+          },
         ],
         existingResume: existingResume || null,
         gapAnalysis: jdAnalysis?.analysis?.resumeGapAnalysis || null,
@@ -166,10 +183,12 @@ Ready to get started?`;
       },
     });
 
-    const totalQuestions = jdAnalysis ? jdAnalysis.questions.length : getTotalQuestions();
+    const totalQuestions = jdAnalysis
+      ? jdAnalysis.questions.length
+      : getTotalQuestions();
 
     res.status(201).json({
-      message: 'Conversation started successfully',
+      message: "Conversation started successfully",
       sessionId,
       questionsType: questionsToUse,
       jobTitle: jdAnalysis?.analysis?.jobTitle || null,
@@ -186,7 +205,7 @@ Ready to get started?`;
       },
     });
   } catch (error) {
-    console.error('❌ Error starting conversation:', error);
+    console.error("❌ Error starting conversation:", error);
     next(error);
   }
 });
@@ -196,15 +215,15 @@ Ready to get started?`;
  * Process user's response and get next question
  * NOW SUPPORTS: JD-specific question flow
  */
-router.post('/message', verifyFirebaseToken, async (req, res, next) => {
+router.post("/message", verifyFirebaseToken, async (req, res, next) => {
   try {
     const { firebaseUid } = req.user;
     const { sessionId, message, currentQuestionId } = req.body;
 
     if (!sessionId || !message) {
       return res.status(400).json({
-        error: 'Missing Required Fields',
-        message: 'sessionId and message are required',
+        error: "Missing Required Fields",
+        message: "sessionId and message are required",
       });
     }
 
@@ -215,8 +234,8 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
 
     if (!user) {
       return res.status(404).json({
-        error: 'User Not Found',
-        message: 'User account not found',
+        error: "User Not Found",
+        message: "User account not found",
       });
     }
 
@@ -229,14 +248,14 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
       where: {
         userId: user.id,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 1,
     });
 
     if (conversations.length === 0) {
       return res.status(404).json({
-        error: 'Session Not Found',
-        message: 'Conversation session not found',
+        error: "Session Not Found",
+        message: "Conversation session not found",
       });
     }
 
@@ -259,7 +278,9 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
       totalQuestions = jdQuestions.length;
     } else {
       // Use generic personality questions
-      currentQuestion = currentQuestionId ? getQuestionById(currentQuestionId) : null;
+      currentQuestion = currentQuestionId
+        ? getQuestionById(currentQuestionId)
+        : null;
       currentQuestionIndex = currentQuestion ? currentQuestion.order - 1 : 0;
       totalQuestions = getTotalQuestions();
     }
@@ -268,12 +289,13 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
     const updatedMessages = [
       ...history,
       {
-        role: 'user',
+        role: "user",
         content: message,
         questionId: currentQuestionId,
-        questionCategory: currentQuestion?.category || currentQuestion?.type || null,
+        questionCategory:
+          currentQuestion?.category || currentQuestion?.type || null,
         timestamp: new Date().toISOString(),
-      }
+      },
     ];
 
     // Get next question (removed followUp logic that was causing duplicates)
@@ -292,7 +314,7 @@ router.post('/message', verifyFirebaseToken, async (req, res, next) => {
           category: nextQ.type,
           order: nextIndex + 1,
           purpose: nextQ.purpose,
-          keywords: nextQ.keywords
+          keywords: nextQ.keywords,
         };
         nextMessageContent = nextQ.question;
       } else {
@@ -327,11 +349,12 @@ Your profile is being saved. Next, you'll be able to generate tailored resumes f
     // Add assistant's response to messages array
     if (nextMessageContent) {
       updatedMessages.push({
-        role: 'assistant',
+        role: "assistant",
         content: nextMessageContent,
         questionId: nextQuestionData?.id || null,
-        questionCategory: nextQuestionData?.category || nextQuestionData?.type || null,
-        modelUsed: isJDSession ? 'gemini-2.0-flash' : 'gemini-1.5-flash',
+        questionCategory:
+          nextQuestionData?.category || nextQuestionData?.type || null,
+        modelUsed: isJDSession ? "gemini-2.0-flash" : "gemini-1.5-flash",
         responseTimeMs: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       });
@@ -348,17 +371,19 @@ Your profile is being saved. Next, you'll be able to generate tailored resumes f
     });
 
     const isComplete = !nextQuestionData;
-    const progress = Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100);
+    const progress = Math.round(
+      ((currentQuestionIndex + 1) / totalQuestions) * 100
+    );
 
     res.status(200).json({
-      message: 'Message processed successfully',
+      message: "Message processed successfully",
       response: nextMessageContent,
       nextQuestion: nextQuestionData
         ? {
             id: nextQuestionData.id,
             text: nextQuestionData.questionText || nextQuestionData.question,
             category: nextQuestionData.category || nextQuestionData.type,
-            order: nextQuestionData.order || (currentQuestionIndex + 2),
+            order: nextQuestionData.order || currentQuestionIndex + 2,
           }
         : null,
       progress: {
@@ -369,7 +394,7 @@ Your profile is being saved. Next, you'll be able to generate tailored resumes f
       isComplete,
     });
   } catch (error) {
-    console.error('❌ Error processing message:', error);
+    console.error("❌ Error processing message:", error);
     next(error);
   }
 });
@@ -378,111 +403,119 @@ Your profile is being saved. Next, you'll be able to generate tailored resumes f
  * GET /api/conversation/history/:sessionId
  * Get conversation history for a session
  */
-router.get('/history/:sessionId', verifyFirebaseToken, async (req, res, next) => {
-  try {
-    const { firebaseUid } = req.user;
-    const { sessionId } = req.params;
+router.get(
+  "/history/:sessionId",
+  verifyFirebaseToken,
+  async (req, res, next) => {
+    try {
+      const { firebaseUid } = req.user;
+      const { sessionId } = req.params;
 
-    const user = await prisma.user.findUnique({
-      where: { firebaseUid },
-      select: { id: true },
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        error: 'User Not Found',
-        message: 'User account not found',
+      const user = await prisma.user.findUnique({
+        where: { firebaseUid },
+        select: { id: true },
       });
-    }
 
-    const history = await prisma.conversation.findMany({
-      where: {
-        userId: user.id,
+      if (!user) {
+        return res.status(404).json({
+          error: "User Not Found",
+          message: "User account not found",
+        });
+      }
+
+      const history = await prisma.conversation.findMany({
+        where: {
+          userId: user.id,
+          sessionId,
+        },
+        orderBy: { messageOrder: "asc" },
+        select: {
+          id: true,
+          messageRole: true,
+          messageContent: true,
+          messageOrder: true,
+          questionId: true,
+          questionCategory: true,
+          createdAt: true,
+        },
+      });
+
+      if (history.length === 0) {
+        return res.status(404).json({
+          error: "Session Not Found",
+          message: "Conversation session not found",
+        });
+      }
+
+      // Check if this is a JD-specific session
+      const jdSession = jdSessions.get(sessionId);
+      const isJDSession = !!jdSession;
+
+      // Find last assistant message to determine current question
+      const lastAssistantMessage = [...history]
+        .reverse()
+        .find((msg) => msg.messageRole === "assistant");
+
+      let currentQuestion;
+      let currentQuestionIndex;
+      let totalQuestions;
+
+      if (isJDSession) {
+        currentQuestionIndex = jdSession.currentQuestionIndex;
+        const jdQuestions = jdSession.questions;
+        currentQuestion = jdQuestions[currentQuestionIndex];
+        totalQuestions = jdQuestions.length;
+      } else {
+        currentQuestion = lastAssistantMessage?.questionId
+          ? getQuestionById(lastAssistantMessage.questionId)
+          : null;
+        currentQuestionIndex = currentQuestion
+          ? currentQuestion.order - 1
+          : history.length;
+        totalQuestions = getTotalQuestions();
+      }
+
+      const progress = Math.round(
+        ((currentQuestionIndex + 1) / totalQuestions) * 100
+      );
+
+      res.status(200).json({
         sessionId,
-      },
-      orderBy: { messageOrder: 'asc' },
-      select: {
-        id: true,
-        messageRole: true,
-        messageContent: true,
-        messageOrder: true,
-        questionId: true,
-        questionCategory: true,
-        createdAt: true,
-      },
-    });
-
-    if (history.length === 0) {
-      return res.status(404).json({
-        error: 'Session Not Found',
-        message: 'Conversation session not found',
+        messages: history,
+        currentQuestion: currentQuestion
+          ? {
+              id: currentQuestion.id,
+              text: currentQuestion.questionText || currentQuestion.question,
+              category: currentQuestion.category || currentQuestion.type,
+              order: currentQuestion.order || currentQuestionIndex + 1,
+            }
+          : null,
+        progress: {
+          current: currentQuestionIndex,
+          total: totalQuestions,
+          percentage: progress,
+        },
       });
+    } catch (error) {
+      console.error("❌ Error fetching conversation history:", error);
+      next(error);
     }
-
-    // Check if this is a JD-specific session
-    const jdSession = jdSessions.get(sessionId);
-    const isJDSession = !!jdSession;
-
-    // Find last assistant message to determine current question
-    const lastAssistantMessage = [...history]
-      .reverse()
-      .find((msg) => msg.messageRole === 'assistant');
-
-    let currentQuestion;
-    let currentQuestionIndex;
-    let totalQuestions;
-
-    if (isJDSession) {
-      currentQuestionIndex = jdSession.currentQuestionIndex;
-      const jdQuestions = jdSession.questions;
-      currentQuestion = jdQuestions[currentQuestionIndex];
-      totalQuestions = jdQuestions.length;
-    } else {
-      currentQuestion = lastAssistantMessage?.questionId
-        ? getQuestionById(lastAssistantMessage.questionId)
-        : null;
-      currentQuestionIndex = currentQuestion ? currentQuestion.order - 1 : history.length;
-      totalQuestions = getTotalQuestions();
-    }
-
-    const progress = Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100);
-
-    res.status(200).json({
-      sessionId,
-      messages: history,
-      currentQuestion: currentQuestion
-        ? {
-            id: currentQuestion.id,
-            text: currentQuestion.questionText || currentQuestion.question,
-            category: currentQuestion.category || currentQuestion.type,
-            order: currentQuestion.order || (currentQuestionIndex + 1),
-          }
-        : null,
-      progress: {
-        current: currentQuestionIndex,
-        total: totalQuestions,
-        percentage: progress,
-      },
-    });
-  } catch (error) {
-    console.error('❌ Error fetching conversation history:', error);
-    next(error);
   }
-});
+);
 
 /**
  * POST /api/conversation/complete
  * Finalize profile building - extract data and save to user_profiles
  */
-router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
+router.post("/complete", verifyFirebaseToken, async (req, res, next) => {
   try {
     const { firebaseUid } = req.user;
     const { sessionId } = req.body;
 
     if (!sessionId) {
       return res.status(400).json({
-        error: 'Missing Required Fields',
-        message: 'sessionId is required',
+        error: "Missing Required Fields",
+        message: "sessionId is required",
       });
     }
 
@@ -493,8 +526,8 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
 
     if (!user) {
       return res.status(404).json({
-        error: 'User Not Found',
-        message: 'User account not found',
+        error: "User Not Found",
+        message: "User account not found",
       });
     }
 
@@ -509,8 +542,8 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
 
     if (!conversation) {
       return res.status(404).json({
-        error: 'Session Not Found',
-        message: 'Conversation session not found',
+        error: "Session Not Found",
+        message: "Conversation session not found",
       });
     }
 
@@ -518,24 +551,28 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
 
     if (messages.length === 0) {
       return res.status(400).json({
-        error: 'Empty Conversation',
-        message: 'No messages found in conversation',
+        error: "Empty Conversation",
+        message: "No messages found in conversation",
       });
     }
 
     // Infer personality traits from conversation using Gemini (with 45s timeout)
-    console.log('🧠 Starting Gemini-based personality inference...');
+    console.log("🧠 Starting Gemini-based personality inference...");
     const inferenceStartTime = Date.now();
     const personality = await inferPersonalityWithGemini(messages, 45000);
     const inferenceTime = Date.now() - inferenceStartTime;
-    console.log(`⏱️ Personality inference completed in ${inferenceTime}ms (confidence: ${personality.inferenceConfidence})`);
+    console.log(
+      `⏱️ Personality inference completed in ${inferenceTime}ms (confidence: ${personality.inferenceConfidence})`
+    );
 
     // Calculate profile completeness based on answered questions
-    const userMessages = messages.filter((msg) => msg.role === 'user');
+    const userMessages = messages.filter((msg) => msg.role === "user");
 
     // Check if this was a JD session
     const jdSession = jdSessions.get(sessionId);
-    const totalQuestions = jdSession ? jdSession.questions.length : getTotalQuestions();
+    const totalQuestions = jdSession
+      ? jdSession.questions.length
+      : getTotalQuestions();
 
     // Clean up JD session if exists
     if (jdSession) {
@@ -589,30 +626,31 @@ router.post('/complete', verifyFirebaseToken, async (req, res, next) => {
     });
 
     res.status(200).json({
-      message: 'Profile completed successfully',
+      message: "Profile completed successfully",
       personality,
-      nextStep: 'generate_resume',
+      nextStep: "generate_resume",
       metadata: {
         inferenceTime,
         confidence: personality.inferenceConfidence,
-        analysisVersion: personality.analysisVersion
-      }
+        analysisVersion: personality.analysisVersion,
+      },
     });
   } catch (error) {
-    console.error('❌ Error completing profile:', error);
-    console.error('Error stack:', error.stack);
+    console.error("❌ Error completing profile:", error);
+    console.error("Error stack:", error.stack);
 
     // Return user-friendly error with fallback suggestion
-    const errorMessage = error.message.includes('timeout')
-      ? 'Personality analysis is taking longer than expected. Please try again, or skip to use a generic profile.'
-      : 'Unable to complete personality analysis. Please try again.';
+    const errorMessage = error.message.includes("timeout")
+      ? "Personality analysis is taking longer than expected. Please try again, or skip to use a generic profile."
+      : "Unable to complete personality analysis. Please try again.";
 
     res.status(500).json({
-      error: 'Profile Completion Error',
+      error: "Profile Completion Error",
       message: errorMessage,
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
       canRetry: true,
-      fallbackAvailable: true
+      fallbackAvailable: true,
     });
   }
 });

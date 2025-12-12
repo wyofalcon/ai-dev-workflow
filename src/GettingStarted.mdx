@@ -1,0 +1,220 @@
+---
+title: Tutorial/Getting Started
+---
+
+# 🚀 Getting Started with CVstomize Components
+
+This tutorial will help you understand how to use CVstomize components in your development workflow.
+
+## 🛠️ Development Setup
+
+### Prerequisites
+
+1. **Node.js 20+** - Required for running the development server
+2. **Docker** - For running the full stack locally
+3. **VS Code** - Recommended IDE with Storybook extensions
+
+### Running Storybook
+
+```bash
+# From the project root
+npm run storybook
+
+# Storybook will start at http://localhost:6006
+```
+
+### Running the Full Application
+
+```bash
+# Start all services (database, backend, frontend)
+docker compose up -d
+
+# Frontend: http://localhost:3000
+# Backend: http://localhost:8080
+# Storybook: http://localhost:6006 (run separately)
+```
+
+---
+
+## 📦 Component Architecture
+
+CVstomize components follow a consistent pattern:
+
+### 1. Feature Cards
+
+Used on the homepage for primary actions.
+
+```jsx
+import FeatureCard from "./components/FeatureCard";
+import BuildIcon from "@mui/icons-material/Build";
+
+<FeatureCard
+  title="BUILD NEW RESUME"
+  icon={<BuildIcon sx={{ fontSize: 40 }} />}
+  tooltip="Start building from scratch"
+  color="#9d99e5"
+  onClick={() => console.log("clicked")}
+/>;
+```
+
+### 2. Modals
+
+Multi-step workflows wrapped in Material-UI dialogs.
+
+```jsx
+import BuildResumeModal from "./components/BuildResumeModal";
+
+<BuildResumeModal open={isOpen} onClose={() => setIsOpen(false)} />;
+```
+
+### 3. Form Components
+
+Controlled inputs with validation support.
+
+```jsx
+import TextInput from "./components/TextInput";
+
+<TextInput
+  title="Job Description"
+  placeholder="Paste the job posting here..."
+  value={jobDescription}
+  onChange={(e) => setJobDescription(e.target.value)}
+/>;
+```
+
+---
+
+## 🎨 Theming
+
+All components use Material-UI's theming system. The theme is defined in `src/theme.js`.
+
+### Using Theme Colors
+
+```jsx
+import { useTheme } from "@mui/material/styles";
+
+function MyComponent() {
+  const theme = useTheme();
+
+  return (
+    <Box
+      sx={{
+        backgroundColor: theme.palette.background.paper,
+        color: theme.palette.primary.main,
+      }}
+    >
+      Themed content
+    </Box>
+  );
+}
+```
+
+### Color Reference
+
+| Variable             | Color           | Hex       |
+| -------------------- | --------------- | --------- |
+| `primary.main`       | Purple          | `#7e78d2` |
+| `secondary.main`     | Light Purple    | `#9d99e5` |
+| `background.default` | Dark            | `#121212` |
+| `background.paper`   | Card Background | `#1e1e1e` |
+
+---
+
+## 📝 Adding New Components
+
+### 1. Create the Component
+
+```jsx
+// src/components/MyComponent.js
+import React from "react";
+import { Box, Typography } from "@mui/material";
+
+function MyComponent({ title, children }) {
+  return (
+    <Box>
+      <Typography variant="h6">{title}</Typography>
+      {children}
+    </Box>
+  );
+}
+
+export default MyComponent;
+```
+
+### 2. Create the Story
+
+```jsx
+// src/components/MyComponent.stories.jsx
+import React from "react";
+import MyComponent from "./MyComponent";
+
+export default {
+  title: "UI/MyComponent",
+  component: MyComponent,
+  parameters: {
+    docs: {
+      description: {
+        component: "Description of what MyComponent does.",
+      },
+    },
+  },
+  tags: ["autodocs"],
+  argTypes: {
+    title: { control: "text" },
+  },
+};
+
+export const Default = {
+  args: {
+    title: "My Title",
+    children: "Content goes here",
+  },
+};
+
+export const CustomTitle = {
+  args: {
+    title: "Custom Title",
+    children: "Different content",
+  },
+};
+```
+
+### 3. Organize by Category
+
+Use these title prefixes for consistent organization:
+
+- `Pages/` - Full page components
+- `Modals/` - Dialog/modal components
+- `Forms/` - Input components
+- `UI/` - Reusable UI elements
+- `Layout/` - Layout components (Header, Footer, etc.)
+- `Features/` - Feature showcases
+- `API/` - API documentation
+- `Development/` - Dev-only components
+
+---
+
+## ✅ Best Practices
+
+### Do's ✓
+
+- Use `tags: ['autodocs']` for automatic documentation
+- Provide meaningful `description` in parameters
+- Create multiple stories showing different states
+- Use `argTypes` for interactive controls
+- Follow the existing folder structure
+
+### Don'ts ✗
+
+- Don't use real API endpoints in stories (mock them)
+- Don't require authentication context (provide mocks)
+- Don't create stories for internal/private components
+- Don't include sensitive data in story examples
+
+---
+
+## 🔗 Useful Links
+
+- [Material-UI Documentation](https://mui.com/)
+- [Storybook Documentation](https://storybook.js.org/docs)
+- [CVstomize Repository](https://github.com/wyofalcon/cvstomize)

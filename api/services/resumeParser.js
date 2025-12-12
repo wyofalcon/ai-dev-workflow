@@ -3,7 +3,8 @@
  * Extracts structured profile data from uploaded resumes using Gemini AI
  */
 
-const geminiService = require('./geminiServiceVertex');
+// Use factory to auto-switch between mock (free) and Vertex AI (GCP)
+const { geminiService } = require("./geminiServiceFactory");
 
 /**
  * Parse resume text and extract structured profile data
@@ -12,7 +13,7 @@ const geminiService = require('./geminiServiceVertex');
  */
 async function parseResume(resumeText) {
   if (!resumeText || resumeText.trim().length < 50) {
-    throw new Error('Resume text is too short to parse');
+    throw new Error("Resume text is too short to parse");
   }
 
   const model = geminiService.getFlashModel();
@@ -32,7 +33,7 @@ For arrays, return empty array [] if no items found.
 **REQUIRED JSON STRUCTURE:**
 {
   "fullName": "string or null",
-  "email": "string or null", 
+  "email": "string or null",
   "phone": "string or null",
   "location": "string (City, State format) or null",
   "linkedinUrl": "string or null",
@@ -68,7 +69,7 @@ Return ONLY the JSON object, nothing else:`;
 
   try {
     const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         maxOutputTokens: 4096,
         temperature: 0.1, // Low temperature for consistent parsing
@@ -80,8 +81,8 @@ Return ONLY the JSON object, nothing else:`;
 
     // Clean up response - remove markdown code blocks if present
     responseText = responseText
-      .replace(/```json\s*/gi, '')
-      .replace(/```\s*/gi, '')
+      .replace(/```json\s*/gi, "")
+      .replace(/```\s*/gi, "")
       .trim();
 
     // Parse JSON
@@ -95,17 +96,32 @@ Return ONLY the JSON object, nothing else:`;
       location: parsedData.location || null,
       linkedinUrl: parsedData.linkedinUrl || null,
       summary: parsedData.summary || null,
-      yearsExperience: typeof parsedData.yearsExperience === 'number' ? parsedData.yearsExperience : null,
-      careerLevel: ['entry', 'mid', 'senior', 'executive'].includes(parsedData.careerLevel) 
-        ? parsedData.careerLevel 
+      yearsExperience:
+        typeof parsedData.yearsExperience === "number"
+          ? parsedData.yearsExperience
+          : null,
+      careerLevel: ["entry", "mid", "senior", "executive"].includes(
+        parsedData.careerLevel
+      )
+        ? parsedData.careerLevel
         : null,
       currentTitle: parsedData.currentTitle || null,
       skills: Array.isArray(parsedData.skills) ? parsedData.skills : [],
-      industries: Array.isArray(parsedData.industries) ? parsedData.industries : [],
-      education: Array.isArray(parsedData.education) ? parsedData.education : [],
-      certifications: Array.isArray(parsedData.certifications) ? parsedData.certifications : [],
-      languages: Array.isArray(parsedData.languages) ? parsedData.languages : [],
-      experience: Array.isArray(parsedData.experience) ? parsedData.experience : [],
+      industries: Array.isArray(parsedData.industries)
+        ? parsedData.industries
+        : [],
+      education: Array.isArray(parsedData.education)
+        ? parsedData.education
+        : [],
+      certifications: Array.isArray(parsedData.certifications)
+        ? parsedData.certifications
+        : [],
+      languages: Array.isArray(parsedData.languages)
+        ? parsedData.languages
+        : [],
+      experience: Array.isArray(parsedData.experience)
+        ? parsedData.experience
+        : [],
     };
 
     return {
@@ -114,12 +130,12 @@ Return ONLY the JSON object, nothing else:`;
       tokensUsed: response.usageMetadata?.totalTokenCount || 0,
     };
   } catch (error) {
-    console.error('Resume parsing error:', error);
-    
+    console.error("Resume parsing error:", error);
+
     if (error instanceof SyntaxError) {
-      throw new Error('Failed to parse AI response as JSON');
+      throw new Error("Failed to parse AI response as JSON");
     }
-    
+
     throw error;
   }
 }
@@ -133,36 +149,45 @@ Return ONLY the JSON object, nothing else:`;
  */
 async function extractTextFromFile(fileBuffer, mimeType) {
   // Plain text files
-  if (mimeType === 'text/plain') {
-    return fileBuffer.toString('utf-8');
+  if (mimeType === "text/plain") {
+    return fileBuffer.toString("utf-8");
   }
 
   // PDF files - use pdf-parse if available
-  if (mimeType === 'application/pdf') {
+  if (mimeType === "application/pdf") {
     try {
-      const pdfParse = require('pdf-parse');
-      const data = await pdfParse(fileBuffer);
-      return data.text;
+      const pdfParse = require("pdf-parse");
+      const result = await pdfParse(fileBuffer);
+      return result.text;
     } catch (error) {
       // pdf-parse not installed or parsing failed
-      console.error('PDF parsing failed:', error.message);
-      throw new Error('PDF parsing is not available. Please upload a text file or paste your resume content.');
+      console.error("PDF parsing failed:", error.message);
+      throw new Error(
+        "PDF parsing is not available. Please upload a text file or paste your resume content."
+      );
     }
   }
 
   // Word documents - could add mammoth for .docx support
-  if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+  if (
+    mimeType ===
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ) {
     try {
-      const mammoth = require('mammoth');
+      const mammoth = require("mammoth");
       const result = await mammoth.extractRawText({ buffer: fileBuffer });
       return result.value;
     } catch (error) {
-      console.error('DOCX parsing failed:', error.message);
-      throw new Error('Word document parsing is not available. Please upload a PDF or text file.');
+      console.error("DOCX parsing failed:", error.message);
+      throw new Error(
+        "Word document parsing is not available. Please upload a PDF or text file."
+      );
     }
   }
 
-  throw new Error(`Unsupported file type: ${mimeType}. Please upload a PDF, DOCX, or TXT file.`);
+  throw new Error(
+    `Unsupported file type: ${mimeType}. Please upload a PDF, DOCX, or TXT file.`
+  );
 }
 
 module.exports = {

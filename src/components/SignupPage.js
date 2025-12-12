@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext.js';
+import React, { useState } from "react";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext.js";
 import {
   Container,
   Box,
@@ -14,52 +14,52 @@ import {
   CircularProgress,
   Checkbox,
   FormControlLabel,
-} from '@mui/material';
-import { Google as GoogleIcon } from '@mui/icons-material';
-import logo from './logo.png';
+} from "@mui/material";
+import { Google as GoogleIcon } from "@mui/icons-material";
+import logo from "./logo.png";
 
 function SignupPage() {
   const navigate = useNavigate();
   const { signup, signInWithGoogle, error: authError } = useAuth();
 
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    displayName: '',
+    email: "",
+    password: "",
+    confirmPassword: "",
+    displayName: "",
     agreeToTerms: false,
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'agreeToTerms' ? checked : value,
+      [name]: name === "agreeToTerms" ? checked : value,
     }));
   };
 
   const validateForm = () => {
     if (!formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       return false;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError("Password must be at least 6 characters");
       return false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return false;
     }
 
     if (!formData.agreeToTerms) {
-      setError('Please agree to the Terms of Service and Privacy Policy');
+      setError("Please agree to the Terms of Service and Privacy Policy");
       return false;
     }
 
@@ -74,20 +74,22 @@ function SignupPage() {
     }
 
     try {
-      setError('');
-      setSuccess('');
+      setError("");
+      setSuccess("");
       setLoading(true);
 
       await signup(formData.email, formData.password, formData.displayName);
 
-      setSuccess('Account created! Please check your email to verify your account.');
+      setSuccess(
+        "Account created! Please check your email to verify your account."
+      );
 
       // Redirect after 2 seconds
       setTimeout(() => {
-        navigate('/');
+        navigate("/", { replace: true });
       }, 2000);
     } catch (error) {
-      setError(error.message || 'Failed to create account');
+      setError(error.message || "Failed to create account");
     } finally {
       setLoading(false);
     }
@@ -95,18 +97,18 @@ function SignupPage() {
 
   const handleGoogleSignup = async () => {
     if (!formData.agreeToTerms) {
-      setError('Please agree to the Terms of Service and Privacy Policy');
+      setError("Please agree to the Terms of Service and Privacy Policy");
       return;
     }
 
     try {
-      setError('');
-      setSuccess('');
+      setError("");
+      setSuccess("");
       setLoading(true);
       await signInWithGoogle();
-      navigate('/'); // Redirect to home after successful signup
+      navigate("/", { replace: true }); // Redirect to home after successful signup
     } catch (error) {
-      setError(error.message || 'Failed to sign up with Google');
+      setError(error.message || "Failed to sign up with Google");
     } finally {
       setLoading(false);
     }
@@ -116,11 +118,11 @@ function SignupPage() {
     <Container maxWidth="sm">
       <Box
         sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
           py: 4,
         }}
       >
@@ -128,20 +130,25 @@ function SignupPage() {
           elevation={3}
           sx={{
             p: 4,
-            width: '100%',
+            width: "100%",
             borderRadius: 2,
           }}
         >
           {/* Logo */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-            <img src={logo} alt="CVstomize Logo" style={{ width: '120px' }} />
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+            <img src={logo} alt="CVstomize Logo" style={{ width: "120px" }} />
           </Box>
 
           {/* Title */}
           <Typography variant="h4" align="center" gutterBottom>
             Create Your Account
           </Typography>
-          <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography
+            variant="body2"
+            align="center"
+            color="text.secondary"
+            sx={{ mb: 3 }}
+          >
             Start building your perfect resume with AI
           </Typography>
 
@@ -243,11 +250,11 @@ function SignupPage() {
               }
               label={
                 <Typography variant="body2">
-                  I agree to the{' '}
+                  I agree to the{" "}
                   <Link href="/terms" target="_blank" underline="hover">
                     Terms of Service
-                  </Link>{' '}
-                  and{' '}
+                  </Link>{" "}
+                  and{" "}
                   <Link href="/privacy" target="_blank" underline="hover">
                     Privacy Policy
                   </Link>
@@ -265,14 +272,14 @@ function SignupPage() {
               disabled={loading}
               sx={{ mt: 2 }}
             >
-              {loading ? <CircularProgress size={24} /> : 'Create Account'}
+              {loading ? <CircularProgress size={24} /> : "Create Account"}
             </Button>
           </form>
 
           {/* Sign In Link */}
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <Box sx={{ mt: 3, textAlign: "center" }}>
             <Typography variant="body2" color="text.secondary">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link
                 component={RouterLink}
                 to="/login"

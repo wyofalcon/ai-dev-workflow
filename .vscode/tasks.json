@@ -66,6 +66,75 @@
       },
       "problemMatcher": [],
       "detail": "Open HTML test report in browser"
+    },
+    {
+      "label": "Start All Services",
+      "type": "shell",
+      "command": "docker compose up -d",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Start database, redis, backend, and frontend containers"
+    },
+    {
+      "label": "Stop All Services",
+      "type": "shell",
+      "command": "docker compose down",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Stop all running containers"
+    },
+    {
+      "label": "View Container Logs",
+      "type": "shell",
+      "command": "docker compose logs -f --tail=100",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "problemMatcher": [],
+      "detail": "Follow logs from all containers"
+    },
+    {
+      "label": "Run Backend Tests",
+      "type": "shell",
+      "command": "cd api && npm test",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Run Jest unit/integration tests for the API"
+    },
+    {
+      "label": "Prisma Studio",
+      "type": "shell",
+      "command": "cd api && npx prisma studio",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": [],
+      "detail": "Open Prisma Studio to view/edit database"
+    },
+    {
+      "label": "Reset Database",
+      "type": "shell",
+      "command": "docker compose down -v && docker compose up -d && sleep 5 && cd api && npx prisma migrate dev",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "⚠️ Destroys all data and recreates database"
     }
   ]
 }

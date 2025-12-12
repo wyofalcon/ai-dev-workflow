@@ -1,7 +1,7 @@
 {
   "name": "CVstomize Dev Container",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
-  
+
   // Container features
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
@@ -15,6 +15,8 @@
       "ppa": false
     },
     "ghcr.io/devcontainers/features/github-cli:1": {}
+    // Note: gcloud feature temporarily removed due to registry issues
+    // Install manually if needed: curl https://sdk.cloud.google.com | bash
   },
 
   // VS Code customizations
@@ -26,33 +28,39 @@
         "esbenp.prettier-vscode",
         "ms-azuretools.vscode-docker",
         "ms-vscode.vscode-typescript-next",
-        
+
         // Database & backend
         "prisma.prisma",
         "cweijan.vscode-database-client2",
-        
+
         // Testing
         "ms-playwright.playwright",
-        
+
         // AI assistance
         "github.copilot",
         "github.copilot-chat",
-        
+
+        // GCP / Cloud deployment
+        "googlecloudtools.cloudcode",
+
         // React development
         "formulahendry.auto-rename-tag",
         "dsznajder.es7-react-js-snippets",
-        
+
         // Productivity
         "christian-kohler.path-intellisense",
         "usernamehw.errorlens",
         "eamodio.gitlens",
         "pkief.material-icon-theme",
         "streetsidesoftware.code-spell-checker",
-        
+
         // Documentation
         "yzhang.markdown-all-in-one",
         "redhat.vscode-yaml",
-        "mikestead.dotenv"
+        "mikestead.dotenv",
+
+        // Browser DevTools
+        "ms-edgedevtools.vscode-edge-devtools"
       ],
       "settings": {
         // Editor settings
@@ -65,26 +73,29 @@
         "editor.insertSpaces": true,
         "editor.wordWrap": "on",
         "editor.minimap.enabled": false,
-        
+
+        // Extensions - suppress unwanted recommendations
+        "extensions.unwantedRecommendations": ["ms-toolsai.jupyter"],
+
         // File handling
         "files.autoSave": "afterDelay",
         "files.autoSaveDelay": 1000,
         "files.trimTrailingWhitespace": true,
         "files.insertFinalNewline": true,
-        
+
         // Terminal
         "terminal.integrated.defaultProfile.linux": "bash",
         "terminal.integrated.scrollback": 10000,
-        
+
         // Git
         "git.autofetch": true,
         "git.confirmSync": false,
         "git.enableSmartCommit": true,
-        
+
         // UI
         "workbench.iconTheme": "material-icon-theme",
         "workbench.startupEditor": "readme",
-        
+
         // Language-specific
         "typescript.preferences.importModuleSpecifier": "relative",
         "[javascript]": {
@@ -101,7 +112,7 @@
             "strings": false
           }
         },
-        
+
         // Extension settings
         "errorLens.enabledDiagnosticLevels": ["error", "warning"],
         "cSpell.words": ["cvstomize", "prisma", "gemini", "vertex"]
@@ -110,48 +121,51 @@
   },
 
   // Port forwarding
-  "forwardPorts": [3000, 3001, 5432, 6379, 9229],
+  "forwardPorts": [3000, 3001, 4000, 5432, 6379, 9099, 9229],
   "portsAttributes": {
-    "3000": { 
-      "label": "Frontend (React)", 
+    "3000": {
+      "label": "Frontend (React)",
       "onAutoForward": "notify",
       "protocol": "http"
     },
-    "3001": { 
-      "label": "Backend (API)", 
+    "3001": {
+      "label": "Backend (API)",
       "onAutoForward": "silent",
       "protocol": "http"
     },
-    "5432": { 
-      "label": "PostgreSQL", 
-      "onAutoForward": "silent" 
+    "4000": {
+      "label": "Firebase Emulator UI",
+      "onAutoForward": "silent",
+      "protocol": "http"
     },
-    "6379": { 
-      "label": "Redis", 
-      "onAutoForward": "silent" 
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
     },
-    "9229": { 
-      "label": "Node Debugger", 
-      "onAutoForward": "silent" 
+    "6379": {
+      "label": "Redis",
+      "onAutoForward": "silent"
+    },
+    "9099": {
+      "label": "Firebase Auth Emulator",
+      "onAutoForward": "silent"
+    },
+    "9229": {
+      "label": "Node Debugger",
+      "onAutoForward": "silent"
     }
   },
 
   // Lifecycle scripts
   "postCreateCommand": "bash .devcontainer/post-create.sh",
-  "postStartCommand": "docker compose up -d && echo '\\n🚀 Dev environment is starting! Frontend: http://localhost:3000\\n'",
-  
+  "postStartCommand": "docker compose up -d && sleep 8 && docker exec cvstomize-api-local npx prisma migrate deploy 2>/dev/null || true && echo '\\n🚀 Dev environment ready! Frontend: http://localhost:3000\\n'",
+
   // Container settings
   "remoteUser": "node",
   "containerEnv": {
     "NODE_ENV": "development",
     "TERM": "xterm-256color"
   },
-
-  // Mount settings for better performance
-  "mounts": [
-    "source=${localWorkspaceFolder}/node_modules,target=/workspaces/cvstomize/node_modules,type=volume",
-    "source=${localWorkspaceFolder}/api/node_modules,target=/workspaces/cvstomize/api/node_modules,type=volume"
-  ],
 
   // Host requirements
   "hostRequirements": {

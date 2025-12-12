@@ -731,7 +731,9 @@ const ResumePage = () => {
                   color="primary"
                   size="large"
                   startIcon={<UploadIcon />}
-                  onClick={() => navigate("/onboarding")}
+                  onClick={() =>
+                    navigate("/onboarding", { state: { intentional: true } })
+                  }
                 >
                   Go to Onboarding
                 </Button>

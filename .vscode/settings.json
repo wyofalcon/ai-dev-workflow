@@ -49,5 +49,15 @@
 
   // Extension settings
   "errorLens.enabledDiagnosticLevels": ["error", "warning"],
-  "cSpell.words": ["cvstomize", "prisma", "gemini", "vertex", "devcontainer"]
+  "cSpell.words": ["cvstomize", "prisma", "gemini", "vertex", "devcontainer"],
+
+  // Microsoft Edge Tools settings
+  "vscode-edge-devtools.autoAttachViaDebuggerForEdge": true,
+  "vscode-edge-devtools.headless": false,
+  "vscode-edge-devtools.webhint": true,
+  "vscode-edge-devtools.mirrorEdits": true,
+  "vscode-edge-devtools.sourceMaps": true,
+
+  // Debug settings for Edge
+  "debug.javascript.autoAttachFilter": "smart"
 }

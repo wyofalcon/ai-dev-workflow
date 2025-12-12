@@ -8,9 +8,11 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.4",
-    "@mui/x-date-pickers": "^8.19.0",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
+    "@mui/x-date-pickers": "^8.21.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "ajv": "^8.17.1",
+    "ajv-keywords": "^5.1.0",
     "axios": "^1.13.1",
     "dayjs": "^1.11.19",
     "eslint": "^8.57.1",
@@ -18,14 +20,14 @@
     "firebase": "^12.5.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.3",
-    "pdfjs-dist": "^3.11.174",
+    "pdfjs-dist": "^4.10.38",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.8",
     "react-markdown": "^9.0.1",
     "react-router-dom": "^6.23.1",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^5.1.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -37,7 +39,9 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:report": "playwright show-report tests/reports/html",
-    "update:skills": "node scripts/update-onet-skills.cjs"
+    "update:skills": "node scripts/update-onet-skills.cjs",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "eslintConfig": {
     "extends": [
@@ -59,7 +63,16 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
+    "@storybook/addon-a11y": "^10.1.7",
+    "@storybook/addon-docs": "^10.1.7",
+    "@storybook/addon-onboarding": "^10.1.7",
+    "@storybook/preset-create-react-app": "^10.1.7",
+    "@storybook/react-webpack5": "^10.1.7",
     "@types/node": "^24.10.1",
-    "typescript": "^5.9.3"
+    "eslint-plugin-storybook": "^10.1.7",
+    "prop-types": "^15.8.1",
+    "storybook": "^10.1.7",
+    "typescript": "^5.9.3",
+    "webpack": "^5.103.0"
   }
 }

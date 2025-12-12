@@ -56,11 +56,19 @@ function ProtectedRoute({ children }) {
 }
 
 // Onboarding Route wrapper - accessible to any logged in user
+// Redirects completed users back to home unless they intentionally navigated here
 function OnboardingRoute({ children }) {
-  const { currentUser } = useAuth();
+  const { currentUser, onboardingCompleted } = useAuth();
+  const location = useLocation();
 
   if (!currentUser) {
     return <Navigate to="/login" replace />;
+  }
+
+  // If user already completed onboarding and didn't intentionally navigate here
+  // (e.g., via browser back button), redirect them to home
+  if (onboardingCompleted === true && !location.state?.intentional) {
+    return <Navigate to="/" replace />;
   }
 
   return children;

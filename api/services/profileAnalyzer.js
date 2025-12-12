@@ -10,7 +10,8 @@
  * - Deep Lexical Hypothesis: Cutler et al. (2022)
  */
 
-const geminiService = require('./geminiServiceVertex');
+// Use factory to auto-switch between mock (free) and Vertex AI (GCP)
+const { geminiService } = require("./geminiServiceFactory");
 
 // =====================================================
 // BFI-20 SCORING ALGORITHM
@@ -26,7 +27,7 @@ const BFI_20_ITEMS = {
   conscientiousness: [5, 6, 7, 8], // Q5-8: thorough, disorganized(R), reliable, perseveres
   extraversion: [9, 10, 11, 12], // Q9-12: talkative, reserved(R), outgoing, enthusiastic
   agreeableness: [13, 14, 15, 16], // Q13-16: helpful, cold(R), considerate, cooperative
-  neuroticism: [17, 18, 19, 20] // Q17-20: worries, relaxed(R), nervous, calm(R)
+  neuroticism: [17, 18, 19, 20], // Q17-20: worries, relaxed(R), nervous, calm(R)
 };
 
 const REVERSE_SCORED_ITEMS = [3, 6, 10, 14, 18, 20];
@@ -59,7 +60,8 @@ function calculateBFI20Scores(likertResponses) {
     const rawScore = sum;
     const minScore = 4;
     const maxScore = 20;
-    const normalizedScore = ((rawScore - minScore) / (maxScore - minScore)) * 100;
+    const normalizedScore =
+      ((rawScore - minScore) / (maxScore - minScore)) * 100;
 
     scores[trait] = Math.round(normalizedScore);
   }
@@ -80,7 +82,8 @@ function checkLikertConsistency(likertResponses) {
   // Extraversion: Q9 (talkative) vs Q10 (reserved-R)
   if (likertResponses.q9 && likertResponses.q10) {
     totalPairs++;
-    if ((likertResponses.q9 + likertResponses.q10) !== 6) { // Not exact opposites = good
+    if (likertResponses.q9 + likertResponses.q10 !== 6) {
+      // Not exact opposites = good
       consistentPairs++;
     }
   }
@@ -88,7 +91,7 @@ function checkLikertConsistency(likertResponses) {
   // Conscientiousness: Q5 (thorough) vs Q6 (disorganized-R)
   if (likertResponses.q5 && likertResponses.q6) {
     totalPairs++;
-    if ((likertResponses.q5 + likertResponses.q6) !== 6) {
+    if (likertResponses.q5 + likertResponses.q6 !== 6) {
       consistentPairs++;
     }
   }
@@ -108,14 +111,16 @@ function checkLikertConsistency(likertResponses) {
  * @returns {string}
  */
 function buildNarrativeAnalysisPrompt(stories, hybridAnswers) {
-  let narrativeText = '**USER NARRATIVES:**\n\n';
+  let narrativeText = "**USER NARRATIVES:**\n\n";
 
   stories.forEach((story, idx) => {
-    narrativeText += `Story ${idx + 1} (${story.question_type}):\n${story.story_text}\n\n`;
+    narrativeText += `Story ${idx + 1} (${story.question_type}):\n${
+      story.story_text
+    }\n\n`;
   });
 
   if (hybridAnswers && hybridAnswers.length > 0) {
-    narrativeText += '**ADDITIONAL RESPONSES:**\n\n';
+    narrativeText += "**ADDITIONAL RESPONSES:**\n\n";
     hybridAnswers.forEach((qa, idx) => {
       narrativeText += `Q${idx + 1}: ${qa.question}\nA: ${qa.answer}\n\n`;
     });
@@ -194,29 +199,30 @@ async function analyzeNarrativesWithGemini(stories, hybridAnswers) {
 
     // Extract text from response
     let responseText;
-    if (typeof response.text === 'function') {
+    if (typeof response.text === "function") {
       responseText = response.text();
     } else if (response.candidates && response.candidates[0]) {
       responseText = response.candidates[0].content.parts[0].text;
     } else {
-      throw new Error('Unexpected Gemini response format');
+      throw new Error("Unexpected Gemini response format");
     }
 
     // Clean JSON
     let cleanedResponse = responseText.trim();
-    cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    cleanedResponse = cleanedResponse
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "");
 
     const analysis = JSON.parse(cleanedResponse);
 
     // Validate structure
     if (!analysis.openness || !analysis.confidence) {
-      throw new Error('Invalid Gemini response structure');
+      throw new Error("Invalid Gemini response structure");
     }
 
     return analysis;
-
   } catch (error) {
-    console.error('❌ Gemini narrative analysis failed:', error);
+    console.error("❌ Gemini narrative analysis failed:", error);
     // Return neutral scores if Gemini fails
     return {
       openness: 50,
@@ -225,7 +231,7 @@ async function analyzeNarrativesWithGemini(stories, hybridAnswers) {
       agreeableness: 50,
       neuroticism: 50,
       confidence: 0.3,
-      reasoning: { error: 'Gemini analysis failed, using neutral scores' }
+      reasoning: { error: "Gemini analysis failed, using neutral scores" },
     };
   }
 }
@@ -241,15 +247,25 @@ async function analyzeNarrativesWithGemini(stories, hybridAnswers) {
  * @param {Object} weights - {likert: 0.7, narrative: 0.3}
  * @returns {Object} Fused OCEAN scores
  */
-function fuseScores(likertScores, narrativeScores, weights = { likert: 0.7, narrative: 0.3 }) {
+function fuseScores(
+  likertScores,
+  narrativeScores,
+  weights = { likert: 0.7, narrative: 0.3 }
+) {
   const fused = {};
 
-  for (const trait of ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism']) {
+  for (const trait of [
+    "openness",
+    "conscientiousness",
+    "extraversion",
+    "agreeableness",
+    "neuroticism",
+  ]) {
     const likertScore = likertScores[trait] || 50;
     const narrativeScore = narrativeScores[trait] || 50;
 
     fused[trait] = Math.round(
-      (likertScore * weights.likert) + (narrativeScore * weights.narrative)
+      likertScore * weights.likert + narrativeScore * weights.narrative
     );
   }
 
@@ -263,12 +279,17 @@ function fuseScores(likertScores, narrativeScores, weights = { likert: 0.7, narr
  * @param {number} narrativeDepth - Average story length
  * @returns {number} Overall confidence (0-1)
  */
-function calculateConfidence(likertConsistency, narrativeConfidence, narrativeDepth) {
+function calculateConfidence(
+  likertConsistency,
+  narrativeConfidence,
+  narrativeDepth
+) {
   // Normalize narrative depth (100-500 words = good)
   const depthScore = Math.min(narrativeDepth / 300, 1.0);
 
   // Weighted average
-  const confidence = (likertConsistency * 0.4) + (narrativeConfidence * 0.4) + (depthScore * 0.2);
+  const confidence =
+    likertConsistency * 0.4 + narrativeConfidence * 0.4 + depthScore * 0.2;
 
   return Math.round(confidence * 100) / 100; // Round to 2 decimals
 }
@@ -283,42 +304,52 @@ function calculateConfidence(likertConsistency, narrativeConfidence, narrativeDe
  * @returns {Object} Derived traits
  */
 function deriveWorkPreferences(ocean) {
-  const { openness, conscientiousness, extraversion, agreeableness, neuroticism } = ocean;
+  const {
+    openness,
+    conscientiousness,
+    extraversion,
+    agreeableness,
+    neuroticism,
+  } = ocean;
 
   // Work Style
-  let workStyle = 'hybrid';
-  if (extraversion > 65 && agreeableness > 60) workStyle = 'collaborative';
-  else if (extraversion < 40) workStyle = 'independent';
+  let workStyle = "hybrid";
+  if (extraversion > 65 && agreeableness > 60) workStyle = "collaborative";
+  else if (extraversion < 40) workStyle = "independent";
 
   // Leadership Style
-  let leadershipStyle = 'none';
-  if (extraversion > 60 && openness > 60) leadershipStyle = 'transformational';
-  else if (agreeableness > 65 && conscientiousness > 60) leadershipStyle = 'servant';
-  else if (extraversion > 55 && agreeableness > 55) leadershipStyle = 'democratic';
+  let leadershipStyle = "none";
+  if (extraversion > 60 && openness > 60) leadershipStyle = "transformational";
+  else if (agreeableness > 65 && conscientiousness > 60)
+    leadershipStyle = "servant";
+  else if (extraversion > 55 && agreeableness > 55)
+    leadershipStyle = "democratic";
 
   // Communication Style
-  let communicationStyle = 'analytical';
-  if (extraversion > 65) communicationStyle = 'expressive';
-  else if (agreeableness > 65) communicationStyle = 'diplomatic';
-  else if (agreeableness < 45 && conscientiousness > 60) communicationStyle = 'direct';
+  let communicationStyle = "analytical";
+  if (extraversion > 65) communicationStyle = "expressive";
+  else if (agreeableness > 65) communicationStyle = "diplomatic";
+  else if (agreeableness < 45 && conscientiousness > 60)
+    communicationStyle = "direct";
 
   // Motivation Type
-  let motivationType = 'achievement';
-  if (openness > 70) motivationType = 'mastery';
-  else if (extraversion < 40 && openness > 60) motivationType = 'autonomy';
-  else if (agreeableness > 70) motivationType = 'purpose';
+  let motivationType = "achievement";
+  if (openness > 70) motivationType = "mastery";
+  else if (extraversion < 40 && openness > 60) motivationType = "autonomy";
+  else if (agreeableness > 70) motivationType = "purpose";
 
   // Decision Making
-  let decisionMaking = 'analytical';
-  if (openness > 65 && conscientiousness < 50) decisionMaking = 'intuitive';
-  else if (agreeableness > 65 && extraversion > 55) decisionMaking = 'consultative';
+  let decisionMaking = "analytical";
+  if (openness > 65 && conscientiousness < 50) decisionMaking = "intuitive";
+  else if (agreeableness > 65 && extraversion > 55)
+    decisionMaking = "consultative";
 
   return {
     workStyle,
     leadershipStyle,
     communicationStyle,
     motivationType,
-    decisionMaking
+    decisionMaking,
   };
 }
 
@@ -337,36 +368,46 @@ function deriveWorkPreferences(ocean) {
 async function analyzePersonality(assessmentData) {
   const { likertResponses, stories, hybridAnswers } = assessmentData;
 
-  console.log('🧠 Starting hybrid personality analysis...');
+  console.log("🧠 Starting hybrid personality analysis...");
 
   // Step 1: Calculate BFI-20 scores
   const likertScores = calculateBFI20Scores(likertResponses);
   const likertConsistency = checkLikertConsistency(likertResponses);
-  console.log('✅ Likert scores calculated:', likertScores);
+  console.log("✅ Likert scores calculated:", likertScores);
 
   // Step 2: Analyze narratives with Gemini
-  const narrativeAnalysis = await analyzeNarrativesWithGemini(stories, hybridAnswers);
+  const narrativeAnalysis = await analyzeNarrativesWithGemini(
+    stories,
+    hybridAnswers
+  );
   const narrativeScores = {
     openness: narrativeAnalysis.openness,
     conscientiousness: narrativeAnalysis.conscientiousness,
     extraversion: narrativeAnalysis.extraversion,
     agreeableness: narrativeAnalysis.agreeableness,
-    neuroticism: narrativeAnalysis.neuroticism
+    neuroticism: narrativeAnalysis.neuroticism,
   };
-  console.log('✅ Narrative scores inferred:', narrativeScores);
+  console.log("✅ Narrative scores inferred:", narrativeScores);
 
   // Step 3: Fuse scores with weighted average
   const fusedScores = fuseScores(likertScores, narrativeScores);
-  console.log('✅ Fused scores (70% Likert + 30% Narrative):', fusedScores);
+  console.log("✅ Fused scores (70% Likert + 30% Narrative):", fusedScores);
 
   // Step 4: Calculate confidence
-  const avgStoryLength = stories.reduce((sum, s) => sum + s.story_text.length, 0) / stories.length;
-  const confidence = calculateConfidence(likertConsistency, narrativeAnalysis.confidence, avgStoryLength);
-  console.log(`✅ Confidence: ${confidence} (consistency: ${likertConsistency}, depth: ${avgStoryLength} chars)`);
+  const avgStoryLength =
+    stories.reduce((sum, s) => sum + s.story_text.length, 0) / stories.length;
+  const confidence = calculateConfidence(
+    likertConsistency,
+    narrativeAnalysis.confidence,
+    avgStoryLength
+  );
+  console.log(
+    `✅ Confidence: ${confidence} (consistency: ${likertConsistency}, depth: ${avgStoryLength} chars)`
+  );
 
   // Step 5: Derive work preferences
   const derived = deriveWorkPreferences(fusedScores);
-  console.log('✅ Derived traits:', derived);
+  console.log("✅ Derived traits:", derived);
 
   return {
     // OCEAN Scores
@@ -377,7 +418,7 @@ async function analyzePersonality(assessmentData) {
     neuroticism: fusedScores.neuroticism,
 
     // Methodology
-    assessmentVersion: 'hybrid-v3',
+    assessmentVersion: "hybrid-v3",
     confidenceScore: confidence,
     likertScores,
     narrativeScores,
@@ -391,8 +432,15 @@ async function analyzePersonality(assessmentData) {
     decisionMaking: derived.decisionMaking,
 
     // Insights
-    profileSummary: `${derived.communicationStyle.charAt(0).toUpperCase() + derived.communicationStyle.slice(1)} ${derived.workStyle} worker motivated by ${derived.motivationType}`,
-    keyInsights: narrativeAnalysis.reasoning ? Object.values(narrativeAnalysis.reasoning).filter(r => typeof r === 'string') : []
+    profileSummary: `${
+      derived.communicationStyle.charAt(0).toUpperCase() +
+      derived.communicationStyle.slice(1)
+    } ${derived.workStyle} worker motivated by ${derived.motivationType}`,
+    keyInsights: narrativeAnalysis.reasoning
+      ? Object.values(narrativeAnalysis.reasoning).filter(
+          (r) => typeof r === "string"
+        )
+      : [],
   };
 }
 
@@ -404,5 +452,5 @@ module.exports = {
   deriveWorkPreferences,
   calculateConfidence,
   BFI_20_ITEMS,
-  REVERSE_SCORED_ITEMS
+  REVERSE_SCORED_ITEMS,
 };

@@ -367,8 +367,9 @@ function OnboardingPage() {
       );
 
       // Navigate after short delay - resumes page for returning users, home for new users
+      // Use replace: true to prevent back button from returning to onboarding
       setTimeout(() => {
-        navigate(isReturningUser ? "/resume" : "/");
+        navigate(isReturningUser ? "/resume" : "/", { replace: true });
       }, 1000);
     } catch (err) {
       console.error("Profile save error:", err);
