@@ -266,37 +266,23 @@ git push origin dev
 
 #### **Step 1: Connect Cloud Build to GitHub**
 
-```bash
-# Enable Cloud Build API
-gcloud services enable cloudbuild.googleapis.com
-
-# Create trigger for dev branch
-gcloud builds triggers create github \
-  --name="deploy-dev" \
-  --repo-owner=YOUR_GITHUB_USERNAME \
-  --repo-name=cvstomize \
-  --branch-pattern="^dev$" \
-  --build-config=cloudbuild.yaml \
-  --substitutions="_ENV=dev"
-
-# Create trigger for staging
-gcloud builds triggers create github \
-  --name="deploy-staging" \
-  --repo-owner=YOUR_GITHUB_USERNAME \
-  --repo-name=cvstomize \
-  --branch-pattern="^staging$" \
-  --build-config=cloudbuild.yaml \
-  --substitutions="_ENV=staging"
-
-# Create trigger for production
-gcloud builds triggers create github \
-  --name="deploy-production" \
-  --repo-owner=YOUR_GITHUB_USERNAME \
-  --repo-name=cvstomize \
-  --branch-pattern="^main$" \
-  --build-config=cloudbuild.yaml \
-  --substitutions="_ENV=production"
-```
+> **⚠️ DEPRECATION WARNING:**
+> The `gcloud builds triggers create github` command is deprecated.
+> Google Cloud now recommends using the **Cloud Build GitHub App** (2nd Gen) integration.
+>
+> **Please follow these steps in the Google Cloud Console:**
+> 1. Go to **Cloud Build > Triggers**
+> 2. Click **Create Trigger**
+> 3. Select **GitHub (Cloud Build GitHub App)** as the source
+> 4. Authenticate and select `wyofalcon/cvstomize` repository
+> 5. Configure the trigger:
+>    - **Name:** `deploy-dev`
+>    - **Event:** Push to branch
+>    - **Source:** `^dev$`
+>    - **Configuration:** `Cloud Build configuration file (yaml or json)`
+>    - **Location:** `cloudbuild.yaml`
+>    - **Substitutions:** `_ENV=dev`
+> 6. Repeat for `staging` and `main` branches.
 
 #### **Step 2: Test Cloud Build**
 

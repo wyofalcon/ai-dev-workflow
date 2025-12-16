@@ -12,14 +12,17 @@ const prisma = new PrismaClient();
 async function runMigrations() {
   console.log('🗄️  Starting database migrations...\n');
 
-  const migrations = [
-    'add_pdf_template.sql',
-    'add_outcome_tracking.sql'
-  ];
+  const migrationsDir = path.join(__dirname, '..', 'database', 'migrations');
+  const migrationFiles = fs.readdirSync(migrationsDir).sort();
 
-  for (const migration of migrations) {
-    const migrationPath = path.join(__dirname, migration);
+  for (const migration of migrationFiles) {
+    const migrationPath = path.join(migrationsDir, migration);
     
+    if (!migration.endsWith('.sql')) {
+      console.log(`Skipping non-SQL file: ${migration}`);
+      continue;
+    }
+
     if (!fs.existsSync(migrationPath)) {
       console.error(`❌ Migration file not found: ${migration}`);
       continue;
@@ -61,17 +64,7 @@ async function main() {
   try {
     await runMigrations();
     
-    // Verify columns exist
-    console.log('🔍 Verifying database schema...');
-    const columns = await prisma.$queryRaw`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'resumes' 
-      AND column_name IN ('pdf_template', 'interview_received', 'outcome_reported_at', 'viewed_count')
-    `;
-    
-    console.log('Columns found:', columns.map(c => c.column_name).join(', '));
-    console.log('✅ Schema verification complete!\n');
+    console.log('✅ Migration script finished.\n');
     
   } catch (error) {
     console.error('❌ Migration script failed:', error.message);

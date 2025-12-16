@@ -35,9 +35,13 @@ export default defineConfig({
 
   // Projects for different browsers
   projects: [
+    // {
+    //   name: 'chromium',
+    //   use: { ...devices['Desktop Chrome'] },
+    // },
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'msedge',
+      use: { ...devices['Desktop Edge'] },
     },
     // Additional browsers (uncomment to test on multiple browsers)
     // {

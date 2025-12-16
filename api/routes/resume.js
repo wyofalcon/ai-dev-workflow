@@ -1963,8 +1963,6 @@ router.post(
     });
   },
   async (req, res, next) => {
-    const tempFiles = [];
-
     try {
       console.log(
         `📤 Upload request received. Files:`,
@@ -1991,25 +1989,13 @@ router.post(
         if (file.mimetype === "text/plain") {
           extractedText = file.buffer.toString("utf-8");
         } else if (file.mimetype === "application/pdf") {
-          const tempPath = path.join(
-            "/tmp",
-            `resume-${Date.now()}-${file.originalname}`
-          );
-          tempFiles.push(tempPath);
-          fs.writeFileSync(tempPath, file.buffer);
-          extractedText = await extractTextFromPdf(tempPath);
+          extractedText = await extractTextFromPdf(file.buffer);
         } else if (
           file.mimetype ===
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
           file.mimetype === "application/msword"
         ) {
-          const tempPath = path.join(
-            "/tmp",
-            `resume-${Date.now()}-${file.originalname}`
-          );
-          tempFiles.push(tempPath);
-          fs.writeFileSync(tempPath, file.buffer);
-          extractedText = await extractTextFromDocx(tempPath);
+          extractedText = await extractTextFromDocx(file.buffer);
         }
 
         if (extractedText && extractedText.trim().length > 0) {
@@ -2020,17 +2006,6 @@ router.post(
           });
         }
       }
-
-      // Cleanup temp files
-      tempFiles.forEach((filePath) => {
-        try {
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        } catch (err) {
-          console.error("Error deleting temp file:", err);
-        }
-      });
 
       if (extractedTexts.length === 0) {
         return res.status(400).json({
@@ -2066,17 +2041,6 @@ router.post(
         message: `Successfully extracted text from ${extractedTexts.length} file(s)`,
       });
     } catch (error) {
-      // Cleanup temp files on error
-      tempFiles.forEach((filePath) => {
-        try {
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        } catch (err) {
-          console.error("Error deleting temp file:", err);
-        }
-      });
-
       console.error("❌ Resume text extraction error:", error);
       next(error);
     }

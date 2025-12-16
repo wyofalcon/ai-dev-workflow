@@ -128,15 +128,13 @@ triggers:
 ```
 
 **Setup:**
-```bash
-# Connect Cloud Build to GitHub
-gcloud builds triggers create github \
-  --name="cvstomize-deploy" \
-  --repo-owner=YourUsername \
-  --repo-name=cvstomize \
-  --branch-pattern="^main$" \
-  --build-config=cloudbuild.yaml
-```
+> **⚠️ DEPRECATION NOTICE:**
+> The `gcloud builds triggers create github` command is deprecated.
+> Please create the trigger manually in the [Google Cloud Console](https://console.cloud.google.com/cloud-build/triggers):
+> 1. Create a new trigger using **GitHub (Cloud Build GitHub App)**.
+> 2. Connect your repository.
+> 3. Set the filter to `^main$`.
+> 4. Point to `cloudbuild.yaml`.
 
 **Option B: GitHub Actions (Portable)**
 ```yaml

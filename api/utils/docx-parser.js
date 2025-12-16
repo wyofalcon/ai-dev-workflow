@@ -1,8 +1,13 @@
 const mammoth = require('mammoth');
 
-async function extractTextFromDocx(filePath) {
+async function extractTextFromDocx(fileInput) {
     try {
-        const result = await mammoth.extractRawText({ path: filePath });
+        let result;
+        if (Buffer.isBuffer(fileInput)) {
+            result = await mammoth.extractRawText({ buffer: fileInput });
+        } else {
+            result = await mammoth.extractRawText({ path: fileInput });
+        }
         return result.value;
     } catch (error) {
         console.error('Error extracting text from DOCX:', error);

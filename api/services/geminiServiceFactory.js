@@ -3,6 +3,7 @@
  *
  * Automatically selects the appropriate Gemini service based on environment:
  * - USE_MOCK_AI=true → Mock service (FREE, no GCP costs)
+ * - GEMINI_API_KEY present → API Key service (Google AI Studio)
  * - Otherwise → Vertex AI service (requires GCP credentials)
  *
  * This makes it easy to develop locally without GCP costs,
@@ -16,7 +17,13 @@ function getGeminiService() {
     return require("./geminiServiceMock");
   }
 
-  // Use real Vertex AI service
+  // Use API Key service if key is provided (easier than GCP credentials)
+  if (process.env.GEMINI_API_KEY) {
+    console.log("🤖 AI Mode: API Key (Google AI Studio)");
+    return require("./geminiServiceApiKey");
+  }
+
+  // Use real Vertex AI service (Default for production with Service Account)
   console.log("🤖 AI Mode: Vertex AI (GCP)");
   return require("./geminiServiceVertex");
 }
