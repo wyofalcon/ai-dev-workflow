@@ -107,14 +107,12 @@ describe('ConversationalWizard Component', () => {
       const analyzeButton = screen.getByText(/Analyze.*Job/i);
       fireEvent.click(analyzeButton);
 
-      await waitFor(() => {
-        expect(auth.currentUser.getIdToken).toHaveBeenCalled();
-        expect(global.fetch).toHaveBeenCalled();
-        
-        const firstCall = global.fetch.mock.calls[0];
-        expect(firstCall[0]).toContain('/api/resume/analyze-jd');
-        expect(firstCall[1].headers['Authorization']).toBe('Bearer mock-token-123');
-      });
+      await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+      
+      expect(auth.currentUser.getIdToken).toHaveBeenCalled();
+      const firstCall = global.fetch.mock.calls[0];
+      expect(firstCall[0]).toContain('/api/resume/analyze-jd');
+      expect(firstCall[1].headers['Authorization']).toBe('Bearer mock-token-123');
     });
 
     it('should display error message when API call fails', async () => {
@@ -129,8 +127,7 @@ describe('ConversationalWizard Component', () => {
       fireEvent.click(analyzeButton);
 
       await waitFor(() => {
-        const errorElement = screen.queryByText(/error|failed/i) || 
-                            screen.queryByRole('alert');
+        const errorElement = screen.getByText(/error|failed/i);
         expect(errorElement).toBeInTheDocument();
       }, { timeout: 2000 });
     });
@@ -147,8 +144,7 @@ describe('ConversationalWizard Component', () => {
     it('should show progress through steps', () => {
       render(<ConversationalWizard onComplete={jest.fn()} />);
       
-      const stepText = screen.queryByText(/step|1/i);
-      expect(stepText || screen.queryAllByRole('progressbar').length > 0).toBeTruthy();
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
     });
 
     it('should show helpful instructions', () => {

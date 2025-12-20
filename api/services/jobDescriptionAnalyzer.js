@@ -27,6 +27,11 @@ class JobDescriptionAnalyzer {
       throw new Error('Job description is too short (minimum 50 characters)');
     }
 
+    // Treat very short resumes as no resume (likely just a name or junk)
+    if (existingResume && existingResume.trim().length < 100) {
+      existingResume = null;
+    }
+
     // Use Gemini to deeply analyze the JD AND generate custom questions
     // If existingResume is provided, perform gap analysis
     const aiResponse = await this.analyzeWithAI(jobDescription, existingResume);

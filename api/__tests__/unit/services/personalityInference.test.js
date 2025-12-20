@@ -10,8 +10,8 @@ const {
 describe('Personality Inference Service', () => {
   describe('calculateTraitScore', () => {
     const mockTrait = {
-      high: ['creative', 'innovative', 'unique'],
-      low: ['traditional', 'routine', 'standard'],
+      high: ['creative', 'innovative', 'unique', 'new', 'learn', 'experiment', 'explore', 'idea', 'change', 'different'],
+      low: ['traditional', 'routine', 'standard', 'proven', 'established', 'conventional', 'familiar', 'consistent', 'old', 'basic'],
     };
 
     it('should return 50 for neutral text with no keywords', () => {
@@ -35,15 +35,15 @@ describe('Personality Inference Service', () => {
     });
 
     it('should clamp score at 0 (minimum)', () => {
-      const lowText = 'traditional routine standard '.repeat(30);
+      const lowText = mockTrait.low.join(' ');
       const score = calculateTraitScore(lowText, mockTrait);
-      expect(score).toBe(0); // Max negative should clamp at 0
+      expect(score).toBe(0); // 10 negative matches should clamp at 0
     });
 
     it('should clamp score at 100 (maximum)', () => {
-      const highText = 'creative innovative unique '.repeat(30);
+      const highText = mockTrait.high.join(' ');
       const score = calculateTraitScore(highText, mockTrait);
-      expect(score).toBe(100); // Max positive should clamp at 100
+      expect(score).toBe(100); // 10 positive matches should clamp at 100
     });
 
     it('should be case-insensitive', () => {

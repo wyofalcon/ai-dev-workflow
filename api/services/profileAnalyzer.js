@@ -261,8 +261,8 @@ function fuseScores(
     "agreeableness",
     "neuroticism",
   ]) {
-    const likertScore = likertScores[trait] || 50;
-    const narrativeScore = narrativeScores[trait] || 50;
+    const likertScore = likertScores[trait] ?? 50;
+    const narrativeScore = narrativeScores[trait] ?? 50;
 
     fused[trait] = Math.round(
       likertScore * weights.likert + narrativeScore * weights.narrative

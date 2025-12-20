@@ -78,6 +78,13 @@ jobs:
         working-directory: api
         run: npm run lint || echo "Linting issues found (non-blocking)"
 
+      - name: Document Frontend Testing Status
+        run: |
+          echo "Frontend testing is currently performed via agentic testing (Claude Chrome Extension)."
+          echo "Full CI/CD integration for frontend unit and E2E tests is being tracked in GitHub issues."
+          echo "Backend test coverage (75%) is considered sufficient for current needs."
+
+
   # ============================================
   # Build and Deploy Backend
   # ============================================

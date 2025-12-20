@@ -51,9 +51,21 @@ const mockPrismaClient = {
     findFirst: jest.fn(),
     update: jest.fn(),
   },
+  userProfile: {
+    findUnique: jest.fn(),
+  },
   personalityTraits: {
     findUnique: jest.fn(),
     create: jest.fn(),
+  },
+  personalityProfile: {
+    findUnique: jest.fn(),
+  },
+  conversation: {
+    findFirst: jest.fn(),
+  },
+  uploadedResume: {
+    findMany: jest.fn(),
   },
   $disconnect: jest.fn(),
 };
@@ -164,6 +176,15 @@ describe('Resume API Endpoints', () => {
     jest.clearAllMocks();
     // Reconfigure Firebase mock after clearing
     global.mockVerifyIdToken.mockResolvedValue(mockFirebaseUser);
+
+    // Default Prisma mocks to prevent undefined errors
+    mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
+    mockPrismaClient.resume.findMany.mockResolvedValue([]);
+    mockPrismaClient.uploadedResume.findMany.mockResolvedValue([]);
+    mockPrismaClient.personalityTraits.findUnique.mockResolvedValue(null);
+    mockPrismaClient.personalityProfile.findUnique.mockResolvedValue(null);
+    mockPrismaClient.conversation.findFirst.mockResolvedValue(null);
+    mockPrismaClient.userProfile.findUnique.mockResolvedValue(null);
   });
 
   describe('POST /api/resume/generate', () => {
@@ -433,8 +454,8 @@ describe('Resume API Endpoints', () => {
         .set('Authorization', `Bearer ${validToken}`)
         .expect(200);
 
-      expect(response.body.markdown).toBe(mockResume.resumeMarkdown);
-      expect(response.body.title).toBe(mockResume.title);
+      expect(response.text).toBe(mockResume.resumeMarkdown);
+      expect(response.header['content-type']).toContain('text/markdown');
 
       // Verify downloadedAt was updated
       expect(mockPrismaClient.resume.update).toHaveBeenCalledWith({

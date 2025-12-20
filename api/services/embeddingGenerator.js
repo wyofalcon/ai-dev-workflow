@@ -117,6 +117,10 @@ async function generateEmbeddingsBatch(texts, batchSize = 5) {
  */
 async function generateStoryEmbedding(story) {
   try {
+    if (!story || (!story.questionText && !story.storyText && !story.storySummary)) {
+      throw new Error('Invalid story object: missing required fields');
+    }
+
     const { questionText, storyText, storySummary } = story;
 
     // Combine context for richer embedding

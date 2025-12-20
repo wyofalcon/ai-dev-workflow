@@ -9,8 +9,115 @@
  * 5. Usage tracking
  */
 
+const mockActualPrismaClient = jest.requireActual('@prisma/client').PrismaClient;
+const mockStoryState = {
+  'mock-devops-id': { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 },
+  'mock-frontend-id': { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 }
+};
+
+jest.mock('@prisma/client', () => {
+  return {
+    PrismaClient: class extends mockActualPrismaClient {
+      constructor(options) {
+        super(options);
+        this.$executeRawUnsafe = jest.fn().mockResolvedValue(1);
+        this.$queryRawUnsafe = jest.fn((query, ...args) => {
+          if (query.includes('INSERT INTO profile_stories')) {
+            const isLearning = args.includes('learning');
+            const id = isLearning ? 'mock-devops-id' : 'mock-frontend-id';
+            return Promise.resolve([{ id }]);
+          }
+          if (query.includes('SELECT') && query.includes('embedding <=>')) {
+            const userId = args[1];
+            if (userId === 'user-no-embeddings') {
+              return Promise.resolve([]);
+            }
+
+            // Mock RAG results with the snake_case properties returned by raw SQL
+            return Promise.resolve([
+              {
+                id: 'mock-devops-id',
+                question_type: 'learning',
+                story_text: 'DevOps story',
+                story_summary: 'DevOps summary',
+                similarity: 0.9,
+                skills_demonstrated: ['kubernetes'],
+                themes: ['automation'],
+                times_used_in_resumes: mockStoryState['mock-devops-id'].timesUsedInResumes,
+                times_used_in_cover_letters: mockStoryState['mock-devops-id'].timesUsedInCoverLetters,
+                created_at: new Date()
+              },
+              {
+                id: 'mock-frontend-id',
+                question_type: 'team',
+                story_text: 'Frontend story',
+                story_summary: 'Frontend summary',
+                similarity: 0.5,
+                skills_demonstrated: ['react'],
+                themes: ['ux'],
+                times_used_in_resumes: mockStoryState['mock-frontend-id'].timesUsedInResumes,
+                times_used_in_cover_letters: mockStoryState['mock-frontend-id'].timesUsedInCoverLetters,
+                created_at: new Date()
+              }
+            ]);
+          }
+          return Promise.resolve([]);
+        });
+
+        // Add model methods
+        this.user = {
+          upsert: jest.fn().mockResolvedValue({ id: 'user-123' }),
+          create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: data.firebaseUid === 'no-embedding-user' ? 'user-no-embeddings' : 'user-123', ...data })),
+          delete: jest.fn().mockResolvedValue({}),
+        };
+        this.personalityProfile = {
+          create: jest.fn().mockResolvedValue({ id: 'profile-123' }),
+          delete: jest.fn().mockResolvedValue({}),
+        };
+        this.profileStory = {
+          deleteMany: jest.fn().mockResolvedValue({}),
+          findUnique: jest.fn().mockImplementation(({ where }) => {
+            const state = mockStoryState[where.id] || { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 };
+            return Promise.resolve({
+              id: where.id,
+              ...state
+            });
+          }),
+          update: jest.fn().mockImplementation(({ where, data }) => {
+            if (mockStoryState[where.id]) {
+              if (data.timesUsedInResumes?.increment) {
+                mockStoryState[where.id].timesUsedInResumes++;
+              }
+              if (data.timesUsedInCoverLetters?.increment) {
+                mockStoryState[where.id].timesUsedInCoverLetters++;
+              }
+            }
+            return Promise.resolve({});
+          }),
+        };
+      }
+    }
+  };
+});
+
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+
+// Mock axios for Vertex AI Embedding API
+jest.mock('axios', () => ({
+  post: jest.fn().mockResolvedValue({
+    data: {
+      predictions: [
+        {
+          embeddings: {
+            values: new Array(768).fill(0.1)
+          }
+        }
+      ]
+    }
+  })
+}));
+
 const { generateStoryEmbedding, formatEmbeddingForPgVector } = require('../../services/embeddingGenerator');
 const { retrieveStoriesForResume, retrieveStoriesForCoverLetter, incrementStoryUsage } = require('../../services/storyRetriever');
 const { MOCK_JOB_DESCRIPTION_DEVOPS, MOCK_JOB_DESCRIPTION_FRONTEND, generateMockEmbedding } = require('../fixtures/goldStandardMocks');

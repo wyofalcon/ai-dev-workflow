@@ -131,7 +131,6 @@ timeout: '1200s'
 
 # Build options
 options:
-  machineType: 'E2_HIGHCPU_8'  # Faster builds
   logging: CLOUD_LOGGING_ONLY
   logStreamingOption: STREAM_ON
 

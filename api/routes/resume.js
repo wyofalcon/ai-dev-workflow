@@ -527,6 +527,34 @@ router.post(
         console.warn(
           "⚠️ No personality profile found - resume will lack personality framing"
         );
+
+        // If personalStories provided, infer personality now (for backwards compatibility/standalone use)
+        if (personalStories && personalStories.trim().length > 20) {
+          console.log("🧠 Inferring personality from provided stories...");
+          const inferred = inferPersonality([
+            { messageRole: "user", messageContent: personalStories },
+          ]);
+
+          // Save inferred personality for future use
+          personality = await prisma.personalityTraits.create({
+            data: {
+              userId: userRecord.id,
+              openness: inferred.openness,
+              conscientiousness: inferred.conscientiousness,
+              extraversion: inferred.extraversion,
+              agreeableness: inferred.agreeableness,
+              neuroticism: inferred.neuroticism,
+              workStyle: inferred.workStyle,
+              leadershipStyle: inferred.leadershipStyle,
+              communicationStyle: inferred.communicationStyle,
+              motivationType: inferred.motivationType,
+              decisionMaking: inferred.decisionMaking,
+              inferenceConfidence: inferred.inferenceConfidence,
+              analysisVersion: inferred.analysisVersion,
+            },
+          });
+          console.log("✅ Personality inferred and saved");
+        }
       }
 
       // NEW: RAG-powered story retrieval for Gold tier users
@@ -1023,11 +1051,9 @@ router.post(
         !selectedSections ||
         selectedSections.length === 0
       ) {
-        return res
-          .status(400)
-          .json({
-            error: "Extracted resume text, job posting, and sections required",
-          });
+        return res.status(400).json({
+          error: "Extracted resume text, job posting, and sections required",
+        });
       }
 
       const startTime = Date.now();

@@ -11,7 +11,7 @@ const mockLogger = {
   warn: jest.fn(),
 };
 
-jest.mock('../utils/logger', () => mockLogger);
+jest.mock('../../../utils/logger', () => mockLogger);
 
 // NOW require errorHandler
 const errorHandler = require('../../../middleware/errorHandler');

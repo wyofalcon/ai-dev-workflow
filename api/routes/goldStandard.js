@@ -273,7 +273,11 @@ router.post('/complete', verifyFirebaseToken, checkGoldAccess, async (req, res) 
     // Update stories with extracted data and generate embeddings
     for (const story of storyData) {
       // Generate embedding for semantic search
-      const embedding = await generateStoryEmbedding(story);
+      const embedding = await generateStoryEmbedding({
+        questionText: story.question_text,
+        storyText: story.story_text,
+        storySummary: story.story_summary
+      });
       const embeddingStr = formatEmbeddingForPgVector(embedding);
 
       // Update story with AI analysis and embedding
@@ -286,7 +290,7 @@ router.post('/complete', verifyFirebaseToken, checkGoldAccess, async (req, res) 
              personality_signals = $5::jsonb,
              relevance_tags = $6,
              embedding = $7::vector
-         WHERE user_id = $8::uuid AND profile_id = $9::uuid AND question_type = $10`,
+         WHERE user_id = $8 AND profile_id = $9 AND question_type = $10`,
         story.story_summary,
         story.category,
         story.themes,

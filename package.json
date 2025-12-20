@@ -33,6 +33,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "lint": "eslint src",
     "eject": "react-scripts eject",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
