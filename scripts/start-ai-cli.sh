@@ -2,6 +2,9 @@
 # Start the configured AI CLI (Gemini or Claude)
 # Called by VS Code task to open in split terminal with Audit Watch
 
+# Fix VS Code debugger bootloader issue
+unset NODE_OPTIONS
+
 # Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
