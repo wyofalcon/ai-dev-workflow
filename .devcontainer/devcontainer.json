@@ -75,7 +75,21 @@
         "editor.minimap.enabled": false,
 
         // Extensions - suppress unwanted recommendations
-        "extensions.unwantedRecommendations": ["ms-toolsai.jupyter"],
+        "extensions.unwantedRecommendations": [
+          "ms-toolsai.jupyter",
+          "ms-toolsai.jupyter-keymap",
+          "ms-toolsai.jupyter-renderers",
+          "ms-toolsai.vscode-jupyter-cell-tags",
+          "ms-toolsai.vscode-jupyter-slideshow"
+        ],
+
+        // MDX files are Storybook docs, not notebooks
+        "[mdx]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "files.associations": {
+          "*.mdx": "mdx"
+        },
 
         // File handling
         "files.autoSave": "afterDelay",

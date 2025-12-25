@@ -40,9 +40,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:report": "playwright show-report tests/reports/html",
-    "update:skills": "node scripts/update-onet-skills.cjs",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "update:skills": "node scripts/update-onet-skills.cjs"
   },
   "eslintConfig": {
     "extends": [
@@ -64,16 +62,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
-    "@storybook/addon-a11y": "^10.1.7",
-    "@storybook/addon-docs": "^10.1.7",
-    "@storybook/addon-onboarding": "^10.1.7",
-    "@storybook/preset-create-react-app": "^10.1.7",
-    "@storybook/react-webpack5": "^10.1.7",
     "@types/node": "^24.10.1",
-    "eslint-plugin-storybook": "^10.1.7",
     "playwright": "^1.57.0",
     "prop-types": "^15.8.1",
-    "storybook": "^10.1.7",
     "typescript": "^5.9.3",
     "webpack": "^5.103.0"
   }

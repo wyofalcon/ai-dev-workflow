@@ -21,6 +21,11 @@ echo ""
 # Check if inotifywait is available
 if ! command -v inotifywait &> /dev/null; then
     echo -e "${YELLOW}📦 Installing inotify-tools...${NC}"
+    # Wait for apt lock if another process is using it
+    while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+        echo -e "${YELLOW}   Waiting for apt lock...${NC}"
+        sleep 2
+    done
     sudo apt-get update -qq && sudo apt-get install -y -qq inotify-tools
 fi
 

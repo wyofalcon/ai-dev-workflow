@@ -2,6 +2,19 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "🎯 Builder Setup",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/.devcontainer/builder-setup.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "🔍 Audit Watch",
       "type": "shell",
       "command": "${workspaceFolder}/scripts/audit-watch.sh",
@@ -11,12 +24,35 @@
         "reveal": "always",
         "focus": false,
         "panel": "dedicated",
-        "clear": true
-      },
-      "runOptions": {
-        "runOn": "folderOpen"
+        "clear": true,
+        "group": "dev-workflow"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "🤖 AI Builder",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/start-ai-cli.sh",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": true,
+        "group": "dev-workflow"
+      },
+      "dependsOn": ["🎯 Builder Setup"],
+      "problemMatcher": []
+    },
+    {
+      "label": "🚀 Start Dev Workflow",
+      "dependsOn": ["🔍 Audit Watch", "🤖 AI Builder"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
     },
     {
       "label": "🚀 Recalibrate Agents",

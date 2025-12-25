@@ -4,6 +4,9 @@
 
 set -e
 
+# Clear NODE_OPTIONS to avoid VS Code debugger conflicts with npm
+unset NODE_OPTIONS
+
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  🔧 Setting up CVstomize Development Environment"
@@ -183,16 +186,10 @@ fi
 WELCOME_EOF
 fi
 
-# Run onboarding for first-time setup (if AI CLI not configured)
-if [ ! -f ~/.gemini/settings.json ] && [ -z "$ANTHROPIC_API_KEY" ]; then
-    echo ""
-    echo "🎉 First time here? Let's set up your dev workflow!"
-    echo ""
-    sleep 1
-    if [ -t 0 ]; then
-        # Interactive terminal available
-        bash "$(dirname "$0")/onboarding.sh"
-    else
-        echo "   Run 'bash .devcontainer/onboarding.sh' to set up your AI tools"
-    fi
-fi
+# Builder setup will run via VS Code task (with proper terminal)
+# The "🚀 Start Dev Workflow" task runs on folder open and launches builder-setup.sh
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  ⏳ Builder setup wizard will appear shortly..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
