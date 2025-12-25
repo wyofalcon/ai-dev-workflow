@@ -165,11 +165,5 @@
   "containerEnv": {
     "NODE_ENV": "development",
     "TERM": "xterm-256color"
-  },
-
-  // Host requirements
-  "hostRequirements": {
-    "memory": "8gb",
-    "cpus": 4
   }
 }
