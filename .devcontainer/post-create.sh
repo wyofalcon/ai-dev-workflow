@@ -143,7 +143,7 @@ echo "  Once ready, open: http://localhost:3000"
 echo ""
 echo "  📚 Key Commands:"
 echo "     gss                        - Launch session mode selector"
-echo "     gemini                     - Start Gemini CLI"
+echo "     gemini / claude            - Start your AI assistant"
 echo "     docker compose up -d       - Start all services"
 echo "     docker compose down        - Stop all services"
 echo "     npm run test:e2e           - Run E2E tests"
@@ -160,3 +160,17 @@ echo ""
 echo "  📖 Documentation: README.md, ROADMAP.md"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+
+# Run onboarding for first-time setup (if AI CLI not configured)
+if [ ! -f ~/.gemini/settings.json ] && [ -z "$ANTHROPIC_API_KEY" ]; then
+    echo ""
+    echo "🎉 First time here? Let's set up your dev workflow!"
+    echo ""
+    sleep 1
+    if [ -t 0 ]; then
+        # Interactive terminal available
+        bash "$(dirname "$0")/onboarding.sh"
+    else
+        echo "   Run 'bash .devcontainer/onboarding.sh' to set up your AI tools"
+    fi
+fi
