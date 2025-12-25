@@ -9,95 +9,104 @@
  * 5. Usage tracking
  */
 
-const mockActualPrismaClient = jest.requireActual('@prisma/client').PrismaClient;
-const mockStoryState = {
-  'mock-devops-id': { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 },
-  'mock-frontend-id': { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 }
-};
+const mockExecuteRawUnsafe = jest.fn().mockResolvedValue(1);
+const mockQueryRawUnsafe = jest.fn();
+const mockUserUpsert = jest.fn().mockResolvedValue({ id: 'user-123' });
+const mockUserCreate = jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: data.firebaseUid === 'no-embedding-user' ? 'user-no-embeddings' : 'user-123', ...data }));
+const mockUserDelete = jest.fn().mockResolvedValue({});
+const mockPersonalityProfileCreate = jest.fn().mockResolvedValue({ id: 'profile-123' });
+const mockPersonalityProfileDelete = jest.fn().mockResolvedValue({});
+const mockProfileStoryDeleteMany = jest.fn().mockResolvedValue({});
+const mockProfileStoryFindMany = jest.fn().mockResolvedValue([]);
+const mockProfileStoryFindUnique = jest.fn().mockImplementation(({ where }) => {
+  const state = mockStoryState[where.id] || { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 };
+  return Promise.resolve({
+    id: where.id,
+    ...state
+  });
+});
+const mockProfileStoryUpdate = jest.fn().mockImplementation(({ where, data }) => {
+  if (mockStoryState[where.id]) {
+    if (data.timesUsedInResumes?.increment) {
+      mockStoryState[where.id].timesUsedInResumes++;
+    }
+    if (data.timesUsedInCoverLetters?.increment) {
+      mockStoryState[where.id].timesUsedInCoverLetters++;
+    }
+  }
+  return Promise.resolve({});
+});
 
 jest.mock('@prisma/client', () => {
   return {
-    PrismaClient: class extends mockActualPrismaClient {
-      constructor(options) {
-        super(options);
-        this.$executeRawUnsafe = jest.fn().mockResolvedValue(1);
-        this.$queryRawUnsafe = jest.fn((query, ...args) => {
-          if (query.includes('INSERT INTO profile_stories')) {
-            const isLearning = args.includes('learning');
-            const id = isLearning ? 'mock-devops-id' : 'mock-frontend-id';
-            return Promise.resolve([{ id }]);
-          }
-          if (query.includes('SELECT') && query.includes('embedding <=>')) {
-            const userId = args[1];
-            if (userId === 'user-no-embeddings') {
-              return Promise.resolve([]);
-            }
-
-            // Mock RAG results with the snake_case properties returned by raw SQL
-            return Promise.resolve([
-              {
-                id: 'mock-devops-id',
-                question_type: 'learning',
-                story_text: 'DevOps story',
-                story_summary: 'DevOps summary',
-                similarity: 0.9,
-                skills_demonstrated: ['kubernetes'],
-                themes: ['automation'],
-                times_used_in_resumes: mockStoryState['mock-devops-id'].timesUsedInResumes,
-                times_used_in_cover_letters: mockStoryState['mock-devops-id'].timesUsedInCoverLetters,
-                created_at: new Date()
-              },
-              {
-                id: 'mock-frontend-id',
-                question_type: 'team',
-                story_text: 'Frontend story',
-                story_summary: 'Frontend summary',
-                similarity: 0.5,
-                skills_demonstrated: ['react'],
-                themes: ['ux'],
-                times_used_in_resumes: mockStoryState['mock-frontend-id'].timesUsedInResumes,
-                times_used_in_cover_letters: mockStoryState['mock-frontend-id'].timesUsedInCoverLetters,
-                created_at: new Date()
-              }
-            ]);
-          }
-          return Promise.resolve([]);
-        });
-
-        // Add model methods
+    PrismaClient: class {
+      constructor() {
+        this.$executeRawUnsafe = mockExecuteRawUnsafe;
+        this.$queryRawUnsafe = mockQueryRawUnsafe;
+        this.$queryRaw = mockQueryRawUnsafe; // Map both for safety
         this.user = {
-          upsert: jest.fn().mockResolvedValue({ id: 'user-123' }),
-          create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: data.firebaseUid === 'no-embedding-user' ? 'user-no-embeddings' : 'user-123', ...data })),
-          delete: jest.fn().mockResolvedValue({}),
+          upsert: mockUserUpsert,
+          create: mockUserCreate,
+          delete: mockUserDelete,
         };
         this.personalityProfile = {
-          create: jest.fn().mockResolvedValue({ id: 'profile-123' }),
-          delete: jest.fn().mockResolvedValue({}),
+          create: mockPersonalityProfileCreate,
+          delete: mockPersonalityProfileDelete,
         };
         this.profileStory = {
-          deleteMany: jest.fn().mockResolvedValue({}),
-          findUnique: jest.fn().mockImplementation(({ where }) => {
-            const state = mockStoryState[where.id] || { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 };
-            return Promise.resolve({
-              id: where.id,
-              ...state
-            });
-          }),
-          update: jest.fn().mockImplementation(({ where, data }) => {
-            if (mockStoryState[where.id]) {
-              if (data.timesUsedInResumes?.increment) {
-                mockStoryState[where.id].timesUsedInResumes++;
-              }
-              if (data.timesUsedInCoverLetters?.increment) {
-                mockStoryState[where.id].timesUsedInCoverLetters++;
-              }
-            }
-            return Promise.resolve({});
-          }),
+          deleteMany: mockProfileStoryDeleteMany,
+          findMany: mockProfileStoryFindMany,
+          findUnique: mockProfileStoryFindUnique,
+          update: mockProfileStoryUpdate,
         };
       }
+      $disconnect() { return Promise.resolve(); }
     }
   };
+});
+
+// Initialize mockQueryRawUnsafe behavior
+mockQueryRawUnsafe.mockImplementation((query, ...args) => {
+  if (query.includes('INSERT INTO profile_stories')) {
+    const isLearning = args.includes('learning');
+    const id = isLearning ? 'mock-devops-id' : 'mock-frontend-id';
+    return Promise.resolve([{ id }]);
+  }
+  if (query.includes('SELECT') && query.includes('embedding <=>')) {
+    const userId = args[1];
+    if (userId === 'user-no-embeddings') {
+      return Promise.resolve([]);
+    }
+
+    // Mock RAG results with the snake_case properties returned by raw SQL
+    return Promise.resolve([
+      {
+        id: 'mock-devops-id',
+        question_type: 'learning',
+        story_text: 'DevOps story',
+        story_summary: 'DevOps summary',
+        similarity: 0.9,
+        skills_demonstrated: ['kubernetes'],
+        themes: ['automation'],
+        times_used_in_resumes: mockStoryState['mock-devops-id'].timesUsedInResumes,
+        times_used_in_cover_letters: mockStoryState['mock-devops-id'].timesUsedInCoverLetters,
+        created_at: new Date()
+      },
+      {
+        id: 'mock-frontend-id',
+        question_type: 'team',
+        story_text: 'Frontend story',
+        story_summary: 'Frontend summary',
+        similarity: 0.5,
+        skills_demonstrated: ['react'],
+        themes: ['ux'],
+        times_used_in_resumes: mockStoryState['mock-frontend-id'].timesUsedInResumes,
+        times_used_in_cover_letters: mockStoryState['mock-frontend-id'].timesUsedInCoverLetters,
+        created_at: new Date()
+      }
+    ]);
+  }
+  return Promise.resolve([]);
 });
 
 const { PrismaClient } = require('@prisma/client');
@@ -119,7 +128,7 @@ jest.mock('axios', () => ({
 }));
 
 const { generateStoryEmbedding, formatEmbeddingForPgVector } = require('../../services/embeddingGenerator');
-const { retrieveStoriesForResume, retrieveStoriesForCoverLetter, incrementStoryUsage } = require('../../services/storyRetriever');
+const { retrieveStoriesForResume, retrieveStoriesForCoverLetter, incrementStoryUsage, getStoryUsageAnalytics } = require('../../services/storyRetriever');
 const { MOCK_JOB_DESCRIPTION_DEVOPS, MOCK_JOB_DESCRIPTION_FRONTEND, generateMockEmbedding } = require('../fixtures/goldStandardMocks');
 
 // Mock Vertex AI
@@ -490,6 +499,50 @@ describe('RAG Story Retrieval - Integration Tests', () => {
 
       // pgvector with IVFFlat index should be fast
       expect(duration).toBeLessThan(500);
+    });
+  });
+
+  describe('Usage Analytics', () => {
+    it('should return story usage statistics', async () => {
+      const mockStories = [
+        {
+          id: 's1',
+          questionType: 'achievement',
+          category: 'technical',
+          timesUsedInResumes: 5,
+          timesUsedInCoverLetters: 2,
+          lastUsedAt: new Date()
+        },
+        {
+          id: 's2',
+          questionType: 'team',
+          category: 'soft_skill',
+          timesUsedInResumes: 0,
+          timesUsedInCoverLetters: 0,
+          lastUsedAt: null
+        }
+      ];
+
+      // Temporarily override the mock for this test
+      mockProfileStoryFindMany.mockResolvedValueOnce(mockStories);
+
+      const stats = await getStoryUsageAnalytics(testUser.id);
+
+      expect(stats.totalStories).toBe(2);
+      expect(stats.totalUsage).toBe(7);
+      expect(stats.mostUsed).toHaveLength(2);
+      expect(stats.mostUsed[0].id).toBe('s1');
+      expect(stats.underutilized).toHaveLength(1);
+      expect(stats.underutilized[0].id).toBe('s2');
+
+      // Restore
+      prisma.profileStory.findMany = originalFindMany;
+    });
+
+    it('should handle errors in analytics gracefully', async () => {
+      mockProfileStoryFindMany.mockRejectedValueOnce(new Error('DB Error'));
+
+      await expect(getStoryUsageAnalytics(testUser.id)).rejects.toThrow('DB Error');
     });
   });
 });

@@ -12,8 +12,8 @@ echo ""
 
 # Install system dependencies
 echo "🔧 [0/8] Installing system dependencies..."
-sudo apt-get update -qq && sudo apt-get install -y -qq whiptail > /dev/null
-echo "   ✓ whiptail installed"
+sudo apt-get update -qq && sudo apt-get install -y -qq whiptail inotify-tools > /dev/null
+echo "   ✓ whiptail & inotify-tools installed"
 
 # Install root dependencies
 echo "📦 [1/6] Installing frontend dependencies..."
@@ -160,6 +160,28 @@ echo ""
 echo "  📖 Documentation: README.md, ROADMAP.md"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+
+# Add welcome message to bashrc (shows on new terminal)
+if ! grep -q "CVSTOMIZE_WELCOME" ~/.bashrc 2>/dev/null; then
+    cat >> ~/.bashrc << 'WELCOME_EOF'
+
+# CVSTOMIZE_WELCOME - Show tips on new terminal
+if [ -z "$CVSTOMIZE_WELCOMED" ]; then
+    export CVSTOMIZE_WELCOMED=1
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  🔍 Audit Watch is running in background!"
+    echo "     View: Terminal → 🔍 Audit Watch (or Ctrl+\` to toggle)"
+    echo ""
+    echo "  💡 Quick Commands:"
+    echo "     gss           - Switch session mode"
+    echo "     gemini        - Start Gemini CLI (Builder)"
+    echo "     claude        - Start Claude CLI (Builder)"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+fi
+WELCOME_EOF
+fi
 
 # Run onboarding for first-time setup (if AI CLI not configured)
 if [ ! -f ~/.gemini/settings.json ] && [ -z "$ANTHROPIC_API_KEY" ]; then

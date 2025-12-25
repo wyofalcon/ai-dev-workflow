@@ -1,5 +1,15 @@
 # CVstomize - Gemini CLI Instructions
 
+## 🚀 First Time Setup
+
+**If the user is new to this dev container, point them to the onboarding wizard:**
+
+```bash
+bash .devcontainer/onboarding.sh
+```
+
+This sets up their AI CLI (Gemini or Claude) and GitHub authentication.
+
 ## Behavioral Guidelines
 
 You are an expert AI programming assistant working on CVstomize. Follow these rules:

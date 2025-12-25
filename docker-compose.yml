@@ -57,6 +57,7 @@ services:
     container_name: cvstomize-api-local
     environment:
       - NODE_ENV=development
+      - ENABLE_DEV_AUTH=true
       - DATABASE_URL=postgresql://dev_user:dev_password@database:5432/cvstomize_dev?schema=public
       - REDIS_URL=redis://redis:6379
       - PORT=3001
@@ -127,7 +128,7 @@ services:
       - /app/node_modules
     command: npm run storybook -- --host 0.0.0.0
     profiles:
-      - storybook  # Only starts with: docker compose --profile storybook up
+      - storybook # Only starts with: docker compose --profile storybook up
 
 volumes:
   postgres_data:

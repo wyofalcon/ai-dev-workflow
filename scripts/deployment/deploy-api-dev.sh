@@ -51,7 +51,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --allow-unauthenticated \
   --project="$PROJECT_ID" \
   --service-account="cvstomize-deployer@$PROJECT_ID.iam.gserviceaccount.com" \
-  --set-env-vars="NODE_ENV=development,LOG_LEVEL=debug" \
+  --set-env-vars="NODE_ENV=development,LOG_LEVEL=debug,ENABLE_DEV_AUTH=true" \
   --set-secrets="DATABASE_URL=DATABASE_URL_dev:latest,JWT_SECRET=JWT_SECRET_dev:latest,GCS_BUCKET_NAME=GCS_BUCKET_NAME_dev:latest" \
   --add-cloudsql-instances="$DB_INSTANCE_FULL" \
   --max-instances=2 \

@@ -52,6 +52,7 @@
   "cSpell.words": ["cvstomize", "prisma", "gemini", "vertex", "devcontainer"],
 
   // Microsoft Edge Tools settings
+  "vscode-edge-devtools.defaultUrl": "http://localhost:3000",
   "vscode-edge-devtools.autoAttachViaDebuggerForEdge": true,
   "vscode-edge-devtools.headless": false,
   "vscode-edge-devtools.webhint": true,
