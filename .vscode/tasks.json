@@ -12,7 +12,10 @@
         "panel": "dedicated",
         "clear": true
       },
-      "problemMatcher": []
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
     },
     {
       "label": "🔍 Audit Watch",
@@ -27,7 +30,8 @@
         "clear": true,
         "group": "dev-workflow"
       },
-      "problemMatcher": []
+      "problemMatcher": [],
+      "dependsOn": ["🎯 Builder Setup"]
     },
     {
       "label": "🤖 AI Builder",
@@ -49,10 +53,7 @@
       "label": "🚀 Start Dev Workflow",
       "dependsOn": ["🔍 Audit Watch", "🤖 AI Builder"],
       "dependsOrder": "parallel",
-      "problemMatcher": [],
-      "runOptions": {
-        "runOn": "folderOpen"
-      }
+      "problemMatcher": []
     },
     {
       "label": "🚀 Recalibrate Agents",

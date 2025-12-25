@@ -10,6 +10,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
+DIM='\033[2m'
 NC='\033[0m'
 
 clear
@@ -30,13 +31,26 @@ cat << 'BANNER'
 BANNER
 echo -e "${NC}"
 
-echo -e "${CYAN}${BOLD}   🚀 Setting up your development environment...${NC}"
+echo -e "${CYAN}${BOLD}   🎉 Welcome to CVstomize!${NC}"
 echo ""
-echo -e "   ${GREEN}✓${NC} Dev container initialized"
-echo -e "   ${GREEN}✓${NC} Dependencies installed"
-echo -e "   ${GREEN}✓${NC} Database tools ready"
+echo -e "   ${DIM}This is a personality-aware resume builder powered by AI.${NC}"
+echo -e "   ${DIM}We use a Builder/Auditor workflow for quality code.${NC}"
 echo ""
-echo -e "   ${YELLOW}⏳ Preparing Builder/Auditor workflow...${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "   ${BOLD}How it works:${NC}"
+echo ""
+echo -e "   ${GREEN}🤖 Builder${NC}    Your AI coding assistant (Gemini or Claude CLI)"
+echo -e "                Generates code, answers questions, helps you build"
+echo ""
+echo -e "   ${GREEN}🔍 Auditor${NC}    GitHub Copilot (this chat) + automated checks"
+echo -e "                Reviews code, catches bugs, ensures quality"
+echo ""
+echo -e "   ${GREEN}📁 Workflow${NC}   Builder writes → Auditor reviews → You ship!"
+echo ""
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "   ${YELLOW}⏳ Preparing setup wizard...${NC}"
 echo ""
 
 # Brief pause for visual effect
