@@ -1,160 +1,104 @@
 #!/usr/bin/env python3
-"""AI Dev Workflow - Single File Auditor
-
-Runs pattern-based security and quality checks on a single file.
-Configurable via .audit-config.json in project root.
 """
-
+Single File Auditor - Checks a specific file for issues
+Used by audit-watch.sh for real-time feedback
+"""
 import sys
-import re
 import os
-import json
+import re
 
-# Colors
-RED = '\033[0;31m'
-YELLOW = '\033[1;33m'
-GREEN = '\033[0;32m'
-NC = '\033[0m'
-
-# Default patterns (can be overridden by .audit-config.json)
-DEFAULT_PATTERNS = {
-    "secrets": {
-        "pattern": r"(?i)(password|secret|api[_-]?key|token|auth)\s*[:=]\s*['\"][^'\"]{8,}['\"]",
-        "message": "🔐 Possible hardcoded secret",
-        "severity": "error"
-    },
-    "console_log": {
-        "pattern": r"console\.(log|debug|info)\(",
-        "message": "📝 Console statement (remove before commit)",
-        "severity": "warning"
-    },
-    "debugger": {
-        "pattern": r"^\s*debugger\s*;?",
-        "message": "🐛 Debugger statement",
-        "severity": "error"
-    },
-    "todo_fixme": {
-        "pattern": r"(?i)(TODO|FIXME|HACK|XXX):",
-        "message": "📌 TODO/FIXME found",
-        "severity": "info"
-    },
-    "eslint_disable": {
-        "pattern": r"eslint-disable(?!-next-line)",
-        "message": "⚠️  ESLint disabled for block",
-        "severity": "warning"
-    },
-    "sql_injection": {
-        "pattern": r"(query|execute)\s*\(\s*['\"].*\$\{|\+\s*[a-zA-Z_]+\s*\+",
-        "message": "💉 Possible SQL injection",
-        "severity": "error"
-    },
-    "eval_usage": {
-        "pattern": r"\beval\s*\(",
-        "message": "🔴 eval() is dangerous",
-        "severity": "error"
-    },
-    "private_key": {
-        "pattern": r"-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----",
-        "message": "🔐 Private key detected",
-        "severity": "error"
-    }
-}
-
-def load_config():
-    """Load patterns from .audit-config.json if it exists."""
-    config_path = os.path.join(os.getcwd(), '.audit-config.json')
-    
-    # Also check project root
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(script_dir)
-    alt_config_path = os.path.join(project_root, '.audit-config.json')
-    
-    for path in [config_path, alt_config_path]:
-        if os.path.exists(path):
-            try:
-                with open(path, 'r') as f:
-                    config = json.load(f)
-                    if 'patterns' in config:
-                        return config['patterns']
-            except (json.JSONDecodeError, IOError):
-                pass
-    
-    return DEFAULT_PATTERNS
+# Colors for terminal output
+class Colors:
+    RED = '\033[0;31m'
+    GREEN = '\033[0;32m'
+    YELLOW = '\033[1;33m'
+    BLUE = '\033[0;34m'
+    NC = '\033[0m'  # No Color
 
 def audit_file(filepath):
-    """Audit a single file for pattern violations."""
+    """Run pattern-based security and quality checks on a single file."""
     if not os.path.exists(filepath):
-        return []
-    
+        return
+
     # Skip test files for some checks
     is_test = any(x in filepath.lower() for x in ['test', 'spec', '__tests__', 'fixtures'])
-    
-    patterns = load_config()
-    issues = []
-    
+
     try:
         with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = f.readlines()
-    except IOError:
-        return []
-    
-    for line_num, line in enumerate(lines, 1):
+            content = f.read()
+    except Exception as e:
+        print(f"{Colors.RED}❌ Could not read file: {e}{Colors.NC}")
+        return
+
+    lines = content.split('\n')
+    issues = {"critical": [], "warning": []}
+
+    for i, line in enumerate(lines, 1):
         line_lower = line.lower()
-        
-        for name, config in patterns.items():
-            if re.search(config['pattern'], line):
-                # Smart exclusions to reduce false positives
-                if name in ['secrets', 'private_key']:
-                    # Skip if using environment variables or example code
-                    if 'process.env' in line or 'os.environ' in line:
-                        continue
-                    if 'example' in line_lower or 'sample' in line_lower:
-                        continue
-                
-                if name == 'console_log' and is_test:
-                    continue  # Allow console.log in test files
-                
-                issues.append({
-                    'line': line_num,
-                    'message': config['message'],
-                    'severity': config.get('severity', 'warning'),
-                    'content': line.strip()[:60]
-                })
-    
-    return issues
+
+        # CRITICAL: Hardcoded secrets
+        secret_patterns = [
+            (r'api[_-]?key\s*[=:]\s*["\'][^"\']{10,}["\']', "API key"),
+            (r'password\s*[=:]\s*["\'][^"\']+["\']', "Password"),
+            (r'secret\s*[=:]\s*["\'][^"\']{10,}["\']', "Secret"),
+            (r'token\s*[=:]\s*["\'][^"\']{20,}["\']', "Token"),
+            (r'private[_-]?key', "Private key"),
+            (r'-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----', "Private key block"),
+        ]
+
+        for pattern, name in secret_patterns:
+            if re.search(pattern, line, re.IGNORECASE):
+                if 'process.env' not in line and 'example' not in line_lower and 'test' not in line_lower:
+                    issues["critical"].append(f"🔐 L{i}: Possible {name}")
+
+        # CRITICAL: SQL injection patterns
+        if re.search(r'\$\{.*\}.*(?:SELECT|INSERT|UPDATE|DELETE|DROP)', line, re.IGNORECASE):
+            issues["critical"].append(f"💉 L{i}: Possible SQL injection")
+
+        # WARNING: Console.log (skip test files)
+        if 'console.log' in line and not is_test:
+            issues["warning"].append(f"📝 L{i}: console.log")
+
+        # WARNING: Debugger statements
+        if 'debugger' in line and not line.strip().startswith('//'):
+            issues["warning"].append(f"🐛 L{i}: debugger statement")
+
+        # WARNING: TODO/FIXME/HACK (info only)
+        if any(tag in line for tag in ['TODO:', 'FIXME:', 'HACK:', 'XXX:']):
+            issues["warning"].append(f"📌 L{i}: TODO/FIXME")
+
+        # WARNING: Disabled eslint rules
+        if 'eslint-disable' in line:
+            issues["warning"].append(f"⚠️  L{i}: ESLint disabled")
+
+    # Print results
+    total_issues = len(issues["critical"]) + len(issues["warning"])
+
+    if total_issues == 0:
+        print(f"{Colors.GREEN}✅ No issues found{Colors.NC}")
+        return
+
+    if issues["critical"]:
+        print(f"\n{Colors.RED}🚨 CRITICAL ({len(issues['critical'])}){Colors.NC}")
+        for issue in issues["critical"]:
+            print(f"   {issue}")
+
+    if issues["warning"]:
+        print(f"\n{Colors.YELLOW}⚠️  WARNINGS ({len(issues['warning'])}){Colors.NC}")
+        for issue in issues["warning"][:5]:  # Limit to first 5
+            print(f"   {issue}")
+        if len(issues["warning"]) > 5:
+            print(f"   ... and {len(issues['warning']) - 5} more")
+
+    print()
 
 def main():
     if len(sys.argv) < 2:
-        print(f"{RED}Usage: audit-file.py <filepath>{NC}")
+        print("Usage: audit-file.py <filepath>")
         sys.exit(1)
-    
-    filepath = sys.argv[1]
-    issues = audit_file(filepath)
-    
-    if not issues:
-        print(f"{GREEN}   ✓ No issues found{NC}")
-        return
-    
-    # Group by severity
-    errors = [i for i in issues if i['severity'] == 'error']
-    warnings = [i for i in issues if i['severity'] == 'warning']
-    infos = [i for i in issues if i['severity'] == 'info']
-    
-    if errors:
-        print(f"\n{RED}🚨 CRITICAL ({len(errors)}){NC}")
-        for issue in errors:
-            print(f"   L{issue['line']}: {issue['message']}")
-    
-    if warnings:
-        print(f"\n{YELLOW}⚠️  WARNINGS ({len(warnings)}){NC}")
-        for issue in warnings[:5]:
-            print(f"   L{issue['line']}: {issue['message']}")
-        if len(warnings) > 5:
-            print(f"   ... and {len(warnings) - 5} more")
-    
-    if infos:
-        for issue in infos[:3]:
-            print(f"   L{issue['line']}: {issue['message']}")
 
-if __name__ == '__main__':
+    filepath = sys.argv[1]
+    audit_file(filepath)
+
+if __name__ == "__main__":
     main()
