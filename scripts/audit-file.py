@@ -20,22 +20,22 @@ NC = '\033[0m'
 DEFAULT_PATTERNS = {
     "secrets": {
         "pattern": r"(?i)(password|secret|api[_-]?key|token|auth)\s*[:=]\s*['\"][^'\"]{8,}['\"]",
-        "message": "⚠️  Possible hardcoded secret",
+        "message": "🔐 Possible hardcoded secret",
         "severity": "error"
     },
     "console_log": {
         "pattern": r"console\.(log|debug|info)\(",
-        "message": "💬 Console statement (remove before commit)",
+        "message": "📝 Console statement (remove before commit)",
         "severity": "warning"
     },
     "debugger": {
         "pattern": r"^\s*debugger\s*;?",
-        "message": "🔴 Debugger statement",
+        "message": "🐛 Debugger statement",
         "severity": "error"
     },
     "todo_fixme": {
         "pattern": r"(?i)(TODO|FIXME|HACK|XXX):",
-        "message": "📝 TODO/FIXME found",
+        "message": "📌 TODO/FIXME found",
         "severity": "info"
     },
     "eslint_disable": {
@@ -45,12 +45,17 @@ DEFAULT_PATTERNS = {
     },
     "sql_injection": {
         "pattern": r"(query|execute)\s*\(\s*['\"].*\$\{|\+\s*[a-zA-Z_]+\s*\+",
-        "message": "🔴 Possible SQL injection",
+        "message": "💉 Possible SQL injection",
         "severity": "error"
     },
     "eval_usage": {
         "pattern": r"\beval\s*\(",
         "message": "🔴 eval() is dangerous",
+        "severity": "error"
+    },
+    "private_key": {
+        "pattern": r"-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----",
+        "message": "🔐 Private key detected",
         "severity": "error"
     }
 }
@@ -81,6 +86,9 @@ def audit_file(filepath):
     if not os.path.exists(filepath):
         return []
     
+    # Skip test files for some checks
+    is_test = any(x in filepath.lower() for x in ['test', 'spec', '__tests__', 'fixtures'])
+    
     patterns = load_config()
     issues = []
     
@@ -91,8 +99,21 @@ def audit_file(filepath):
         return []
     
     for line_num, line in enumerate(lines, 1):
+        line_lower = line.lower()
+        
         for name, config in patterns.items():
             if re.search(config['pattern'], line):
+                # Smart exclusions to reduce false positives
+                if name in ['secrets', 'private_key']:
+                    # Skip if using environment variables or example code
+                    if 'process.env' in line or 'os.environ' in line:
+                        continue
+                    if 'example' in line_lower or 'sample' in line_lower:
+                        continue
+                
+                if name == 'console_log' and is_test:
+                    continue  # Allow console.log in test files
+                
                 issues.append({
                     'line': line_num,
                     'message': config['message'],
@@ -119,14 +140,21 @@ def main():
     warnings = [i for i in issues if i['severity'] == 'warning']
     infos = [i for i in issues if i['severity'] == 'info']
     
-    for issue in errors:
-        print(f"{RED}   Line {issue['line']}: {issue['message']}{NC}")
+    if errors:
+        print(f"\n{RED}🚨 CRITICAL ({len(errors)}){NC}")
+        for issue in errors:
+            print(f"   L{issue['line']}: {issue['message']}")
     
-    for issue in warnings:
-        print(f"{YELLOW}   Line {issue['line']}: {issue['message']}{NC}")
+    if warnings:
+        print(f"\n{YELLOW}⚠️  WARNINGS ({len(warnings)}){NC}")
+        for issue in warnings[:5]:
+            print(f"   L{issue['line']}: {issue['message']}")
+        if len(warnings) > 5:
+            print(f"   ... and {len(warnings) - 5} more")
     
-    for issue in infos:
-        print(f"   Line {issue['line']}: {issue['message']}")
+    if infos:
+        for issue in infos[:3]:
+            print(f"   L{issue['line']}: {issue['message']}")
 
 if __name__ == '__main__':
     main()
