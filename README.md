@@ -28,7 +28,17 @@
 
 ## 🚀 Quick Start
 
-**👉 START HERE:** [ROADMAP.md](ROADMAP.md) - Complete project documentation & roadmap
+### First Time? Run the Setup Script:
+
+```bash
+git clone https://github.com/wyofalcon/cvstomize.git
+cd cvstomize
+./setup.sh    # Checks dependencies and guides you to the best setup path
+```
+
+> **⚠️ Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) is **strongly recommended**. The setup script will check what you have and suggest the best approach.
+
+**👉 Full Documentation:** [ROADMAP.md](ROADMAP.md) - Complete project documentation & roadmap
 
 **Essential Docs:**
 
