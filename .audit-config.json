@@ -1,0 +1,40 @@
+{
+  "watchDirs": ["src", "api", "scripts", "lib"],
+  "patterns": {
+    "secrets": {
+      "pattern": "(?i)(password|secret|api[_-]?key|token|auth)\\s*[:=]\\s*['\"][^'\"]{8,}['\"]",
+      "message": "⚠️  Possible hardcoded secret",
+      "severity": "error"
+    },
+    "console_log": {
+      "pattern": "console\\.(log|debug|info)\\(",
+      "message": "💬 Console statement (remove before commit)",
+      "severity": "warning"
+    },
+    "debugger": {
+      "pattern": "^\\s*debugger\\s*;?",
+      "message": "🔴 Debugger statement",
+      "severity": "error"
+    },
+    "todo_fixme": {
+      "pattern": "(?i)(TODO|FIXME|HACK|XXX):",
+      "message": "📝 TODO/FIXME found",
+      "severity": "info"
+    },
+    "eslint_disable": {
+      "pattern": "eslint-disable(?!-next-line)",
+      "message": "⚠️  ESLint disabled for block",
+      "severity": "warning"
+    },
+    "sql_injection": {
+      "pattern": "(query|execute)\\s*\\(\\s*['\"].*\\$\\{|\\+\\s*[a-zA-Z_]+\\s*\\+",
+      "message": "🔴 Possible SQL injection",
+      "severity": "error"
+    },
+    "eval_usage": {
+      "pattern": "\\beval\\s*\\(",
+      "message": "🔴 eval() is dangerous",
+      "severity": "error"
+    }
+  }
+}
