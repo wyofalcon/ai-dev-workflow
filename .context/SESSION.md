@@ -16,8 +16,8 @@
 
 <!-- What are we actively working on right now? -->
 
-- Setting up Builder/Auditor workflow automation
-- Ensuring agents persist context between sessions
+- ✅ Session context automation complete
+- Ready for container rebuild test
 
 ## Recent Progress
 
@@ -27,6 +27,9 @@
 - ✅ Fixed NODE_OPTIONS conflict for gemini/claude aliases
 - ✅ Created public ai-dev-workflow repo
 - ✅ Added smart exclusions to audit-file.py
+- ✅ **Created session context automation** (this file!)
+- ✅ Updated GEMINI.md, CLAUDE.md, copilot-instructions.md with mandatory context check
+- ✅ Added context reminder to start-ai-cli.sh
 
 ## Blockers / Open Questions
 
@@ -38,9 +41,10 @@
 
 <!-- What should the next session focus on? -->
 
-1. Verify full container workflow (rebuild to test)
-2. Test first-time user experience with onboarding.sh
-3. Continue feature development
+1. Rebuild container to test full workflow end-to-end
+2. Verify agents check SESSION.md on startup
+3. Test first-time user experience (onboarding.sh)
+4. Continue feature development
 
 ---
 
