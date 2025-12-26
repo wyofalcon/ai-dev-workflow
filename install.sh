@@ -7,6 +7,7 @@ set -e
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 echo ""
@@ -16,28 +17,43 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 # Check if we're in a project directory
-if [ ! -f "package.json" ] && [ ! -f "requirements.txt" ] && [ ! -f "Cargo.toml" ]; then
-    echo -e "${YELLOW}⚠️  No project detected. Creating in current directory.${NC}"
+if [ ! -f "package.json" ] && [ ! -f "requirements.txt" ] && [ ! -f "Cargo.toml" ] && [ ! -f "go.mod" ]; then
+    echo -e "${YELLOW}⚠️  No project detected. Installing in current directory.${NC}"
 fi
 
 # Create directories
-mkdir -p scripts .devcontainer .vscode
+mkdir -p scripts .devcontainer .vscode .context
 
 echo -e "${GREEN}📦 Downloading workflow files...${NC}"
 
 # Download files
 BASE_URL="https://raw.githubusercontent.com/wyofalcon/ai-dev-workflow/main"
 
+# Core scripts
 curl -fsSL "$BASE_URL/scripts/audit-watch.sh" -o scripts/audit-watch.sh
 curl -fsSL "$BASE_URL/scripts/audit-file.py" -o scripts/audit-file.py
 curl -fsSL "$BASE_URL/scripts/start-ai-cli.sh" -o scripts/start-ai-cli.sh
 curl -fsSL "$BASE_URL/scripts/pre-commit-hook.sh" -o scripts/pre-commit-hook.sh
+
+# Toggle & status scripts
+curl -fsSL "$BASE_URL/scripts/toggle-relay-mode.sh" -o scripts/toggle-relay-mode.sh
+curl -fsSL "$BASE_URL/scripts/toggle-audit-watch.sh" -o scripts/toggle-audit-watch.sh
+curl -fsSL "$BASE_URL/scripts/send-prompt.sh" -o scripts/send-prompt.sh
+curl -fsSL "$BASE_URL/scripts/show-status.sh" -o scripts/show-status.sh
+
+# Config files
 curl -fsSL "$BASE_URL/.devcontainer/builder-setup.sh" -o .devcontainer/builder-setup.sh
 curl -fsSL "$BASE_URL/.vscode/tasks.json" -o .vscode/tasks.json
 curl -fsSL "$BASE_URL/.audit-config.json" -o .audit-config.json
 
+# Context files (workflow state)
+curl -fsSL "$BASE_URL/.context/WORKFLOW.md" -o .context/WORKFLOW.md
+curl -fsSL "$BASE_URL/.context/PROMPT.md" -o .context/PROMPT.md
+echo "review" > .context/RELAY_MODE
+echo "on" > .context/AUDIT_WATCH_MODE
+
 # Make scripts executable
-chmod +x scripts/*.sh scripts/*.py .devcontainer/*.sh
+chmod +x scripts/*.sh scripts/*.py .devcontainer/*.sh 2>/dev/null || true
 
 # Install pre-commit hook if in git repo
 if [ -d ".git" ]; then
@@ -51,12 +67,18 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo -e "${GREEN}✅ AI Dev Workflow installed!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "Next steps:"
-echo "  1. Open in VS Code: code ."
-echo "  2. If using dev containers, add .devcontainer/devcontainer.json"
-echo "  3. Run setup wizard: bash .devcontainer/builder-setup.sh"
+echo -e "${CYAN}Next steps:${NC}"
+echo "  1. Open in VS Code: ${GREEN}code .${NC}"
+echo "  2. Run setup wizard: ${GREEN}bash .devcontainer/builder-setup.sh${NC}"
 echo ""
-echo "Or manually start:"
-echo "  • Audit Watch: bash scripts/audit-watch.sh"
-echo "  • AI Builder:  bash scripts/start-ai-cli.sh"
+echo -e "${CYAN}Quick commands:${NC}"
+echo "  • Start workflow:  ${GREEN}bash scripts/audit-watch.sh${NC} (terminal 1)"
+echo "  •                  ${GREEN}bash scripts/start-ai-cli.sh${NC} (terminal 2)"
+echo "  • Show status:     ${GREEN}bash scripts/show-status.sh${NC}"
+echo "  • Toggle modes:    ${GREEN}bash scripts/toggle-relay-mode.sh${NC}"
+echo "  •                  ${GREEN}bash scripts/toggle-audit-watch.sh${NC}"
+echo ""
+echo -e "${CYAN}Workflow modes:${NC}"
+echo "  • Prompt Relay:    review (default) / auto"
+echo "  • Audit Watch:     on (default) / off"
 echo ""

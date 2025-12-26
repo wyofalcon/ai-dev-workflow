@@ -16,24 +16,24 @@ AI coding assistants are powerful, but they can introduce:
 **Builder/Auditor Workflow:**
 
 ```
-🤖 Builder (AI CLI)  →  🔍 Auditor (Checks + Copilot)  →  ✅ You Ship!
+📝 You (idea) → 🔍 Auditor (refines) → 🤖 Builder (implements) → ✅ Ship!
 ```
 
+- **Auditor**: GitHub Copilot refines your ideas into Builder prompts
 - **Builder**: Gemini CLI or Claude CLI generates code
-- **Auditor**: Automated pattern checks + GitHub Copilot reviews
-- **Split terminals**: See both side-by-side in VS Code
+- **Toggles**: Control how much automation you want
 
 ## 🚀 Quick Install
 
 ```bash
+# In your project directory:
 curl -fsSL https://raw.githubusercontent.com/wyofalcon/ai-dev-workflow/main/install.sh | bash
 ```
 
 Or manually:
-
 ```bash
 git clone https://github.com/wyofalcon/ai-dev-workflow.git
-cp -r ai-dev-workflow/{scripts,.vscode,.audit-config.json} your-project/
+cp -r ai-dev-workflow/{scripts,.vscode,.context,.audit-config.json} your-project/
 ```
 
 ## 📦 What's Included
@@ -43,48 +43,78 @@ cp -r ai-dev-workflow/{scripts,.vscode,.audit-config.json} your-project/
 | `scripts/audit-watch.sh` | Real-time file watcher, runs audits on save |
 | `scripts/audit-file.py` | Pattern-based security/quality checks |
 | `scripts/start-ai-cli.sh` | Launches your configured AI CLI |
-| `scripts/pre-commit-hook.sh` | Blocks commits with critical issues |
-| `.devcontainer/` | Dev container with auto-setup |
-| `.vscode/tasks.json` | Auto-launch split terminals |
-| `.audit-config.json` | Configurable audit patterns |
+| `scripts/toggle-relay-mode.sh` | Toggle prompt relay (review/auto) |
+| `scripts/toggle-audit-watch.sh` | Toggle file watching (on/off) |
+| `scripts/send-prompt.sh` | Send prompts to Builder |
+| `scripts/show-status.sh` | Show current workflow status |
+| `.context/` | Workflow state (modes, prompts) |
+| `.vscode/tasks.json` | VS Code tasks for easy access |
 
-## 🔧 Configuration
+## ⚙️ Workflow Modes
 
-Edit `.audit-config.json` to customize:
+### Prompt Relay Mode
 
-```json
-{
-  "watchDirs": ["src", "api", "lib"],
-  "patterns": {
-    "secrets": {
-      "pattern": "(?i)(password|secret|api_key)\\s*[:=]\\s*['\"][^'\"]+['\"]",
-      "message": "⚠️  Possible hardcoded secret",
-      "severity": "error"
-    },
-    "console_log": {
-      "pattern": "console\\.(log|debug)\\(",
-      "message": "💬 Console statement",
-      "severity": "warning"
-    }
-  }
-}
+Controls how Auditor (Copilot) sends prompts to Builder:
+
+| Mode | Description |
+|------|-------------|
+| `review` | **Default.** Copilot writes to `.context/PROMPT.md`, you review before sending |
+| `auto` | Copilot writes prompt, you run `send-prompt.sh` to send immediately |
+
+```bash
+# Toggle via UI
+bash scripts/toggle-relay-mode.sh
+
+# Or manually
+echo "auto" > .context/RELAY_MODE
+echo "review" > .context/RELAY_MODE
 ```
 
-### Severity Levels
+### Audit Watch Mode
 
-- `error` - Blocks commits, shown in red
-- `warning` - Shown in yellow, doesn't block
-- `info` - Informational only
+Controls automatic file checking on save:
+
+| Mode | Description |
+|------|-------------|
+| `on` | **Default.** Files are checked when you save |
+| `off` | Manual auditing only |
+
+```bash
+# Toggle via UI
+bash scripts/toggle-audit-watch.sh
+
+# Or manually
+echo "on" > .context/AUDIT_WATCH_MODE
+echo "off" > .context/AUDIT_WATCH_MODE
+```
+
+### Check Current Status
+
+```bash
+bash scripts/show-status.sh
+
+# Output:
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#   WORKFLOW STATUS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#   📤 Prompt Relay:  REVIEW
+#   🔍 Audit Watch:   ON
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
 ## 🖥️ Usage
 
 ### Option 1: VS Code Tasks (Recommended)
 
-Open Command Palette (`Ctrl+Shift+P`) → "Tasks: Run Task" → "🚀 Start Dev Workflow"
+Open Command Palette (`Ctrl+Shift+P`) → "Tasks: Run Task":
 
-This opens split terminals:
-- Left: **🔍 Audit Watch** - monitors file changes
-- Right: **🤖 AI Builder** - your Gemini/Claude CLI
+| Task | Description |
+|------|-------------|
+| 🚀 Start Dev Workflow | Opens split terminals (auto-runs on folder open) |
+| 📊 Show Workflow Status | Display current modes |
+| ⚙️ Toggle Relay Mode | Switch review/auto |
+| 🔍 Toggle Audit Watch | Switch on/off |
+| 📤 Send Prompt to Builder | Send pending prompt |
 
 ### Option 2: Manual
 
@@ -98,28 +128,59 @@ bash scripts/start-ai-cli.sh
 
 ### Option 3: Dev Container
 
-If using the included `.devcontainer/`, everything auto-starts on container open!
+If using `.devcontainer/`, everything auto-starts on container open!
+
+## 🔄 The Prompt Relay Flow
+
+1. **Describe your idea** to GitHub Copilot (Auditor)
+2. **Copilot refines it** into a well-structured prompt
+3. **Prompt saved** to `.context/PROMPT.md`
+4. **Review** (if in review mode) or **send immediately**
+5. **Paste into Builder** terminal (Gemini/Claude)
+6. **Builder implements** your idea
+
+Example `.context/PROMPT.md`:
+```markdown
+## Task: Add user authentication
+
+### Context
+User wants to add login/logout functionality
+
+### Requirements
+- Use Firebase Auth
+- Support email/password and Google OAuth
+- Add protected routes
+
+### Files to Consider
+- src/contexts/AuthContext.js
+- src/components/Login.js
+```
+
+## 🔧 Configuration
+
+Edit `.audit-config.json` to customize patterns:
+
+```json
+{
+  "watchDirs": ["src", "api", "lib"],
+  "patterns": {
+    "secrets": {
+      "pattern": "(?i)(password|secret|api_key)\\s*[:=]\\s*['\"][^'\"]+['\"]",
+      "message": "⚠️  Possible hardcoded secret",
+      "severity": "error"
+    }
+  }
+}
+```
 
 ## 🛡️ Pre-commit Hook
 
-Install the pre-commit hook to catch issues before they're committed:
+Automatically installed if you're in a git repo. Blocks commits with critical issues.
 
 ```bash
+# Manual install
 cp scripts/pre-commit-hook.sh .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
-```
-
-Example output:
-```
-============================================================
-🔍 LOCAL AUDITOR (Pre-commit)
-============================================================
-Checking: src/api.js
-   Line 15: ⚠️  Possible hardcoded secret
-   Line 42: 💬 Console statement (remove before commit)
-============================================================
-❌ AUDIT FAILED - Fix errors before committing
-============================================================
 ```
 
 ## 🤖 Supported AI CLIs
@@ -137,30 +198,37 @@ export ANTHROPIC_API_KEY="your-key"
 claude
 ```
 
-## 📁 Project Structure
+## 📁 Project Structure After Install
 
 ```
 your-project/
-├── .audit-config.json      # Audit configuration
+├── .audit-config.json      # Audit patterns config
+├── .context/
+│   ├── RELAY_MODE          # review or auto
+│   ├── AUDIT_WATCH_MODE    # on or off
+│   ├── PROMPT.md           # Pending prompts
+│   └── WORKFLOW.md         # Documentation
 ├── .devcontainer/
-│   ├── builder-setup.sh    # Welcome wizard
-│   ├── devcontainer.json   # Container config
-│   └── post-create.sh      # Setup script
+│   └── builder-setup.sh    # Welcome wizard
 ├── .vscode/
 │   └── tasks.json          # VS Code tasks
 └── scripts/
     ├── audit-watch.sh      # File watcher
     ├── audit-file.py       # Pattern checker
     ├── start-ai-cli.sh     # CLI launcher
-    └── pre-commit-hook.sh  # Git hook
+    ├── toggle-relay-mode.sh
+    ├── toggle-audit-watch.sh
+    ├── send-prompt.sh
+    ├── show-status.sh
+    └── pre-commit-hook.sh
 ```
 
 ## 🤝 Philosophy
 
 1. **AI generates, humans verify** - Let AI do the heavy lifting, but maintain oversight
-2. **Fail fast** - Catch issues on save, not in production
-3. **Non-blocking by default** - Warnings inform, only errors block
-4. **Configurable** - Every project has different needs
+2. **Configurable automation** - Choose your comfort level with toggles
+3. **Fail fast** - Catch issues on save, not in production
+4. **Non-blocking by default** - Warnings inform, only errors block
 
 ## 📄 License
 
