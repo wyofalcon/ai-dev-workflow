@@ -3,6 +3,7 @@
 # Shows reassuring messages during container initialization
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+FIRST_TIME_MARKER="$HOME/.cvstomize_welcomed"
 
 # Colors
 GREEN='\033[0;32m'
@@ -13,7 +14,52 @@ BOLD='\033[1m'
 DIM='\033[2m'
 NC='\033[0m'
 
+# Wait for whiptail to be available (may still be installing)
+wait_for_whiptail() {
+    for i in {1..10}; do
+        if command -v whiptail &> /dev/null; then
+            return 0
+        fi
+        sleep 1
+    done
+    return 1
+}
+
+# Show first-time welcome popup
+show_first_time_popup() {
+    if [ ! -f "$FIRST_TIME_MARKER" ] && wait_for_whiptail; then
+        whiptail --title "🎉 Welcome to CVstomize!" --msgbox "$(cat << 'EOF'
+Welcome! This dev container uses a Builder/Auditor workflow:
+
+📝 HOW IT WORKS:
+   1. Describe your idea to Copilot (Auditor)
+   2. Copilot refines it into a Builder prompt
+   3. Review the prompt, then send to Builder
+   4. Builder (Gemini/Claude) implements it
+
+🤖 BUILDER: Gemini or Claude CLI (generates code)
+🔍 AUDITOR: GitHub Copilot (reviews & refines)
+
+⚙️  MODES:
+   • Review Mode: You check prompts before sending
+   • Auto Mode: Prompts send automatically
+
+📋 NEXT STEPS:
+   1. Set up your AI Builder (next screen)
+   2. Check .context/SESSION.md for status
+   3. Use Copilot Chat (Ctrl+Shift+I)
+
+Press OK to continue...
+EOF
+)" 24 62
+        touch "$FIRST_TIME_MARKER"
+    fi
+}
+
 clear
+
+# Show first-time popup before anything else
+show_first_time_popup
 
 # Show welcome banner
 echo -e "${BLUE}"

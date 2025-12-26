@@ -16,13 +16,20 @@
 
 <!-- What are we actively working on right now? -->
 
-- ✅ Session context automation complete
-- Ready for container rebuild test
+- ✅ Workflow toggles complete (Relay Mode + Audit Watch)
+- Ready for testing
 
 ## Recent Progress
 
 <!-- What was accomplished in the last session? -->
 
+- ✅ **Added Audit Watch toggle** (on/off mode with visual UI)
+- ✅ Updated audit-watch.sh to respect mode setting
+- ✅ **Created Prompt Relay system** (Copilot → PROMPT.md → Builder)
+- ✅ Added RELAY_MODE toggle (review/auto)
+- ✅ Created send-prompt.sh script
+- ✅ Updated first-time popup with new workflow
+- ✅ Added first-time welcome popup to builder-setup.sh
 - ✅ Configured split terminals (Audit Watch + AI Builder)
 - ✅ Fixed NODE_OPTIONS conflict for gemini/claude aliases
 - ✅ Created public ai-dev-workflow repo

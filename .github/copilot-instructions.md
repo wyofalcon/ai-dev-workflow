@@ -5,10 +5,49 @@
 **EVERY TIME a user starts a conversation, do this FIRST:**
 
 1. Read `.context/SESSION.md` to understand current state
-2. Briefly summarize what's in progress
-3. Ask if they want to continue with the listed next steps or do something else
+2. Read `.context/RELAY_MODE` to check prompt relay mode (`review` or `auto`)
+3. Briefly summarize what's in progress
+4. Ask if they want to continue with the listed next steps or do something else
 
 **Update `.context/SESSION.md` after completing significant tasks.**
+
+---
+
+## 🔄 Prompt Relay Workflow
+
+**When the user describes an idea or feature request:**
+
+1. **Refine the idea** into a clear, well-structured prompt for the Builder
+2. **Check `.context/RELAY_MODE`** for the current mode:
+   - `review` (default): Write the prompt to `.context/PROMPT.md` for user review
+   - `auto`: Write to PROMPT.md AND tell user to run `./scripts/send-prompt.sh`
+3. **Format the prompt** with clear context, requirements, and constraints
+
+**Prompt Template for Builder:**
+
+```markdown
+## Task: [Brief Title]
+
+### Context
+
+[What the user is trying to accomplish]
+
+### Requirements
+
+- [Specific requirement 1]
+- [Specific requirement 2]
+
+### Constraints
+
+- Follow existing code patterns in the codebase
+- [Any specific constraints]
+
+### Files to Consider
+
+- [Relevant files if known]
+```
+
+**To switch modes:** User can say "switch to auto mode" or "switch to review mode"
 
 ---
 

@@ -4,6 +4,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+AUDIT_MODE_FILE="$PROJECT_ROOT/.context/AUDIT_WATCH_MODE"
 
 # Colors
 RED='\033[0;31m'
@@ -12,11 +13,48 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# Check if audit watch is enabled
+check_audit_mode() {
+    if [ -f "$AUDIT_MODE_FILE" ]; then
+        MODE=$(cat "$AUDIT_MODE_FILE" | tr -d '[:space:]')
+        if [ "$MODE" = "off" ]; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+# Initial mode check
+if ! check_audit_mode; then
+    echo -e "${YELLOW}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${YELLOW}║${NC}  🔍 ${YELLOW}AUDIT WATCH MODE: OFF${NC}                               ${YELLOW}║${NC}"
+    echo -e "${YELLOW}║${NC}     Automatic file watching is disabled.                 ${YELLOW}║${NC}"
+    echo -e "${YELLOW}║${NC}     Run: ${GREEN}./scripts/toggle-audit-watch.sh${NC} to enable       ${YELLOW}║${NC}"
+    echo -e "${YELLOW}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo "Waiting for mode change..."
+    # Watch for mode file changes
+    while true; do
+        sleep 5
+        if check_audit_mode; then
+            echo -e "${GREEN}Audit Watch enabled! Restarting...${NC}"
+            exec "$0"  # Restart this script
+        fi
+    done
+    exit 0
+fi
+
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║${NC}  🔍 ${GREEN}AUDIT WATCH MODE${NC}                                     ${BLUE}║${NC}"
+echo -e "${BLUE}║${NC}  🔍 ${GREEN}AUDIT WATCH MODE: ON${NC}                                 ${BLUE}║${NC}"
 echo -e "${BLUE}║${NC}     Watching for changes... Press Ctrl+C to stop.        ${BLUE}║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
+
+# Show workflow status
+if [ -f "$SCRIPT_DIR/show-status.sh" ]; then
+    bash "$SCRIPT_DIR/show-status.sh" "$PROJECT_ROOT/.context" oneline
+    echo ""
+fi
 
 # Check if inotifywait is available
 if ! command -v inotifywait &> /dev/null; then

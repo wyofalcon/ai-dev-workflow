@@ -189,6 +189,7 @@ if [ -z "$CVSTOMIZE_WELCOMED" ]; then
     echo "     View: Terminal → 🔍 Audit Watch (or Ctrl+\` to toggle)"
     echo ""
     echo "  💡 Quick Commands:"
+    echo "     status        - Show workflow mode status"
     echo "     gss           - Switch session mode"
     echo "     gemini        - Start Gemini CLI (Builder)"
     echo "     claude        - Start Claude CLI (Builder)"
@@ -196,6 +197,13 @@ if [ -z "$CVSTOMIZE_WELCOMED" ]; then
     echo ""
 fi
 WELCOME_EOF
+fi
+
+# Add status alias
+if ! grep -q "alias status=" ~/.bashrc 2>/dev/null; then
+    echo "" >> ~/.bashrc
+    echo "# Workflow status shortcut" >> ~/.bashrc
+    echo 'alias status="bash /workspaces/cvstomize/scripts/show-status.sh"' >> ~/.bashrc
 fi
 
 # Builder setup will run via VS Code task (with proper terminal)

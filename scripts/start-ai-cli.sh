@@ -5,6 +5,8 @@
 # Fix VS Code debugger bootloader issue
 unset NODE_OPTIONS
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -15,6 +17,12 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${GREEN}🤖 AI Builder CLI${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
+
+# Show workflow status
+if [ -f "$SCRIPT_DIR/show-status.sh" ]; then
+    bash "$SCRIPT_DIR/show-status.sh" ".context" oneline
+    echo ""
+fi
 
 # Show session context reminder
 if [ -f ".context/SESSION.md" ]; then

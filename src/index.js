@@ -8,7 +8,10 @@ import theme from './theme.js';
 
 if (process.env.NODE_ENV === 'development') {
   import('@locator/runtime').then((locator) => {
-    locator.setup();
+    locator.setup({
+      // If you are running Docker and the links fail, set your host path here:
+      // projectPath: "/absolute/path/to/cvstomize/on/your/host/machine",
+    });
   });
 }
 

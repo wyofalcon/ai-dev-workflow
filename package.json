@@ -30,9 +30,9 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test",
+    "start": "npx craco start --config craco.config.cjs",
+    "build": "npx craco build --config craco.config.cjs",
+    "test": "npx craco test --config craco.config.cjs",
     "lint": "eslint src",
     "eject": "react-scripts eject",
     "test:e2e": "playwright test",

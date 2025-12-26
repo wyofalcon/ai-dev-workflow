@@ -73,7 +73,59 @@
       "problemMatcher": []
     },
     {
-      "label": "🚀 Promote Branch",
+      "label": "📊 Show Workflow Status",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/scripts/show-status.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚙️ Toggle Relay Mode",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/scripts/toggle-relay-mode.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📤 Send Prompt to Builder",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/scripts/send-prompt.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "� Toggle Audit Watch",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/scripts/toggle-audit-watch.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "�🚀 Promote Branch",
       "type": "shell",
       "command": "${workspaceFolder}/scripts/promote.py",
       "group": "deploy",

@@ -1,12 +1,14 @@
+const locatorPlugin = require("@locator/babel-jsx").default;
+
 module.exports = {
   babel: {
     plugins: [
-      process.env.NODE_ENV === "development" && [
-        "@locator/babel-jsx",
+      [
+        locatorPlugin,
         {
           env: "development",
         },
       ],
-    ].filter(Boolean),
+    ],
   },
 };
