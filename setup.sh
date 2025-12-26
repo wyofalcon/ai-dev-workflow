@@ -178,3 +178,22 @@ echo -e "  📚 Full documentation: ${CYAN}README.md${NC}"
 echo -e "  🗺️  Project roadmap:   ${CYAN}ROADMAP.md${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
+
+# Offer to create desktop shortcut if Docker + VS Code are available
+if [ "$HAS_DOCKER" = true ] && [ "$HAS_VSCODE" = true ]; then
+    echo ""
+    read -p "Would you like to create a Desktop shortcut for this project? [y/N] " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        if [ -f "$SCRIPT_DIR/scripts/create-shortcut.sh" ]; then
+            bash "$SCRIPT_DIR/scripts/create-shortcut.sh"
+        elif [ -f "./scripts/create-shortcut.sh" ]; then
+            bash "./scripts/create-shortcut.sh"
+        else
+            echo -e "${YELLOW}Shortcut script not found. Run manually:${NC}"
+            echo -e "  ${CYAN}./scripts/create-shortcut.sh${NC}"
+        fi
+    fi
+fi
+
