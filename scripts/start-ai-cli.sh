@@ -1,9 +1,11 @@
 #!/bin/bash
-# AI Dev Workflow - Start AI CLI
-# Launches the configured AI CLI (Gemini or Claude)
+# Start the configured AI CLI (Gemini or Claude)
+# Called by VS Code task to open in split terminal with Audit Watch
 
 # Fix VS Code debugger bootloader issue
 unset NODE_OPTIONS
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Colors
 GREEN='\033[0;32m'
@@ -15,6 +17,20 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${GREEN}🤖 AI Builder CLI${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
+
+# Show workflow status
+if [ -f "$SCRIPT_DIR/show-status.sh" ]; then
+    bash "$SCRIPT_DIR/show-status.sh" ".context" oneline
+    echo ""
+fi
+
+# Show session context reminder
+if [ -f ".context/SESSION.md" ]; then
+    echo -e "${YELLOW}📋 Session Context Available${NC}"
+    echo -e "   First thing: ${GREEN}cat .context/SESSION.md${NC}"
+    echo -e "   Update it when you complete tasks!"
+    echo ""
+fi
 
 # Check which CLI is configured
 HAS_GEMINI=false
@@ -30,7 +46,7 @@ if [ -n "$ANTHROPIC_API_KEY" ]; then
     HAS_CLAUDE=true
 fi
 
-# Determine which to use (prefer preference file)
+# Determine which to use (prefer last configured, or prompt)
 if [ "$HAS_GEMINI" = true ] && [ "$HAS_CLAUDE" = false ]; then
     echo -e "Starting ${GREEN}Gemini CLI${NC}..."
     echo ""
@@ -40,7 +56,7 @@ elif [ "$HAS_CLAUDE" = true ] && [ "$HAS_GEMINI" = false ]; then
     echo ""
     exec claude
 elif [ "$HAS_GEMINI" = true ] && [ "$HAS_CLAUDE" = true ]; then
-    # Both configured - check preference file
+    # Both configured - check preference file or use Gemini as default
     PREF_FILE=~/.ai-cli-preference
     if [ -f "$PREF_FILE" ]; then
         PREFERRED=$(cat "$PREF_FILE")
@@ -51,23 +67,25 @@ elif [ "$HAS_GEMINI" = true ] && [ "$HAS_CLAUDE" = true ]; then
     echo -e "Both CLIs configured. Using ${GREEN}${PREFERRED}${NC}"
     echo -e "${YELLOW}(To switch: echo 'claude' > ~/.ai-cli-preference)${NC}"
     echo ""
-    
+
     if [ "$PREFERRED" = "claude" ]; then
         exec claude
     else
         exec gemini
     fi
 else
-    echo -e "${YELLOW}No AI CLI configured yet.${NC}"
+    # Neither configured
+    echo -e "${YELLOW}⚠️  No AI CLI configured yet!${NC}"
     echo ""
-    echo "To set up:"
-    echo "  • Gemini: npm i -g @google/gemini-cli && gemini"
-    echo "  • Claude: npm i -g @anthropic-ai/claude-code"
+    echo "Run the onboarding wizard to set up your AI CLI:"
     echo ""
-    echo "Or run the setup wizard:"
-    echo "  bash .devcontainer/builder-setup.sh"
+    echo -e "  ${GREEN}bash .devcontainer/onboarding.sh${NC}"
     echo ""
-    
-    # Keep terminal open for manual setup
+    echo "Or install manually:"
+    echo "  • Gemini: gemini (then authenticate with OAuth)"
+    echo "  • Claude: export ANTHROPIC_API_KEY=your-key"
+    echo ""
+
+    # Keep terminal open
     exec bash
 fi
