@@ -6,12 +6,53 @@
 unset NODE_OPTIONS
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PID_FILE="$PROJECT_ROOT/.context/.ai-builder.pid"
 
 # Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
+
+# Cleanup function
+cleanup() {
+    rm -f "$PID_FILE" 2>/dev/null
+    exit 0
+}
+trap cleanup EXIT INT TERM
+
+# Check if another instance is already running
+check_already_running() {
+    if [ -f "$PID_FILE" ]; then
+        OLD_PID=$(cat "$PID_FILE" 2>/dev/null)
+        if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+            echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+            echo -e "${YELLOW}⚠️  AI Builder CLI is already running (PID: $OLD_PID)${NC}"
+            echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+            echo ""
+            echo "Options:"
+            echo "  • Switch to that terminal"
+            echo "  • Kill it: kill $OLD_PID"
+            echo "  • Force restart: rm $PID_FILE && $0"
+            echo ""
+            return 1
+        else
+            # Stale PID file, remove it
+            rm -f "$PID_FILE" 2>/dev/null
+        fi
+    fi
+    return 0
+}
+
+# Check for duplicate instance
+if ! check_already_running; then
+    exit 0
+fi
+
+# Write our PID
+mkdir -p "$(dirname "$PID_FILE")"
+echo $$ > "$PID_FILE"
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}🤖 AI Builder CLI${NC}"

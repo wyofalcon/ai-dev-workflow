@@ -87,5 +87,8 @@ Thumbs.db
 .vercel
 .gemini/
 
+# Workflow PID files (used for duplicate instance detection)
+.context/.*.pid
+
 *storybook.log
 storybook-static
