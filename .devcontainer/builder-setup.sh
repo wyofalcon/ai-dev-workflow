@@ -220,4 +220,8 @@ esac
 
 echo ""
 echo -e "${GREEN}✅ Setup complete!${NC}"
+echo -e "${YELLOW}⏳ Launching split terminals...${NC}"
 echo ""
+
+# Give VS Code a moment to finish, then close this terminal
+sleep 1

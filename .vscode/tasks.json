@@ -12,10 +12,7 @@
         "panel": "dedicated",
         "clear": true
       },
-      "problemMatcher": [],
-      "runOptions": {
-        "runOn": "folderOpen"
-      }
+      "problemMatcher": []
     },
     {
       "label": "🔍 Audit Watch",
@@ -30,8 +27,7 @@
         "clear": true,
         "group": "dev-workflow"
       },
-      "problemMatcher": [],
-      "dependsOn": ["🎯 Builder Setup"]
+      "problemMatcher": []
     },
     {
       "label": "🤖 AI Builder",
@@ -46,14 +42,22 @@
         "clear": true,
         "group": "dev-workflow"
       },
-      "dependsOn": ["🎯 Builder Setup"],
+      "problemMatcher": []
+    },
+    {
+      "label": "🖥️ Split Terminals",
+      "dependsOn": ["🔍 Audit Watch", "🤖 AI Builder"],
+      "dependsOrder": "parallel",
       "problemMatcher": []
     },
     {
       "label": "🚀 Start Dev Workflow",
-      "dependsOn": ["🔍 Audit Watch", "🤖 AI Builder"],
-      "dependsOrder": "parallel",
-      "problemMatcher": []
+      "dependsOn": ["🎯 Builder Setup", "🖥️ Split Terminals"],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
     },
     {
       "label": "🚀 Recalibrate Agents",
