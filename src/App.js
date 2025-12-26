@@ -6,6 +6,7 @@ import TutorialModal from './components/TutorialModal.js';
 import ResumePage from './components/ResumePage.js';
 import ProcessModal from './components/ProcessModal.js';
 import Footer from './components/Footer.js';
+import DevelopmentBanner from './components/DevelopmentBanner.js';
 import {
   Container,
   Typography,
@@ -59,6 +60,7 @@ function MainLayout() {
 function App() {
   return (
     <Router>
+      <DevelopmentBanner />
       <div className="App">
         <Routes>
           <Route path="/" element={<MainLayout />} />
