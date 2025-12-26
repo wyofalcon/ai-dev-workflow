@@ -6,6 +6,12 @@ import reportWebVitals from './reportWebVitals.js';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme.js';
 
+if (process.env.NODE_ENV === 'development') {
+  import('@locator/runtime').then((locator) => {
+    locator.setup();
+  });
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
