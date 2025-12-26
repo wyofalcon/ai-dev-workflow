@@ -19,7 +19,7 @@ PROJECT_NAME="CVstomize"
 detect_os() {
     case "$(uname -s)" in
         Darwin*)  echo "macos" ;;
-        Linux*)   
+        Linux*)
             if grep -q Microsoft /proc/version 2>/dev/null; then
                 echo "wsl"
             else
@@ -45,13 +45,13 @@ echo ""
 create_macos_shortcut() {
     DESKTOP="$HOME/Desktop"
     APP_PATH="$DESKTOP/${PROJECT_NAME}.app"
-    
+
     echo -e "${CYAN}Creating macOS application...${NC}"
-    
+
     # Create .app bundle structure
     mkdir -p "$APP_PATH/Contents/MacOS"
     mkdir -p "$APP_PATH/Contents/Resources"
-    
+
     # Create the launcher script
     cat > "$APP_PATH/Contents/MacOS/${PROJECT_NAME}" << LAUNCHER
 #!/bin/bash
@@ -79,7 +79,7 @@ if [ \$? -ne 0 ]; then
 fi
 LAUNCHER
     chmod +x "$APP_PATH/Contents/MacOS/${PROJECT_NAME}"
-    
+
     # Create Info.plist
     cat > "$APP_PATH/Contents/Info.plist" << PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -109,7 +109,7 @@ PLIST
 create_windows_shortcut() {
     # For WSL, create shortcut in Windows Desktop
     WIN_DESKTOP="/mnt/c/Users/$USER/Desktop"
-    
+
     # Try to find actual Windows username
     if [ -d "/mnt/c/Users" ]; then
         # Get the most likely Windows user folder
@@ -118,7 +118,7 @@ create_windows_shortcut() {
             WIN_DESKTOP="/mnt/c/Users/$WIN_USER/Desktop"
         fi
     fi
-    
+
     if [ ! -d "$WIN_DESKTOP" ]; then
         echo -e "${YELLOW}Could not find Windows Desktop folder.${NC}"
         echo -e "Tried: $WIN_DESKTOP"
@@ -129,14 +129,14 @@ create_windows_shortcut() {
         echo "3. Name: ${PROJECT_NAME}"
         return
     fi
-    
+
     SHORTCUT_PATH="$WIN_DESKTOP/${PROJECT_NAME}.bat"
-    
+
     echo -e "${CYAN}Creating Windows shortcut...${NC}"
-    
+
     # Convert WSL path to Windows path
     WIN_PROJECT_PATH=$(wslpath -w "$PROJECT_DIR" 2>/dev/null || echo "")
-    
+
     if [ -n "$WIN_PROJECT_PATH" ]; then
         cat > "$SHORTCUT_PATH" << BATCH
 @echo off
@@ -168,26 +168,26 @@ wsl.exe --cd "${PROJECT_DIR}" bash -c "code ."
 BATCH
         echo -e "${GREEN}✅ Created: ${SHORTCUT_PATH}${NC}"
     fi
-    
+
     echo ""
     echo -e "${CYAN}Double-click ${PROJECT_NAME}.bat on your Desktop to launch!${NC}"
 }
 
 create_linux_shortcut() {
     DESKTOP="$HOME/Desktop"
-    
+
     # Also try XDG desktop directory
     if [ -f "$HOME/.config/user-dirs.dirs" ]; then
         source "$HOME/.config/user-dirs.dirs"
         DESKTOP="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
     fi
-    
+
     mkdir -p "$DESKTOP"
-    
+
     SHORTCUT_PATH="$DESKTOP/${PROJECT_NAME}.desktop"
-    
+
     echo -e "${CYAN}Creating Linux .desktop entry...${NC}"
-    
+
     cat > "$SHORTCUT_PATH" << DESKTOP
 [Desktop Entry]
 Version=1.0
@@ -202,12 +202,12 @@ StartupWMClass=Code
 DESKTOP
 
     chmod +x "$SHORTCUT_PATH"
-    
+
     # Also add to applications menu
     APPS_DIR="$HOME/.local/share/applications"
     mkdir -p "$APPS_DIR"
     cp "$SHORTCUT_PATH" "$APPS_DIR/"
-    
+
     echo -e "${GREEN}✅ Created: ${SHORTCUT_PATH}${NC}"
     echo -e "${GREEN}✅ Added to Applications menu${NC}"
     echo ""

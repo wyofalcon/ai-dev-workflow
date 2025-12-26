@@ -52,6 +52,17 @@ Welcome! This dev container uses a Builder/Auditor workflow:
 Press OK to continue...
 EOF
 )" 24 62
+
+        # Offer to create desktop shortcut
+        if whiptail --title "🖥️ Desktop Shortcut" --yesno "Would you like to create a Desktop shortcut to quickly reopen this project?\n\nThis creates a clickable icon that:\n  • Starts Docker if needed\n  • Opens VS Code with this dev container\n  • Works even after restart" 14 60; then
+            # Run the shortcut creator
+            if [ -f "/workspaces/cvstomize/scripts/create-shortcut.sh" ]; then
+                bash /workspaces/cvstomize/scripts/create-shortcut.sh
+            else
+                whiptail --title "⚠️ Script Not Found" --msgbox "Shortcut script not found.\n\nYou can run it manually later:\n  ./scripts/create-shortcut.sh" 10 50
+            fi
+        fi
+
         touch "$FIRST_TIME_MARKER"
     fi
 }
