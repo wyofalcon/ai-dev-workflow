@@ -128,7 +128,19 @@ fi
 if ! grep -q 'alias gss=' ~/.bashrc 2>/dev/null; then
     echo 'alias gss="source ~/bin/gemini-session-select"' >> ~/.bashrc
 fi
+
+# Add gemini/claude aliases to fix VS Code NODE_OPTIONS conflict
+if ! grep -q 'alias gemini=' ~/.bashrc 2>/dev/null; then
+    cat >> ~/.bashrc << 'ALIAS_EOF'
+
+# Fix for Gemini/Claude CLI in VS Code (NODE_OPTIONS conflict)
+alias gemini='unset NODE_OPTIONS && command gemini'
+alias claude='unset NODE_OPTIONS && command claude'
+ALIAS_EOF
+fi
+
 echo "   ✓ Session selector installed (run 'gss' to use)"
+echo "   ✓ CLI aliases configured (gemini/claude work directly)"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

@@ -1,5 +1,21 @@
 # CVstomize - Gemini CLI Instructions
 
+## ⚠️ MANDATORY: Session Context Check
+
+**EVERY TIME you start a session, do this FIRST:**
+
+```bash
+cat .context/SESSION.md
+```
+
+1. Read the current session state
+2. Summarize what's in progress to the user
+3. Ask: "Ready to continue with [Next Steps], or do you have something else in mind?"
+
+**Update `.context/SESSION.md` after completing tasks and before ending your session.**
+
+---
+
 ## 🚀 First Time Setup
 
 **If the user is new to this dev container, point them to the onboarding wizard:**

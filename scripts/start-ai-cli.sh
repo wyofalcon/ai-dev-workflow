@@ -16,6 +16,14 @@ echo -e "${GREEN}🤖 AI Builder CLI${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
+# Show session context reminder
+if [ -f ".context/SESSION.md" ]; then
+    echo -e "${YELLOW}📋 Session Context Available${NC}"
+    echo -e "   First thing: ${GREEN}cat .context/SESSION.md${NC}"
+    echo -e "   Update it when you complete tasks!"
+    echo ""
+fi
+
 # Check which CLI is configured
 HAS_GEMINI=false
 HAS_CLAUDE=false

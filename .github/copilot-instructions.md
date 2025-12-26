@@ -1,5 +1,17 @@
 # AI Coding Instructions (Auditor 2)
 
+## ⚠️ MANDATORY: Session Context Check
+
+**EVERY TIME a user starts a conversation, do this FIRST:**
+
+1. Read `.context/SESSION.md` to understand current state
+2. Briefly summarize what's in progress
+3. Ask if they want to continue with the listed next steps or do something else
+
+**Update `.context/SESSION.md` after completing significant tasks.**
+
+---
+
 ## 🚀 First Time Setup
 
 **If the user is new to this dev container, point them to the onboarding wizard:**
