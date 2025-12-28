@@ -1,0 +1,68 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-12-28T05:03:52.151794",
+  "languages": {
+    "python": {
+      "detected": true,
+      "samples": 14,
+      "indentation": {
+        "type": "spaces",
+        "size": 2,
+        "confidence": 1.0
+      },
+      "quotes": {
+        "style": "double",
+        "confidence": 0.9006622516556292
+      },
+      "trailingComma": {
+        "style": "never",
+        "confidence": 1.0
+      },
+      "imports": {
+        "preferFromImport": false
+      },
+      "lineEnding": "lf",
+      "trailingNewline": true,
+      "typicalMaxLineLength": 72,
+      "naming": {
+        "variables": "snake_case",
+        "confidence": 0.8461538461538461,
+        "breakdown": {
+          "snake_case": 11,
+          "SCREAMING_SNAKE": 2
+        }
+      }
+    },
+    "bash": {
+      "detected": true,
+      "samples": 16,
+      "indentation": {
+        "type": "spaces",
+        "size": 2,
+        "confidence": 1.0
+      },
+      "naming": {
+        "variables": "PascalCase",
+        "confidence": 0.84,
+        "breakdown": {
+          "PascalCase": 42,
+          "SCREAMING_SNAKE": 8
+        }
+      },
+      "lineEnding": "lf",
+      "trailingNewline": true,
+      "typicalMaxLineLength": 71
+    }
+  },
+  "global": {
+    "detected": true,
+    "indentation": {
+      "type": "spaces",
+      "size": 2,
+      "confidence": 1.0
+    },
+    "lineEnding": "lf",
+    "maxLineLength": null,
+    "trailingNewline": null
+  }
+}

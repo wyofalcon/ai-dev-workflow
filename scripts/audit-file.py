@@ -90,7 +90,51 @@ def audit_file(filepath):
         if len(issues["warning"]) > 5:
             print(f"   ... and {len(issues['warning']) - 5} more")
 
+    # Check code style consistency
+    style_issues = check_code_style(filepath)
+    if style_issues:
+        print(f"\n{Colors.BLUE}📝 STYLE ({len(style_issues)}){Colors.NC}")
+        for issue in style_issues[:3]:
+            print(f"   {issue['message']}")
+        if len(style_issues) > 3:
+            print(f"   ... and {len(style_issues) - 3} more")
+
+    # Track style from this file (learn patterns)
+    track_file_style(filepath)
+
     print()
+
+
+def check_code_style(filepath):
+    """Check file against tracked code styles."""
+    try:
+        from style_tracker import check_file_style
+        return check_file_style(filepath)
+    except ImportError:
+        # Try importing from same directory
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, script_dir)
+        try:
+            from style_tracker import check_file_style
+            return check_file_style(filepath)
+        except ImportError:
+            return []
+
+
+def track_file_style(filepath):
+    """Track style patterns from this file."""
+    try:
+        from style_tracker import track_file
+        track_file(filepath, quiet=True)
+    except ImportError:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, script_dir)
+        try:
+            from style_tracker import track_file
+            track_file(filepath, quiet=True)
+        except ImportError:
+            pass
+
 
 def main():
     if len(sys.argv) < 2:

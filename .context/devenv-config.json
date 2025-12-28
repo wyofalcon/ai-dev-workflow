@@ -1,0 +1,119 @@
+{
+  "version": "1.0",
+  "currentEnvironment": null,
+  "environments": {
+    "DevLocal": {
+      "name": "DevLocal",
+      "description": "Full local development with mock services - zero cost",
+      "icon": "🏠",
+      "services": {
+        "mode": "all-mock",
+        "database": { "type": "mock", "provider": "sqlite-memory" },
+        "cache": { "type": "mock", "provider": "local-memory" },
+        "storage": { "type": "mock", "provider": "local-fs" },
+        "email": { "type": "mock", "provider": "mailhog" },
+        "payment": { "type": "mock", "provider": "stripe-mock" },
+        "auth": { "type": "mock", "provider": "local-jwt" },
+        "ai": { "type": "mock", "provider": "mock-responses" },
+        "analytics": { "type": "mock", "provider": "console-log" },
+        "search": { "type": "mock", "provider": "lunr-local" },
+        "queue": { "type": "mock", "provider": "bull-memory" }
+      },
+      "isolation": "complete",
+      "costRisk": "none"
+    },
+    "DevLive": {
+      "name": "DevLive",
+      "description": "Live services isolated from production - real integrations",
+      "icon": "🌐",
+      "services": {
+        "mode": "all-live",
+        "database": { "type": "live", "environment": "development" },
+        "cache": { "type": "live", "environment": "development" },
+        "storage": { "type": "live", "environment": "development" },
+        "email": { "type": "live", "environment": "development" },
+        "payment": {
+          "type": "live",
+          "environment": "development",
+          "testMode": true
+        },
+        "auth": { "type": "live", "environment": "development" },
+        "ai": { "type": "live", "environment": "development" },
+        "analytics": { "type": "live", "environment": "development" },
+        "search": { "type": "live", "environment": "development" },
+        "queue": { "type": "live", "environment": "development" }
+      },
+      "isolation": "dev-namespace",
+      "costRisk": "low"
+    },
+    "DevHybrid": {
+      "name": "DevHybrid",
+      "description": "Mix and match - mock expensive services, use live for others",
+      "icon": "🔀",
+      "services": {
+        "mode": "hybrid",
+        "database": { "type": "configurable", "default": "live" },
+        "cache": { "type": "configurable", "default": "mock" },
+        "storage": { "type": "configurable", "default": "mock" },
+        "email": { "type": "configurable", "default": "mock" },
+        "payment": { "type": "configurable", "default": "mock" },
+        "auth": { "type": "configurable", "default": "live" },
+        "ai": { "type": "configurable", "default": "mock" },
+        "analytics": { "type": "configurable", "default": "mock" },
+        "search": { "type": "configurable", "default": "mock" },
+        "queue": { "type": "configurable", "default": "mock" }
+      },
+      "isolation": "partial",
+      "costRisk": "configurable"
+    }
+  },
+  "serviceProviders": {
+    "database": {
+      "mock": ["sqlite-memory", "json-file", "mock-prisma"],
+      "live": [
+        "postgresql",
+        "mysql",
+        "mongodb",
+        "supabase",
+        "planetscale",
+        "neon"
+      ]
+    },
+    "cache": {
+      "mock": ["local-memory", "node-cache"],
+      "live": ["redis", "upstash", "memcached"]
+    },
+    "storage": {
+      "mock": ["local-fs", "memory-fs"],
+      "live": ["s3", "cloudflare-r2", "supabase-storage", "gcs"]
+    },
+    "email": {
+      "mock": ["mailhog", "ethereal", "console-log"],
+      "live": ["sendgrid", "mailgun", "ses", "postmark", "resend"]
+    },
+    "payment": {
+      "mock": ["stripe-mock", "mock-checkout"],
+      "live": ["stripe", "paddle", "lemon-squeezy"]
+    },
+    "auth": {
+      "mock": ["local-jwt", "mock-sessions"],
+      "live": ["auth0", "clerk", "supabase-auth", "nextauth"]
+    },
+    "ai": {
+      "mock": ["mock-responses", "fixed-responses", "delayed-echo"],
+      "live": ["openai", "anthropic", "gemini", "together-ai", "replicate"]
+    },
+    "analytics": {
+      "mock": ["console-log", "noop"],
+      "live": ["posthog", "mixpanel", "amplitude", "segment"]
+    },
+    "search": {
+      "mock": ["lunr-local", "simple-search"],
+      "live": ["algolia", "typesense", "meilisearch", "elasticsearch"]
+    },
+    "queue": {
+      "mock": ["bull-memory", "sync-queue"],
+      "live": ["bull-redis", "sqs", "rabbitmq"]
+    }
+  }
+}

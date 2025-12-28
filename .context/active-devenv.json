@@ -1,0 +1,50 @@
+{
+  "environment": "DevLocal",
+  "icon": "\ud83c\udfe0",
+  "services": {
+    "mode": "all-mock",
+    "database": {
+      "type": "mock",
+      "provider": "sqlite-memory"
+    },
+    "cache": {
+      "type": "mock",
+      "provider": "local-memory"
+    },
+    "storage": {
+      "type": "mock",
+      "provider": "local-fs"
+    },
+    "email": {
+      "type": "mock",
+      "provider": "mailhog"
+    },
+    "payment": {
+      "type": "mock",
+      "provider": "stripe-mock"
+    },
+    "auth": {
+      "type": "mock",
+      "provider": "local-jwt"
+    },
+    "ai": {
+      "type": "mock",
+      "provider": "mock-responses"
+    },
+    "analytics": {
+      "type": "mock",
+      "provider": "console-log"
+    },
+    "search": {
+      "type": "mock",
+      "provider": "lunr-local"
+    },
+    "queue": {
+      "type": "mock",
+      "provider": "bull-memory"
+    }
+  },
+  "isolation": "complete",
+  "costRisk": "none",
+  "timestamp": "2025-12-28T04:47:40.017700"
+}

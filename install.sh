@@ -41,10 +41,25 @@ curl -fsSL "$BASE_URL/scripts/toggle-audit-watch.sh" -o scripts/toggle-audit-wat
 curl -fsSL "$BASE_URL/scripts/send-prompt.sh" -o scripts/send-prompt.sh
 curl -fsSL "$BASE_URL/scripts/show-status.sh" -o scripts/show-status.sh
 
+# DevEnv management scripts
+curl -fsSL "$BASE_URL/scripts/devenv-manager.py" -o scripts/devenv-manager.py
+curl -fsSL "$BASE_URL/scripts/devquick-manager.py" -o scripts/devquick-manager.py
+curl -fsSL "$BASE_URL/scripts/credentials-manager.py" -o scripts/credentials-manager.py
+curl -fsSL "$BASE_URL/scripts/service-mock-manager.py" -o scripts/service-mock-manager.py
+curl -fsSL "$BASE_URL/scripts/switch-devenv.sh" -o scripts/switch-devenv.sh
+
+# Code style tracking scripts
+curl -fsSL "$BASE_URL/scripts/style-tracker.py" -o scripts/style-tracker.py
+curl -fsSL "$BASE_URL/scripts/generate-context.py" -o scripts/generate-context.py
+
 # Config files
 curl -fsSL "$BASE_URL/.devcontainer/builder-setup.sh" -o .devcontainer/builder-setup.sh
+curl -fsSL "$BASE_URL/.devcontainer/post-create.sh" -o .devcontainer/post-create.sh
 curl -fsSL "$BASE_URL/.vscode/tasks.json" -o .vscode/tasks.json
 curl -fsSL "$BASE_URL/.audit-config.json" -o .audit-config.json
+
+# DevEnv config
+curl -fsSL "$BASE_URL/.context/devenv-config.json" -o .context/devenv-config.json
 
 # Context files (workflow state)
 curl -fsSL "$BASE_URL/.context/WORKFLOW.md" -o .context/WORKFLOW.md
@@ -70,15 +85,17 @@ echo ""
 echo -e "${CYAN}Next steps:${NC}"
 echo "  1. Open in VS Code: ${GREEN}code .${NC}"
 echo "  2. Run setup wizard: ${GREEN}bash .devcontainer/builder-setup.sh${NC}"
+echo "  3. Scan code styles: ${GREEN}python3 scripts/style-tracker.py --scan${NC}"
 echo ""
 echo -e "${CYAN}Quick commands:${NC}"
 echo "  • Start workflow:  ${GREEN}bash scripts/audit-watch.sh${NC} (terminal 1)"
 echo "  •                  ${GREEN}bash scripts/start-ai-cli.sh${NC} (terminal 2)"
 echo "  • Show status:     ${GREEN}bash scripts/show-status.sh${NC}"
-echo "  • Toggle modes:    ${GREEN}bash scripts/toggle-relay-mode.sh${NC}"
-echo "  •                  ${GREEN}bash scripts/toggle-audit-watch.sh${NC}"
+echo "  • Switch env:      ${GREEN}python3 scripts/devenv-manager.py${NC}"
+echo "  • View styles:     ${GREEN}python3 scripts/style-tracker.py --status${NC}"
 echo ""
-echo -e "${CYAN}Workflow modes:${NC}"
-echo "  • Prompt Relay:    review (default) / auto"
-echo "  • Audit Watch:     on (default) / off"
+echo -e "${CYAN}Environments:${NC}"
+echo "  • DevLocal:  All services mocked (free)"
+echo "  • DevLive:   Real dev services (isolated)"
+echo "  • DevHybrid: Mix mock + live per service"
 echo ""

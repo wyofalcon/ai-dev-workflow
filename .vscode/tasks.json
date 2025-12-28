@@ -112,6 +112,118 @@
       "problemMatcher": []
     },
     {
+      "label": "🌍 Switch DevEnv",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/scripts/switch-devenv.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "Switch between DevLocal, DevLive, and DevHybrid environments"
+    },
+    {
+      "label": "⚡ DevQuick Presets",
+      "type": "shell",
+      "command": "python3 ${workspaceFolder}/scripts/devquick-manager.py",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "Save or load DevQuick configuration presets"
+    },
+    {
+      "label": "🔐 Manage Credentials",
+      "type": "shell",
+      "command": "python3 ${workspaceFolder}/scripts/credentials-manager.py --setup",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "Configure API keys and service credentials"
+    },
+    {
+      "label": "🎭 Mock Services Status",
+      "type": "shell",
+      "command": "python3 ${workspaceFolder}/scripts/service-mock-manager.py --status",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "View current mock vs live service configuration"
+    },
+    {
+      "label": "📐 Scan Code Styles",
+      "type": "shell",
+      "command": "python3 ${workspaceFolder}/scripts/style-tracker.py --scan",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "Scan the project and detect code style patterns"
+    },
+    {
+      "label": "📝 Generate Rules Context",
+      "type": "shell",
+      "command": "python3 ${workspaceFolder}/scripts/generate-context.py --update",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "Update BUILDER_RULES.md and AUDITOR_RULES.md from detected styles"
+    },
+    {
+      "label": "🔎 Show Style Status",
+      "type": "shell",
+      "command": "python3 ${workspaceFolder}/scripts/style-tracker.py --status",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "Show currently detected code style patterns"
+    },
+    {
+      "label": "🗑️ Reset Styles",
+      "type": "shell",
+      "command": "python3 ${workspaceFolder}/scripts/style-tracker.py --reset",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "Clear all detected styles and start fresh"
+    },
+    {
       "label": "� Toggle Audit Watch",
       "type": "shell",
       "command": "bash ${workspaceFolder}/scripts/toggle-audit-watch.sh",
