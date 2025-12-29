@@ -1,0 +1,30 @@
+# =================================
+# AI Dev Workflow Template .gitignore
+# =================================
+# Add this to your project's .gitignore
+
+# Workflow context and state
+.context/audit-logs/
+.context/state/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Node modules (if using npm scripts)
+node_modules/
+
+# IDE settings that shouldn't be shared
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local

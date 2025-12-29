@@ -185,7 +185,8 @@ def configure_hybrid_services() -> Dict[str, str]:
     return service_config
 
 
-def apply_environment(env_name: str, service_overrides: Optional[Dict] = None) -> bool:
+def apply_environment(env_name: str, service_overrides: Optional[Dict] = None,
+                      restart_services: bool = False, run_migrations: bool = False) -> bool:
     """Apply the selected environment configuration."""
     config = load_config()
 
@@ -222,7 +223,86 @@ def apply_environment(env_name: str, service_overrides: Optional[Dict] = None) -
     # Generate environment variables file
     generate_env_file(active_config)
 
+    # Handle Docker services restart
+    if restart_services:
+        restart_docker_services(env_name)
+
+    # Run database migrations
+    if run_migrations:
+        run_db_migrations()
+
     return True
+
+
+def restart_docker_services(env_name: str) -> bool:
+    """Restart Docker containers based on environment."""
+    print(f"\n{Colors.CYAN}🔄 Restarting Docker services...{Colors.NC}")
+
+    # DevLive uses overlay compose file on top of base
+    if env_name == "DevLive":
+        compose_args = ["-f", "docker-compose.yml", "-f", "docker-compose.devlive.yml"]
+    else:
+        compose_args = ["-f", "docker-compose.yml"]
+
+    try:
+        # Stop existing containers
+        subprocess.run(
+            ["docker", "compose"] + compose_args + ["down"],
+            cwd=PROJECT_ROOT,
+            capture_output=True
+        )
+
+        # Start fresh containers
+        result = subprocess.run(
+            ["docker", "compose"] + compose_args + ["up", "-d", "--build"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode == 0:
+            print(f"{Colors.GREEN}✅ Docker services restarted{Colors.NC}")
+            return True
+        else:
+            print(f"{Colors.RED}❌ Docker restart failed: {result.stderr}{Colors.NC}")
+            return False
+    except Exception as e:
+        print(f"{Colors.RED}❌ Error restarting Docker: {e}{Colors.NC}")
+        return False
+
+
+def run_db_migrations() -> bool:
+    """Run Prisma database migrations."""
+    print(f"\n{Colors.CYAN}📦 Running database migrations...{Colors.NC}")
+
+    api_dir = PROJECT_ROOT / "api"
+
+    try:
+        # Wait for database to be ready
+        import time
+        print(f"{Colors.DIM}   Waiting for database...{Colors.NC}")
+        time.sleep(5)
+
+        result = subprocess.run(
+            ["npx", "prisma", "migrate", "dev", "--skip-generate"],
+            cwd=api_dir,
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode == 0:
+            print(f"{Colors.GREEN}✅ Migrations complete{Colors.NC}")
+            return True
+        else:
+            # Check if it's just "already applied"
+            if "already in sync" in result.stdout or "No pending migrations" in result.stdout:
+                print(f"{Colors.GREEN}✅ Database already up to date{Colors.NC}")
+                return True
+            print(f"{Colors.YELLOW}⚠️  Migration output: {result.stdout}{Colors.NC}")
+            return True
+    except Exception as e:
+        print(f"{Colors.RED}❌ Error running migrations: {e}{Colors.NC}")
+        return False
 
 
 def generate_env_file(config: Dict[str, Any]) -> None:
@@ -300,14 +380,57 @@ def main():
     parser.add_argument("--status", action="store_true", help="Show current environment status")
     parser.add_argument("--set", metavar="ENV", help="Set environment (DevLocal|DevLive|DevHybrid)")
     parser.add_argument("--interactive", action="store_true", help="Interactive mode (default)")
+    parser.add_argument("--restart", action="store_true", help="Restart Docker services after switching")
+    parser.add_argument("--migrate", action="store_true", help="Run database migrations after switching")
+    parser.add_argument("--full-reset", action="store_true", help="Full reset: wipe DB, restart services, run migrations")
+    parser.add_argument("--save-preset", metavar="NAME", help="Save current config as a preset")
+    parser.add_argument("--load-preset", metavar="NAME", help="Load a saved preset")
     args = parser.parse_args()
 
     if args.status:
         show_environment_status()
         return
 
+    # Handle preset save/load
+    if args.save_preset:
+        subprocess.run([sys.executable, str(SCRIPT_DIR / "devquick-manager.py"), "--save", args.save_preset])
+        return
+
+    if args.load_preset:
+        subprocess.run([sys.executable, str(SCRIPT_DIR / "devquick-manager.py"), "--load", args.load_preset])
+        return
+
+    # Handle full reset
+    if args.full_reset:
+        print(f"\n{Colors.YELLOW}⚠️  Full Reset will:{Colors.NC}")
+        print(f"   • Stop all Docker containers")
+        print(f"   • Wipe database volumes")
+        print(f"   • Rebuild and restart services")
+        print(f"   • Run database migrations")
+        print()
+        try:
+            confirm = input(f"   Continue? (y/N): ").strip().lower()
+            if confirm != 'y':
+                print(f"{Colors.YELLOW}Cancelled.{Colors.NC}")
+                return
+        except (KeyboardInterrupt, EOFError):
+            print(f"\n{Colors.YELLOW}Cancelled.{Colors.NC}")
+            return
+
+        # Perform full reset
+        print(f"\n{Colors.CYAN}🗑️  Stopping and wiping containers...{Colors.NC}")
+        subprocess.run(["docker", "compose", "down", "-v"], cwd=PROJECT_ROOT)
+
+        env_name = get_active_environment() or "DevLocal"
+        apply_environment(env_name, restart_services=True, run_migrations=True)
+
+        print(f"\n{Colors.GREEN}✅ Full reset complete!{Colors.NC}")
+        return
+
     if args.set:
-        if apply_environment(args.set):
+        restart = args.restart or args.full_reset
+        migrate = args.migrate or args.full_reset
+        if apply_environment(args.set, restart_services=restart, run_migrations=migrate):
             print(f"{Colors.GREEN}✅ Environment set to {args.set}{Colors.NC}")
         return
 
@@ -331,7 +454,31 @@ def main():
     if choice == "DevHybrid":
         service_overrides = configure_hybrid_services()
 
-    if apply_environment(choice, service_overrides):
+    # Ask about restart/migration
+    do_restart = False
+    do_migrate = False
+
+    try:
+        print()
+        print(f"   {Colors.BOLD}Service Options:{Colors.NC}")
+        print(f"   {Colors.GREEN}1{Colors.NC}. Quick switch (config only)")
+        print(f"   {Colors.GREEN}2{Colors.NC}. Restart Docker services")
+        print(f"   {Colors.GREEN}3{Colors.NC}. Full reset (wipe DB + restart + migrate)")
+        print()
+        service_choice = input(f"   Select (1-3) [1]: ").strip()
+
+        if service_choice == "2":
+            do_restart = True
+        elif service_choice == "3":
+            do_restart = True
+            do_migrate = True
+            # Wipe volumes first
+            print(f"\n{Colors.CYAN}🗑️  Wiping Docker volumes...{Colors.NC}")
+            subprocess.run(["docker", "compose", "down", "-v"], cwd=PROJECT_ROOT, capture_output=True)
+    except (KeyboardInterrupt, EOFError):
+        pass
+
+    if apply_environment(choice, service_overrides, restart_services=do_restart, run_migrations=do_migrate):
         config = load_config()
         env = config["environments"].get(choice, {})
         icon = env.get("icon", "")
