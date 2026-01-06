@@ -94,6 +94,8 @@ function ResetPasswordPage() {
             <form onSubmit={handleSubmit}>
               <TextField
                 fullWidth
+                id="email"
+                name="email"
                 label="Email Address"
                 type="email"
                 value={email}

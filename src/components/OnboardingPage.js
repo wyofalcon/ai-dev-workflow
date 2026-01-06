@@ -43,7 +43,6 @@ import {
 } from "@mui/material";
 import {
   CloudUpload as UploadIcon,
-  Edit as EditIcon,
   ArrowBack as BackIcon,
   ArrowForward as ForwardIcon,
   CheckCircle as CheckIcon,
@@ -95,7 +94,7 @@ for (const industry of INDUSTRY_ORDER) {
   }
 }
 
-const stepsOnboarding = ["Choose Method", "Enter Details", "Review & Complete"];
+const stepsOnboarding = ["Upload Resume", "Review Details", "Save Profile"];
 const stepsUpload = ["Upload Resume", "Review Details", "Save Resume"];
 
 function OnboardingPage() {
@@ -151,7 +150,7 @@ function OnboardingPage() {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login");
+      navigate("/"); // Go to landing page
     } catch (err) {
       console.error("Logout error:", err);
     }
@@ -322,6 +321,18 @@ function OnboardingPage() {
     setError("");
 
     try {
+      // Build enabledSections based on what data was parsed
+      const enabledSections = [
+        "contact",
+        "workExperience",
+        "skills",
+        "education",
+      ];
+      if (formData.summary) enabledSections.push("summary");
+      if (formData.certifications?.length > 0)
+        enabledSections.push("certifications");
+      if (formData.languages?.length > 0) enabledSections.push("languages");
+
       const token = await getIdToken();
       const response = await fetch(`${API_URL}/profile`, {
         method: "POST",
@@ -347,6 +358,17 @@ function OnboardingPage() {
             formData.experience?.length > 0 ? formData.experience : null,
           certifications: formData.certifications || [],
           languages: formData.languages || [],
+          // Include workPreferences with enabledSections and full data
+          workPreferences: {
+            enabledSections,
+            summary: formData.summary || "",
+            currentTitle: formData.currentTitle || "",
+            workExperience: formData.experience || [],
+            education: formData.education || [],
+            skills: formData.skills || [],
+            certifications: formData.certifications || [],
+            languages: formData.languages || [],
+          },
           completeOnboarding: true, // Mark onboarding as complete
         }),
       });
@@ -406,21 +428,27 @@ function OnboardingPage() {
     }
   };
 
-  // Step 1: Choose Method
+  // Step 1: Upload Resume
   const renderMethodSelection = () => (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h5" align="center" gutterBottom>
-        {isReturningUser ? "Upload Your Resume" : "Let's Set Up Your Profile"}
+        Let's Start With What You Have
       </Typography>
       <Typography
         variant="body1"
         align="center"
         color="text.secondary"
-        sx={{ mb: 4 }}
+        sx={{ mb: 2 }}
       >
-        {isReturningUser
-          ? "Drop your resume file below and we'll extract your information."
-          : "Upload your existing resume and we'll automatically extract your information to get you started quickly."}
+        Upload your existing resume — we'll use it as a starting point.
+      </Typography>
+      <Typography
+        variant="body2"
+        align="center"
+        sx={{ mb: 4, color: "#fdbb2d", fontStyle: "italic" }}
+      >
+        💡 This is just the beginning. Our AI will help you discover skills you
+        forgot to include.
       </Typography>
 
       {/* Unified Upload Resume Dropzone */}
@@ -508,6 +536,8 @@ function OnboardingPage() {
             fullWidth
             multiline
             rows={6}
+            id="resumeText"
+            name="resumeText"
             label="Paste your resume content here"
             value={resumeText}
             onChange={(e) => setResumeText(e.target.value)}
@@ -529,35 +559,6 @@ function OnboardingPage() {
           </Button>
         </Box>
       )}
-
-      {/* Manual Entry - Secondary Option at Bottom */}
-      <Box sx={{ mt: 5, textAlign: "center" }}>
-        <Divider sx={{ mb: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            Don't have a resume file?
-          </Typography>
-        </Divider>
-        <Button
-          variant="text"
-          color="primary"
-          onClick={() => handleSelectMethod("manual")}
-          startIcon={<EditIcon />}
-          sx={{
-            textTransform: "none",
-            fontSize: "1rem",
-          }}
-        >
-          Enter your information manually instead
-        </Button>
-        <Typography
-          variant="caption"
-          display="block"
-          color="text.secondary"
-          sx={{ mt: 1 }}
-        >
-          You can always add or update your details later
-        </Typography>
-      </Box>
     </Box>
   );
 
@@ -565,17 +566,23 @@ function OnboardingPage() {
   const renderDetailsForm = () => (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h5" align="center" gutterBottom>
-        Your Professional Information
+        Your Professional Foundation
       </Typography>
       <Typography
         variant="body1"
         align="center"
         color="text.secondary"
-        sx={{ mb: 4 }}
+        sx={{ mb: 2 }}
       >
-        {method === "upload"
-          ? "Review and edit the information extracted from your resume."
-          : "Enter your basic professional information."}
+        Review what we extracted. You can always add more later.
+      </Typography>
+      <Typography
+        variant="body2"
+        align="center"
+        sx={{ mb: 4, color: "text.secondary", fontStyle: "italic" }}
+      >
+        ✨ Next, we'll have a conversation to uncover your hidden skills and
+        stories.
       </Typography>
 
       <Grid container spacing={3}>
@@ -583,6 +590,8 @@ function OnboardingPage() {
           <TextField
             fullWidth
             required
+            id="fullName"
+            name="fullName"
             label="Full Name"
             value={formData.fullName}
             onChange={handleInputChange("fullName")}
@@ -592,6 +601,8 @@ function OnboardingPage() {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
+            id="email"
+            name="email"
             label="Email"
             value={formData.email}
             disabled
@@ -601,6 +612,8 @@ function OnboardingPage() {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
+            id="phone"
+            name="phone"
             label="Phone Number"
             value={formData.phone}
             onChange={handleInputChange("phone")}
@@ -610,6 +623,8 @@ function OnboardingPage() {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
+            id="location"
+            name="location"
             label="Location"
             value={formData.location}
             onChange={handleInputChange("location")}
@@ -619,6 +634,8 @@ function OnboardingPage() {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
+            id="linkedinUrl"
+            name="linkedinUrl"
             label="LinkedIn URL"
             value={formData.linkedinUrl}
             onChange={handleInputChange("linkedinUrl")}
@@ -628,6 +645,8 @@ function OnboardingPage() {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
+            id="currentTitle"
+            name="currentTitle"
             label="Current/Most Recent Job Title"
             value={formData.currentTitle}
             onChange={handleInputChange("currentTitle")}
@@ -638,6 +657,8 @@ function OnboardingPage() {
           <TextField
             fullWidth
             type="number"
+            id="yearsExperience"
+            name="yearsExperience"
             label="Years of Experience"
             value={formData.yearsExperience}
             onChange={handleInputChange("yearsExperience")}
@@ -649,6 +670,8 @@ function OnboardingPage() {
             fullWidth
             multiline
             rows={3}
+            id="summary"
+            name="summary"
             label="Professional Summary"
             value={formData.summary}
             onChange={handleInputChange("summary")}
@@ -769,18 +792,28 @@ function OnboardingPage() {
   const renderReview = () => (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h5" align="center" gutterBottom>
-        {isReturningUser ? "Review Your Resume" : "Review Your Profile"}
+        {isReturningUser ? "Review Your Resume" : "Almost There!"}
       </Typography>
       <Typography
         variant="body1"
         align="center"
         color="text.secondary"
-        sx={{ mb: 4 }}
+        sx={{ mb: 2 }}
       >
         {isReturningUser
           ? "Review the extracted information before saving your resume."
-          : "Make sure everything looks correct before completing your profile setup."}
+          : "Here's your foundation. After saving, we'll start discovering your hidden talents."}
       </Typography>
+      {!isReturningUser && (
+        <Typography
+          variant="body2"
+          align="center"
+          sx={{ mb: 4, color: "#fdbb2d" }}
+        >
+          🎯 Ready to uncover skills from your life experiences, hobbies, and
+          untold stories?
+        </Typography>
+      )}
 
       <Paper elevation={2} sx={{ p: 3 }}>
         {/* Show uploaded resume info */}
@@ -1039,7 +1072,7 @@ function OnboardingPage() {
   );
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="md" data-testid="onboarding-page">
       <Box
         sx={{
           minHeight: "100vh",
@@ -1050,6 +1083,7 @@ function OnboardingPage() {
       >
         {/* Header with Logo and Back/Logout */}
         <Box
+          data-testid="onboarding-header"
           sx={{
             display: "flex",
             justifyContent: "space-between",
@@ -1059,6 +1093,7 @@ function OnboardingPage() {
         >
           {isReturningUser ? (
             <Button
+              data-testid="onboarding-back-btn"
               variant="text"
               color="inherit"
               size="small"
@@ -1074,8 +1109,14 @@ function OnboardingPage() {
           ) : (
             <Box sx={{ width: 100 }} /> /* Spacer for centering */
           )}
-          <img src={logo} alt="CVstomize Logo" style={{ width: "120px" }} />
+          <img
+            src={logo}
+            alt="CVstomize Logo"
+            style={{ width: "120px" }}
+            data-testid="onboarding-logo"
+          />
           <Button
+            data-testid="onboarding-logout-btn"
             variant="text"
             color="inherit"
             size="small"
@@ -1091,7 +1132,12 @@ function OnboardingPage() {
         </Box>
 
         {/* Welcome Message */}
-        <Typography variant="h4" align="center" gutterBottom>
+        <Typography
+          data-testid="onboarding-title"
+          variant="h4"
+          align="center"
+          gutterBottom
+        >
           {isReturningUser ? "Upload a Resume" : "Welcome to CVstomize! 🎉"}
         </Typography>
         <Typography
@@ -1106,7 +1152,12 @@ function OnboardingPage() {
         </Typography>
 
         {/* Stepper */}
-        <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
+        <Stepper
+          data-testid="onboarding-stepper"
+          activeStep={activeStep}
+          alternativeLabel
+          sx={{ mb: 4 }}
+        >
           {(isReturningUser ? stepsUpload : stepsOnboarding).map((label) => (
             <Step key={label}>
               <StepLabel>{label}</StepLabel>
@@ -1131,7 +1182,11 @@ function OnboardingPage() {
         )}
 
         {/* Step Content */}
-        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+        <Paper
+          data-testid="onboarding-step-content"
+          elevation={3}
+          sx={{ p: 4, borderRadius: 2 }}
+        >
           {activeStep === 0 && renderMethodSelection()}
           {activeStep === 1 && renderDetailsForm()}
           {activeStep === 2 && renderReview()}

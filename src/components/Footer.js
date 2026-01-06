@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Typography, Link } from '@mui/material';
+import React from "react";
+import { Box, Typography, Link } from "@mui/material";
 
 export default function Footer() {
   return (
@@ -8,24 +8,31 @@ export default function Footer() {
       sx={{
         py: 3,
         px: 2,
-        mt: 'auto',
+        mt: "auto",
         backgroundColor: (theme) =>
-          theme.palette.mode === 'light'
+          theme.palette.mode === "light"
             ? theme.palette.grey[200]
             : theme.palette.grey[800],
       }}
     >
-      <Typography variant="body2" color="text.secondary" align="center">
-        {'Copyright © '}
-        <Link color="inherit" href="https://github.com/wyofalcon">
-          wyofalcon
-        </Link>{' '}
-        {new Date().getFullYear()}
-        {'.'}
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        align="center"
+        sx={{ mb: 1, fontStyle: "italic" }}
+      >
+        "You have skills you've never thought to put on a resume. We help you
+        find them."
       </Typography>
       <Typography variant="body2" color="text.secondary" align="center">
-        <Link color="inherit" href="https://github.com/wyofalcon/cvstomize">
-          CVstomize GitHub Repository
+        {"Copyright © "}
+        <Link color="inherit" href="https://cvstomize.com">
+          CVstomize
+        </Link>{" "}
+        {new Date().getFullYear()}
+        {" | "}
+        <Link color="inherit" href="/terms" sx={{ textDecoration: "none" }}>
+          Terms & Conditions
         </Link>
       </Typography>
     </Box>

@@ -525,6 +525,8 @@ function ConversationalWizard({ onComplete }) {
           fullWidth
           multiline
           rows={6}
+          id="existingResume"
+          name="existingResume"
           value={existingResume}
           onChange={(e) => setExistingResume(e.target.value)}
           placeholder="Paste your existing resume here (optional)...&#10;&#10;I'll keep what's good, enhance what's weak, and only ask about gaps!"
@@ -548,6 +550,8 @@ function ConversationalWizard({ onComplete }) {
           fullWidth
           multiline
           rows={8}
+          id="jobDescription"
+          name="jobDescription"
           value={currentAnswer}
           onChange={(e) => setCurrentAnswer(e.target.value)}
           placeholder="Paste the full job description here...&#10;&#10;Example:&#10;Software Engineer - Full Stack&#10;Requirements:&#10;- 3+ years experience with React and Node.js&#10;- Strong problem-solving skills&#10;- Experience with AWS deployment&#10;..."

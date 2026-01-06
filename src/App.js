@@ -22,6 +22,9 @@ import SignupPage from "./components/SignupPage.js";
 import ResetPasswordPage from "./components/ResetPasswordPage.js";
 import OnboardingPage from "./components/OnboardingPage.js";
 import GoldStandardWizard from "./components/GoldStandardWizard.js";
+import LandingPage from "./components/LandingPage.js";
+import DemoExperience from "./components/DemoExperience.js";
+import TermsPage from "./components/TermsPage.js";
 import {
   Container,
   Button,
@@ -37,14 +40,16 @@ import {
 import { AccountCircle } from "@mui/icons-material";
 import logo from "./components/logo.png";
 import "./App.css";
+import DebugInspector from "./components/DebugInspector.js";
 
-// Protected Route wrapper - redirects to login if not authenticated, or to onboarding if not completed
+// Protected Route wrapper - redirects to landing if not authenticated, or to onboarding if not completed
 function ProtectedRoute({ children }) {
   const { currentUser, onboardingCompleted } = useAuth();
   const location = useLocation();
 
   if (!currentUser) {
-    return <Navigate to="/login" replace />;
+    // Redirect to public landing page instead of login
+    return <Navigate to="/welcome" replace />;
   }
 
   // Redirect to onboarding if not completed (but not if already on onboarding page)
@@ -66,15 +71,31 @@ function OnboardingRoute({ children }) {
   return children;
 }
 
-// Public Route wrapper (redirect to home if already logged in)
+// Public Route wrapper (redirect to dashboard if already logged in)
 function PublicRoute({ children }) {
   const { currentUser } = useAuth();
 
   if (currentUser) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
+}
+
+// Landing Page Route - shows landing for guests, redirects logged-in users to dashboard
+function LandingPageRoute() {
+  const { currentUser, onboardingCompleted } = useAuth();
+
+  // If logged in, go to dashboard (or onboarding if needed)
+  if (currentUser) {
+    if (onboardingCompleted === false) {
+      return <Navigate to="/onboarding" replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Not logged in - show public landing page
+  return <LandingPage />;
 }
 
 function MainLayout() {
@@ -129,7 +150,7 @@ function MainLayout() {
     handleMenuClose();
     try {
       await logout();
-      navigate("/login");
+      navigate("/"); // Go to landing page to show value props
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -169,8 +190,12 @@ function MainLayout() {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <Box
+      data-testid="main-layout"
+      sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+    >
       <AppBar
+        data-testid="main-navbar"
         position="static"
         color="transparent"
         elevation={0}
@@ -178,6 +203,7 @@ function MainLayout() {
       >
         <Toolbar>
           <img
+            data-testid="navbar-logo"
             src={logo}
             alt="logo"
             style={{ width: "80px", marginRight: "10px" }}
@@ -186,6 +212,7 @@ function MainLayout() {
 
           {/* How to Use Button */}
           <Button
+            data-testid="navbar-tutorial-btn"
             color="primary"
             onClick={() => setIsTutorialOpen(true)}
             sx={{ mr: 2 }}
@@ -206,7 +233,11 @@ function MainLayout() {
               </Typography>
 
               {/* User Menu */}
-              <IconButton onClick={handleMenuOpen} color="primary">
+              <IconButton
+                data-testid="navbar-user-menu-btn"
+                onClick={handleMenuOpen}
+                color="primary"
+              >
                 {getAvatarUrl() ? (
                   <Avatar
                     src={getAvatarUrl()}
@@ -218,6 +249,7 @@ function MainLayout() {
                 )}
               </IconButton>
               <Menu
+                data-testid="navbar-user-menu"
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
@@ -228,6 +260,7 @@ function MainLayout() {
                   </Typography>
                 </MenuItem>
                 <MenuItem
+                  data-testid="navbar-profile-link"
                   onClick={() => {
                     handleMenuClose();
                     navigate("/profile");
@@ -236,6 +269,7 @@ function MainLayout() {
                   User Profile
                 </MenuItem>
                 <MenuItem
+                  data-testid="navbar-resumes-link"
                   onClick={() => {
                     handleMenuClose();
                     navigate("/resume");
@@ -243,12 +277,18 @@ function MainLayout() {
                 >
                   My Resumes
                 </MenuItem>
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                <MenuItem
+                  data-testid="navbar-logout-btn"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </MenuItem>
               </Menu>
             </>
           ) : (
             <>
               <Button
+                data-testid="navbar-login-btn"
                 color="primary"
                 onClick={() => navigate("/login")}
                 sx={{ mr: 1 }}
@@ -256,6 +296,7 @@ function MainLayout() {
                 Login
               </Button>
               <Button
+                data-testid="navbar-signup-btn"
                 variant="contained"
                 color="primary"
                 onClick={() => navigate("/signup")}
@@ -288,8 +329,15 @@ function App() {
     <Router>
       <AuthProvider>
         <div className="App">
+          <DebugInspector />
           <Routes>
-            {/* Public Routes */}
+            {/* Public Landing Page - No login required */}
+            <Route path="/" element={<LandingPageRoute />} />
+            <Route path="/welcome" element={<LandingPage />} />
+            <Route path="/demo" element={<DemoExperience />} />
+            <Route path="/terms" element={<TermsPage />} />
+
+            {/* Auth Routes */}
             <Route
               path="/login"
               element={
@@ -318,9 +366,9 @@ function App() {
               }
             />
 
-            {/* Protected Routes */}
+            {/* Protected Routes - Logged in users */}
             <Route
-              path="/"
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <MainLayout />

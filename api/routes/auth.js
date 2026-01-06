@@ -285,7 +285,7 @@ router.post("/logout", verifyFirebaseToken, async (req, res, next) => {
 
 /**
  * GET /api/auth/me
- * Get current user's complete profile
+ * Get current user's complete profile including user_profiles data
  * Requires valid Firebase token
  */
 router.get("/me", verifyFirebaseToken, async (req, res, next) => {
@@ -307,13 +307,12 @@ router.get("/me", verifyFirebaseToken, async (req, res, next) => {
         resumesLimit: true,
         emailVerified: true,
         onboardingCompleted: true,
-        // TEMP FIX: Commented out profile to avoid schema mismatch
-        // TODO: Fix Prisma schema to match database columns
-        // profile: true,
+        profile: true, // Include the full user_profiles data
       },
     });
 
     console.log("✅ Query completed, user found:", !!user);
+    console.log("📋 Profile data included:", !!user?.profile);
 
     if (!user) {
       return res.status(404).json({
@@ -322,9 +321,17 @@ router.get("/me", verifyFirebaseToken, async (req, res, next) => {
       });
     }
 
-    // Return basic user data without profile (profile has schema mismatch)
+    // Flatten profile data into user object for frontend compatibility
+    // This allows userProfile.fullName, userProfile.skills etc. to work
+    const { profile, ...userData } = user;
+    const flattenedUser = {
+      ...userData,
+      // Spread profile fields directly onto user object
+      ...(profile || {}),
+    };
+
     res.status(200).json({
-      user,
+      user: flattenedUser,
     });
   } catch (error) {
     console.error("❌ ERROR in /api/auth/me:", {

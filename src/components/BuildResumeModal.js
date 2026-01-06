@@ -197,6 +197,8 @@ function BuildResumeModal({ open, onClose }) {
               fullWidth
               multiline
               rows={12}
+              id="jobPosting"
+              name="jobPosting"
               placeholder="Paste the job posting here..."
               value={formData.jobPosting}
               onChange={(e) => setFormData({ ...formData, jobPosting: e.target.value })}
@@ -236,6 +238,8 @@ function BuildResumeModal({ open, onClose }) {
               }}
             >
               <input
+                id="resumeUpload"
+                name="resumeUpload"
                 type="file"
                 hidden
                 accept=".pdf,.doc,.docx"
@@ -292,6 +296,8 @@ function BuildResumeModal({ open, onClose }) {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
                 fullWidth
+                id="fullName"
+                name="fullName"
                 label="Full Name"
                 value={formData.personalInfo.fullName}
                 onChange={(e) =>
@@ -303,6 +309,8 @@ function BuildResumeModal({ open, onClose }) {
               />
               <TextField
                 fullWidth
+                id="email"
+                name="email"
                 label="Email"
                 type="email"
                 value={formData.personalInfo.email}
@@ -315,6 +323,8 @@ function BuildResumeModal({ open, onClose }) {
               />
               <TextField
                 fullWidth
+                id="phone"
+                name="phone"
                 label="Phone Number"
                 value={formData.personalInfo.phone}
                 onChange={(e) =>
@@ -326,6 +336,8 @@ function BuildResumeModal({ open, onClose }) {
               />
               <TextField
                 fullWidth
+                id="location"
+                name="location"
                 label="Location (City, State)"
                 value={formData.personalInfo.location}
                 onChange={(e) =>

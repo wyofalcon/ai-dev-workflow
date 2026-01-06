@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.js";
 import onetSkillsData from "../data/onet-skills.json";
 import LocationAutocomplete from "./LocationAutocomplete.js";
+import UserProfileSearch from "./profile-search/UserProfileSearch.js";
+import AiAssistPanel from "./AiAssistPanel.js";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -78,6 +80,7 @@ import {
   RemoveCircle as RemoveIcon,
   ViewList as SimpleViewIcon,
   ViewModule as DetailedViewIcon,
+  AutoAwesome as SparklesIcon,
 } from "@mui/icons-material";
 
 // All possible resume sections with their configurations
@@ -286,6 +289,34 @@ const ALL_SECTIONS = {
 // Use comprehensive O*NET skills database (4,400+ skills, abilities, knowledge areas, and tools)
 // Auto-updated monthly via GitHub Actions from O*NET Resource Center
 const SKILL_SUGGESTIONS = onetSkillsData.skills;
+
+// Common job titles for autocomplete
+const COMMON_JOB_TITLES = [
+  "Account Manager", "Accountant", "Administrative Assistant", "Architect", "Art Director",
+  "Business Analyst", "Chef", "Civil Engineer", "Content Writer", "Customer Service Representative",
+  "Data Analyst", "Data Scientist", "Database Administrator", "Designer", "DevOps Engineer",
+  "Digital Marketing Manager", "Editor", "Electrical Engineer", "Event Planner", "Executive Assistant",
+  "Financial Analyst", "Graphic Designer", "Human Resources Manager", "Investment Banker", "IT Manager",
+  "Java Developer", "Journalist", "Legal Assistant", "Marketing Coordinator", "Marketing Manager",
+  "Mechanical Engineer", "Medical Assistant", "Nurse", "Office Manager", "Operations Manager",
+  "Pharmacist", "Photographer", "Physical Therapist", "Product Manager", "Project Manager",
+  "Python Developer", "Real Estate Agent", "Recruiter", "Registered Nurse", "Sales Associate",
+  "Sales Manager", "Software Engineer", "Teacher", "UX/UI Designer", "Web Developer"
+];
+
+const COMMON_DEGREES = [
+  "High School Diploma", "GED", "Associate of Arts (AA)", "Associate of Science (AS)",
+  "Bachelor of Arts (BA)", "Bachelor of Science (BS)", "Bachelor of Fine Arts (BFA)",
+  "Master of Arts (MA)", "Master of Science (MS)", "Master of Business Administration (MBA)",
+  "Master of Fine Arts (MFA)", "Doctor of Philosophy (PhD)", "Juris Doctor (JD)", "Doctor of Medicine (MD)"
+];
+
+const COMMON_LANGUAGES = [
+  "English", "Spanish", "Chinese (Mandarin)", "French", "German", "Arabic", "Hindi", "Portuguese",
+  "Russian", "Japanese", "Italian", "Korean", "Turkish", "Vietnamese", "Polish", "Dutch", "Thai",
+  "Swedish", "Indonesian", "Greek", "Hebrew", "Danish", "Finnish", "Norwegian", "Hungarian", "Czech"
+];
+
 const SKILLS_BY_INDUSTRY = onetSkillsData.byIndustry || {};
 const SKILL_INDUSTRIES = onetSkillsData.industries || [];
 
@@ -475,6 +506,59 @@ function UserProfilePage() {
     data: null,
     index: -1,
   });
+
+  const [aiAssistOpen, setAiAssistOpen] = useState(false);
+
+  const handleUpdateProfileFromAi = (section, value) => {
+    // Determine how to update based on section type
+    if (section === 'skills' || section === 'interests') {
+        // For chip lists, assume value is a comma-separated string or single item
+        const newItems = value.split(',').map(s => s.trim()).filter(Boolean);
+        if (section === 'skills') {
+            setSkills(prev => [...new Set([...prev, ...newItems])]);
+        } else {
+            setInterests(prev => [...new Set([...prev, ...newItems])]);
+        }
+        setSuccess(`Added ${newItems.length} items to ${section}`);
+    } else if (section === 'summary') {
+        setProfileData(prev => ({ ...prev, summary: value }));
+        setSuccess("Updated professional summary");
+    } else if (section === 'workExperience') {
+        // Create a new generic entry
+        const newEntry = {
+            title: "New Position",
+            company: "Company Name",
+            description: value,
+            startDate: dayjs().format("MM/YYYY"),
+            endDate: "Present",
+            current: true
+        };
+        setWorkExperience(prev => [newEntry, ...prev]);
+        setSuccess("Added new work experience entry");
+    } else if (section === 'education') {
+         const newEntry = {
+            institution: "Institution Name",
+            degree: "Degree",
+            field: "Field of Study",
+            startDate: dayjs().format("YYYY"),
+            endDate: dayjs().add(4, 'year').format("YYYY"),
+            achievements: value
+        };
+        setEducation(prev => [newEntry, ...prev]);
+        setSuccess("Added new education entry");
+    } else if (section === 'projects') {
+         const newEntry = {
+            name: "New Project",
+            description: value,
+            technologies: []
+        };
+        setProjects(prev => [newEntry, ...prev]);
+        setSuccess("Added new project");
+    } else {
+        // Default fallthrough for list items - open dialog with pre-filled data
+        openDialog(section, { description: value });
+    }
+  };
 
   // Load profile data
   useEffect(() => {
@@ -717,8 +801,9 @@ function UserProfilePage() {
 
   // Attempt to remove a section - may show warning if section has data
   const attemptRemoveSection = (sectionId) => {
-    const coreSections = ["contact", "workExperience", "skills", "education"];
-    if (coreSections.includes(sectionId)) return;
+    // Core sections can now be removed with warning
+    // const coreSections = ["contact", "workExperience", "skills", "education"];
+    // if (coreSections.includes(sectionId)) return;
 
     if (sectionHasData(sectionId)) {
       setRemoveWarningDialog({ open: true, sectionId });
@@ -727,18 +812,63 @@ function UserProfilePage() {
     }
   };
 
-  // Confirm removal after warning
+  // Confirm removal after warning - also clears the section data
   const confirmRemoveSection = () => {
-    if (removeWarningDialog.sectionId) {
-      handleRemoveSection(removeWarningDialog.sectionId);
+    const sectionId = removeWarningDialog.sectionId;
+    if (sectionId) {
+      // Clear the data for this section before removing
+      clearSectionData(sectionId);
+      handleRemoveSection(sectionId);
     }
     setRemoveWarningDialog({ open: false, sectionId: null });
   };
 
+  // Clear data for a specific section
+  const clearSectionData = (sectionId) => {
+    switch (sectionId) {
+      case "summary":
+        setProfileData((prev) => ({ ...prev, summary: "" }));
+        break;
+      case "projects":
+        setProjects([]);
+        break;
+      case "certifications":
+        setCertifications([]);
+        break;
+      case "publications":
+        setPublications([]);
+        break;
+      case "awards":
+        setAwards([]);
+        break;
+      case "volunteer":
+        setVolunteer([]);
+        break;
+      case "languages":
+        setLanguages([]);
+        break;
+      case "memberships":
+        setMemberships([]);
+        break;
+      case "licenses":
+        setLicenses([]);
+        break;
+      case "interests":
+        setInterests([]);
+        break;
+      case "references":
+        setReferences([]);
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleRemoveSection = (sectionId) => {
     // Core sections cannot be removed
-    const coreSections = ["contact", "workExperience", "skills", "education"];
-    if (coreSections.includes(sectionId)) return;
+    // Core sections can now be removed with warning
+    // const coreSections = ["contact", "workExperience", "skills", "education"];
+    // if (coreSections.includes(sectionId)) return;
     const newSections = enabledSections.filter((s) => s !== sectionId);
     setEnabledSections(newSections);
     if (activeTab >= newSections.length)
@@ -1231,9 +1361,19 @@ function UserProfilePage() {
                   </IconButton>
                 </Tooltip>
                 {!editingContact && (
-                  <IconButton onClick={() => setEditingContact(true)}>
-                    <EditIcon />
-                  </IconButton>
+                  <>
+                    <IconButton onClick={() => setEditingContact(true)}>
+                      <EditIcon />
+                    </IconButton>
+                    <Tooltip title="Remove this section">
+                      <IconButton
+                        onClick={() => attemptRemoveSection("contact")}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </>
                 )}
               </Box>
             }
@@ -2553,8 +2693,8 @@ function UserProfilePage() {
   const renderListSection = (type, items, title, subheader, formatItem) => {
     const section = ALL_SECTIONS[type];
     const SectionIcon = section?.icon || ProjectIcon;
-    const coreSections = ["contact", "workExperience", "skills", "education"];
-    const canRemove = !coreSections.includes(type);
+    // Core sections can now be removed
+    const canRemove = true;
     return (
       <Box>
         {section?.importance && (
@@ -2713,8 +2853,8 @@ function UserProfilePage() {
   ) => {
     const section = ALL_SECTIONS[type];
     const SectionIcon = section?.icon || SkillsIcon;
-    const coreSections = ["contact", "workExperience", "skills", "education"];
-    const canRemove = !coreSections.includes(type);
+    // Core sections can now be removed
+    const canRemove = true;
     return (
       <Box>
         {section?.importance && (
@@ -2892,7 +3032,13 @@ function UserProfilePage() {
 
     const dialogFields = {
       workExperience: [
-        { field: "title", label: "Job Title", md: 6 },
+        { 
+          field: "title", 
+          label: "Job Title", 
+          md: 6,
+          isAutocomplete: true,
+          options: COMMON_JOB_TITLES 
+        },
         { field: "company", label: "Company", md: 6 },
         { field: "location", label: "Location", md: 6, isLocation: true },
         {
@@ -2921,7 +3067,13 @@ function UserProfilePage() {
       ],
       education: [
         { field: "institution", label: "Institution", md: 12 },
-        { field: "degree", label: "Degree", md: 6 },
+        { 
+          field: "degree", 
+          label: "Degree", 
+          md: 6,
+          isAutocomplete: true,
+          options: COMMON_DEGREES
+        },
         { field: "field", label: "Field of Study", md: 6 },
         {
           field: "startDate",
@@ -2964,6 +3116,8 @@ function UserProfilePage() {
           label: "Technologies (comma-separated)",
           md: 12,
           isArray: true,
+          isAutocomplete: true,
+          options: SKILL_SUGGESTIONS
         },
         { field: "url", label: "URL (optional)", md: 12 },
       ],
@@ -3058,12 +3212,20 @@ function UserProfilePage() {
         },
       ],
       languages: [
-        { field: "language", label: "Language", md: 6 },
+        { 
+          field: "language", 
+          label: "Language", 
+          md: 6,
+          isAutocomplete: true,
+          options: COMMON_LANGUAGES 
+        },
         {
           field: "proficiency",
           label: "Proficiency Level",
           placeholder: "Native, Fluent, Conversational, Basic",
           md: 6,
+          isAutocomplete: true,
+          options: ["Native", "Fluent", "Conversational", "Basic"]
         },
       ],
       memberships: [
@@ -3156,6 +3318,29 @@ function UserProfilePage() {
                     },
                   }}
                 />
+              ) : f.isAutocomplete ? (
+                <Autocomplete
+                  freeSolo
+                  multiple={f.isArray}
+                  options={f.options || []}
+                  value={
+                    f.isArray
+                      ? data[f.field] || []
+                      : data[f.field] || ""
+                  }
+                  onChange={(event, newValue) => {
+                     updateData(f.field, newValue);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      label={f.label}
+                      placeholder={f.placeholder}
+                      helperText={f.helperText}
+                    />
+                  )}
+                />
               ) : f.isLocation ? (
                 <LocationAutocomplete
                   value={data[f.field] || ""}
@@ -3203,17 +3388,60 @@ function UserProfilePage() {
     return `${index === -1 ? "Add" : "Edit"} ${section?.label || "Item"}`;
   };
 
+  const handleScrollToSection = (sectionId) => {
+    const index = enabledSections.indexOf(sectionId);
+    if (index !== -1) {
+      setActiveTab(index);
+    }
+  };
+
+  const sectionData = {
+    workExperience,
+    education,
+    projects,
+    skills,
+    certifications,
+    publications,
+    awards,
+    volunteer,
+    languages,
+    memberships,
+    licenses,
+    interests,
+    references,
+  };
+
   return (
-    <Container maxWidth="lg">
+    <Container data-testid="profile-page" maxWidth="lg">
       <Box sx={{ py: 4 }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
-          <IconButton onClick={() => navigate("/")} sx={{ mr: 2 }}>
+        <Box
+          data-testid="profile-header"
+          sx={{ display: "flex", alignItems: "center", mb: 4 }}
+        >
+          <IconButton
+            data-testid="profile-back-btn"
+            onClick={() => navigate("/")}
+            sx={{ mr: 2 }}
+          >
             <BackIcon />
           </IconButton>
-          <Typography variant="h4" sx={{ flexGrow: 1 }}>
+          <Typography
+            data-testid="profile-title"
+            variant="h4"
+            sx={{ flexGrow: 1 }}
+          >
             My Profile
           </Typography>
           <Button
+            variant="outlined"
+            startIcon={<SparklesIcon />}
+            onClick={() => setAiAssistOpen(true)}
+            sx={{ mr: 2 }}
+          >
+            AI Assist
+          </Button>
+          <Button
+            data-testid="profile-save-btn"
             variant="contained"
             startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
             onClick={handleSaveProfile}
@@ -3233,6 +3461,16 @@ function UserProfilePage() {
           autoHideDuration={3000}
           onClose={() => setSuccess("")}
           message={success}
+        />
+
+        <UserProfileSearch
+          allSections={ALL_SECTIONS}
+          profileData={profileData}
+          sectionData={sectionData}
+          enabledSections={enabledSections}
+          onOpenDialog={openDialog}
+          onAddSection={handleAddSection}
+          onScrollToSection={handleScrollToSection}
         />
 
         <Paper sx={{ mb: 3 }}>
@@ -3277,10 +3515,8 @@ function UserProfilePage() {
               })}
             </Tabs>
             <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-            {draggedTab &&
-            !["contact", "workExperience", "skills", "education"].includes(
-              draggedTab.sectionId
-            ) ? (
+            {draggedTab ? (
+              // Show remove zone when dragging any section
               // Show remove zone when dragging a non-core section
               <Tooltip title="Drop here to remove section">
                 <IconButton
@@ -3399,6 +3635,15 @@ function UserProfilePage() {
             ⚠️ Remove Section?
           </DialogTitle>
           <DialogContent>
+            {removeWarningDialog.sectionId &&
+              ALL_SECTIONS[removeWarningDialog.sectionId]?.importance && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: "bold" }}>
+                    Why {ALL_SECTIONS[removeWarningDialog.sectionId].label} is important:
+                  </Typography>
+                  {ALL_SECTIONS[removeWarningDialog.sectionId].importance}
+                </Alert>
+              )}
             <Typography>
               This section contains information you've added. Removing it will
               permanently delete all the data in this section.
@@ -3424,6 +3669,12 @@ function UserProfilePage() {
             </Button>
           </DialogActions>
         </Dialog>
+        <AiAssistPanel
+          open={aiAssistOpen}
+          onClose={() => setAiAssistOpen(false)}
+          activeSection={enabledSections[activeTab] || 'default'}
+          onUpdateProfile={handleUpdateProfileFromAi}
+        />
       </Box>
     </Container>
   );

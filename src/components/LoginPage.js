@@ -60,7 +60,7 @@ function LoginPage() {
   };
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="sm" data-testid="login-page">
       <Box
         sx={{
           minHeight: "100vh",
@@ -71,6 +71,7 @@ function LoginPage() {
         }}
       >
         <Paper
+          data-testid="login-form-container"
           elevation={3}
           sx={{
             p: 4,
@@ -84,16 +85,32 @@ function LoginPage() {
           </Box>
 
           {/* Title */}
-          <Typography variant="h4" align="center" gutterBottom>
+          <Typography
+            data-testid="login-title"
+            variant="h4"
+            align="center"
+            gutterBottom
+          >
             Welcome Back
           </Typography>
           <Typography
             variant="body2"
             align="center"
             color="text.secondary"
-            sx={{ mb: 3 }}
+            sx={{ mb: 2 }}
           >
-            Sign in to continue to CVstomize
+            Ready to discover more hidden skills?
+          </Typography>
+
+          {/* Quick reminder of value */}
+          <Typography
+            variant="caption"
+            align="center"
+            color="text.secondary"
+            component="div"
+            sx={{ mb: 3, fontStyle: "italic" }}
+          >
+            💡 Your stories hold skills you've never thought to include
           </Typography>
 
           {/* Error Alert */}
@@ -105,6 +122,7 @@ function LoginPage() {
 
           {/* Google Sign In Button */}
           <Button
+            data-testid="login-google-btn"
             fullWidth
             variant="outlined"
             size="large"
@@ -123,9 +141,12 @@ function LoginPage() {
           </Divider>
 
           {/* Email/Password Form */}
-          <form onSubmit={handleEmailLogin}>
+          <form onSubmit={handleEmailLogin} data-testid="login-form">
             <TextField
+              data-testid="login-email-input"
               fullWidth
+              id="email"
+              name="email"
               label="Email Address"
               type="email"
               value={email}
@@ -137,7 +158,10 @@ function LoginPage() {
             />
 
             <TextField
+              data-testid="login-password-input"
               fullWidth
+              id="password"
+              name="password"
               label="Password"
               type="password"
               value={password}
@@ -164,6 +188,7 @@ function LoginPage() {
 
             {/* Submit Button */}
             <Button
+              data-testid="login-submit-btn"
               type="submit"
               fullWidth
               variant="contained"
@@ -180,6 +205,7 @@ function LoginPage() {
             <Typography variant="body2" color="text.secondary">
               Don't have an account?{" "}
               <Link
+                data-testid="login-signup-link"
                 component={RouterLink}
                 to="/signup"
                 variant="body2"

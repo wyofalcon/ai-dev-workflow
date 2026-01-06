@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Box, Container, Typography, Paper, Button, Alert } from '@mui/material';
-import ConversationalWizard from './ConversationalWizard.js';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import DownloadIcon from '@mui/icons-material/Download';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Container,
+  Typography,
+  Paper,
+  Button,
+  Alert,
+} from "@mui/material";
+import ConversationalWizard from "./ConversationalWizard.js";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import DownloadIcon from "@mui/icons-material/Download";
 
 /**
  * Conversational Resume Page
@@ -16,7 +23,7 @@ function ConversationalResumePage() {
   const [generatedResume, setGeneratedResume] = useState(null);
 
   const handleResumeGenerated = (resumeData) => {
-    console.log('Resume generated successfully:', resumeData);
+    console.log("Resume generated successfully:", resumeData);
     setGeneratedResume(resumeData);
   };
 
@@ -33,34 +40,58 @@ function ConversationalResumePage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
+    <Box
+      data-testid="create-resume-page"
+      sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}
+    >
       <Container maxWidth="lg">
         {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          <Typography
+            data-testid="create-resume-title"
+            variant="h3"
+            component="h1"
+            gutterBottom
+            fontWeight="bold"
+          >
             Create Your Perfect Resume
           </Typography>
           <Typography variant="h6" color="text.secondary" paragraph>
             Answer our questions • Zero revisions needed
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
-            Our AI analyzes your target job and asks targeted questions about your experience.
-            The result: A resume that positions you as a must-interview candidate.
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ maxWidth: 600, mx: "auto" }}
+          >
+            Our AI analyzes your target job and asks targeted questions about
+            your experience. The result: A resume that positions you as a
+            must-interview candidate.
           </Typography>
         </Box>
 
         {/* Success State */}
         {generatedResume ? (
-          <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
-            <CheckCircleIcon sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
-            <Typography variant="h4" gutterBottom fontWeight="bold" color="success.main">
+          <Paper elevation={3} sx={{ p: 4, textAlign: "center" }}>
+            <CheckCircleIcon
+              sx={{ fontSize: 80, color: "success.main", mb: 2 }}
+            />
+            <Typography
+              variant="h4"
+              gutterBottom
+              fontWeight="bold"
+              color="success.main"
+            >
               Your Resume is Ready!
             </Typography>
             <Typography variant="body1" color="text.secondary" paragraph>
-              We've created a tailored resume that highlights your strengths for this specific role.
+              We've created a tailored resume that highlights your strengths for
+              this specific role.
             </Typography>
 
-            <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'center' }}>
+            <Box
+              sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "center" }}
+            >
               <Button
                 variant="contained"
                 size="large"
@@ -81,10 +112,11 @@ function ConversationalResumePage() {
             {generatedResume.usage && (
               <Alert severity="info" sx={{ mt: 3 }}>
                 <Typography variant="body2">
-                  You've used {generatedResume.usage.resumesGenerated} of {generatedResume.usage.resumesLimit} resumes this month.
+                  You've used {generatedResume.usage.resumesGenerated} of{" "}
+                  {generatedResume.usage.resumesLimit} resumes this month.
                   {generatedResume.usage.remaining > 0
                     ? ` ${generatedResume.usage.remaining} remaining.`
-                    : ' Upgrade for unlimited resumes!'}
+                    : " Upgrade for unlimited resumes!"}
                 </Typography>
               </Alert>
             )}
@@ -96,33 +128,58 @@ function ConversationalResumePage() {
 
         {/* How It Works */}
         {!generatedResume && (
-          <Box sx={{ mt: 6, textAlign: 'center' }}>
+          <Box sx={{ mt: 6, textAlign: "center" }}>
             <Typography variant="h5" gutterBottom fontWeight="bold">
               How This Works
             </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 3, mt: 3 }}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
+                gap: 3,
+                mt: 3,
+              }}
+            >
               <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="bold" color="primary.main" gutterBottom>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color="primary.main"
+                  gutterBottom
+                >
                   1. Paste Job Description
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Our AI analyzes the role's requirements, skills, and culture to generate targeted questions.
+                  Our AI analyzes the role's requirements, skills, and culture
+                  to generate targeted questions.
                 </Typography>
               </Paper>
               <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="bold" color="primary.main" gutterBottom>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color="primary.main"
+                  gutterBottom
+                >
                   2. Answer Our Questions
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Tell us about your experiences. Each answer serves two purposes: resume content + personality insights.
+                  Tell us about your experiences. Each answer serves two
+                  purposes: resume content + personality insights.
                 </Typography>
               </Paper>
               <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="bold" color="primary.main" gutterBottom>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color="primary.main"
+                  gutterBottom
+                >
                   3. Get Perfect Resume
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Our AI creates a resume tailored to the job, matching keywords and positioning you for success.
+                  Our AI creates a resume tailored to the job, matching keywords
+                  and positioning you for success.
                 </Typography>
               </Paper>
             </Box>

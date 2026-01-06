@@ -22,15 +22,25 @@ async function initializeFromLocalFile() {
       throw new Error(`Service account key file not found: ${absolutePath}`);
     }
 
-    const serviceAccountKey = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+    const credentials = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+    let credential;
+    let projectId = credentials.project_id || credentials.quota_project_id || process.env.GCP_PROJECT_ID;
+
+    if (credentials.type === 'service_account') {
+      console.log('🔑 Using Service Account credentials');
+      credential = admin.credential.cert(credentials);
+    } else {
+      console.log(`🔑 Using Application Default Credentials (type: ${credentials.type || 'unknown'})`);
+      credential = admin.credential.applicationDefault();
+    }
     
     // Initialize Firebase Admin
     const app = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccountKey),
-      projectId: serviceAccountKey.project_id,
+      credential,
+      projectId,
     });
 
-    console.log(`✅ Firebase Admin SDK initialized from local file (project: ${serviceAccountKey.project_id})`);
+    console.log(`✅ Firebase Admin SDK initialized from local file (project: ${projectId})`);
     return app;
   } catch (error) {
     console.error('❌ Failed to initialize Firebase from local file:', error);
