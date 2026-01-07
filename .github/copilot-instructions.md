@@ -275,13 +275,32 @@ git push origin $(git branch --show-current)
 - `test:` - Adding tests
 - `chore:` - Maintenance tasks
 
-#### Step 4: Update Session Handoff (Optional)
+#### Step 4: Update Session Handoff (REQUIRED)
 
-If significant work was done, update or create `SESSION_XX_HANDOFF.md` with:
+After completing work, **ALWAYS** update the current session handoff document (e.g., `SESSION_36_HANDOFF.md`):
 
-- What was accomplished
-- What remains to be done
-- Any blockers or notes for next session
+1. **Find the current handoff:** Look for the highest-numbered `SESSION_XX_HANDOFF.md` file in the project root
+2. **Add completed work** to the "Completed This Session" section:
+   - Brief description of each feature/fix
+   - Files created or modified
+   - Related issue numbers (e.g., "Related to #45")
+3. **Update "Remaining Work"** if items were completed or new items discovered
+4. **Add any blockers or notes** for the next session
+
+**Handoff update template:**
+```markdown
+### [Feature Name]
+- **Files:** `path/to/file.js`, `path/to/other.js`
+- **Changes:** Brief description of what was done
+- **Issue:** #XX (if applicable)
+```
+
+If no handoff exists for the current session, create one:
+```bash
+# Check current session number
+ls SESSION_*_HANDOFF.md | tail -1
+# Create next session (e.g., if SESSION_36 exists, create SESSION_37)
+```
 
 ### Quick Reference Commands
 
@@ -323,4 +342,5 @@ Automatically:
 1. Commit any uncommitted changes
 2. Push to remote
 3. Create/update relevant issues
-4. Optionally create a session handoff document
+4. **Update session handoff document with all completed work**
+5. Commit and push the handoff update
