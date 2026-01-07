@@ -282,9 +282,8 @@ function LandingPage() {
         return {
           heroTitle: (
             <>
-              You have skills you've{" "}
-              <span style={{ color: "#fdbb2d" }}>never thought</span> to put on
-              a resume.
+              "You're more capable than you know.{" "}
+              <span style={{ color: "#fdbb2d" }}>We'll Prove it.</span>"
             </>
           ),
           heroSubtitle:
@@ -312,18 +311,6 @@ function LandingPage() {
             <CollapsibleSection initiallyOpen={config.openHero}>
               <Grid container spacing={6} alignItems="center">
                 <Grid item xs={12} md={6}>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{
-                      color: "#fdbb2d",
-                      mb: 1,
-                      fontWeight: "bold",
-                      letterSpacing: 1,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    "You're more capable than you know, we'll prove it."
-                  </Typography>
                   <Typography
                     data-testid="landing-hero-title"
                     variant="h2"

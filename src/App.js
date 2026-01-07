@@ -8,6 +8,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext.js";
+import { WebLlmProvider } from "./contexts/WebLlmContext.js";
 import { useCvState } from "./hooks/useCvState.js";
 import HomePage from "./components/HomePage.js";
 import TutorialModal from "./components/TutorialModal.js";
@@ -98,7 +99,7 @@ function LandingPageRoute() {
   return <LandingPage />;
 }
 
-function MainLayout() {
+function MainLayout({ children }) {
   const cvState = useCvState();
   const { isTutorialOpen, setIsTutorialOpen } = cvState;
   const { currentUser, userProfile, logout } = useAuth();
@@ -206,7 +207,8 @@ function MainLayout() {
             data-testid="navbar-logo"
             src={logo}
             alt="logo"
-            style={{ width: "80px", marginRight: "10px" }}
+            style={{ width: "80px", marginRight: "10px", cursor: "pointer" }}
+            onClick={() => navigate("/dashboard")}
           />
           <Box sx={{ flexGrow: 1 }} />
 
@@ -309,7 +311,7 @@ function MainLayout() {
       </AppBar>
 
       <Container maxWidth="xl" sx={{ mt: 4, flexGrow: 1 }}>
-        <HomePage onStart={handleStart} />
+        {children || <HomePage onStart={handleStart} />}
         {isTutorialOpen && <TutorialModal setIsOpen={setIsTutorialOpen} />}
         {isProcessStarted && (
           <ProcessModal
@@ -328,11 +330,12 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="App">
-          <DebugInspector />
-          <Routes>
-            {/* Public Landing Page - No login required */}
-            <Route path="/" element={<LandingPageRoute />} />
+        <WebLlmProvider>
+          <div className="App">
+            <DebugInspector />
+            <Routes>
+              {/* Public Landing Page - No login required */}
+              <Route path="/" element={<LandingPageRoute />} />
             <Route path="/welcome" element={<LandingPage />} />
             <Route path="/demo" element={<DemoExperience />} />
             <Route path="/terms" element={<TermsPage />} />
@@ -371,7 +374,9 @@ function App() {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <MainLayout />
+                  <MainLayout>
+                    <UserProfilePage />
+                  </MainLayout>
                 </ProtectedRoute>
               }
             />
@@ -387,7 +392,9 @@ function App() {
               path="/profile"
               element={
                 <ProtectedRoute>
-                  <UserProfilePage />
+                  <MainLayout>
+                    <UserProfilePage />
+                  </MainLayout>
                 </ProtectedRoute>
               }
             />
@@ -420,6 +427,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
+        </WebLlmProvider>
       </AuthProvider>
     </Router>
   );

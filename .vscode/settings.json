@@ -49,5 +49,20 @@
 
   // Extension settings
   "errorLens.enabledDiagnosticLevels": ["error", "warning"],
-  "cSpell.words": ["cvstomize", "prisma", "gemini", "vertex", "devcontainer"]
+  "cSpell.words": ["cvstomize", "prisma", "gemini", "vertex", "devcontainer"],
+
+  // GitHub Copilot Settings
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "file": ".github/copilot-instructions.md"
+    }
+  ]
+
+  // AI Assistant Workflow Automation Reminder
+  // Both Copilot and Gemini should follow these rules after completing features:
+  // 1. Check GitHub issues for duplicates before creating new ones
+  // 2. Create/update issues to document completed work
+  // 3. Commit and push changes to current branch
+  // 4. Use conventional commit messages (feat/fix/docs/refactor)
+  // See .github/copilot-instructions.md for full details
 }

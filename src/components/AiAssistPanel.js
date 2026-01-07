@@ -13,7 +13,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress
+  CircularProgress,
+  LinearProgress,
+  Alert
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -22,8 +24,10 @@ import {
   AutoAwesome as SparklesIcon,
   Edit as EditIcon,
   Check as CheckIcon,
-  ContentCopy as CopyIcon
+  Download as DownloadIcon,
+  Memory as ChipIcon
 } from '@mui/icons-material';
+import { useWebLlm } from '../contexts/WebLlmContext.js';
 
 // Questions mapped to profile sections
 const SECTION_QUESTIONS = {
@@ -58,156 +62,205 @@ const SECTION_QUESTIONS = {
   ]
 };
 
-export default function AiAssistPanel({ 
-  open, 
-  onClose, 
-  activeSection, 
-  onUpdateProfile 
+const SYSTEM_PROMPT = `You are an expert resume writer and career coach for CVstomize. 
+Your goal is to help users discover hidden skills and articulate their experience. 
+1. Ask follow-up questions to dig deeper into their stories.
+2. If they provide a specific accomplishment, suggest how to phrase it as a resume bullet point (Action Verb + Task + Result).
+3. Be concise, encouraging, and professional.
+4. If you identify a clear skill or resume entry, explicitly mention it prefixed with "EXTRACTED:".`;
+
+export default function AiAssistPanel({
+  open,
+  onClose,
+  activeSection,
+  onUpdateProfile
 }) {
+  const { 
+    isReady, 
+    isLoading, 
+    progress, 
+    initializeModel, 
+    generate, 
+    resetChat 
+  } = useWebLlm();
+
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const [extractionModal, setExtractionModal] = useState({ open: false, data: null, section: null });
   const messagesEndRef = useRef(null);
 
   // Initialize chat when panel opens or section changes
   useEffect(() => {
-    if (open) {
-      const sectionKey = SECTION_QUESTIONS[activeSection] ? activeSection : 'default';
-      const questions = SECTION_QUESTIONS[sectionKey];
-      const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-      
-      setMessages([
-        {
-          id: 'welcome',
-          role: 'ai',
-          text: `I can help you flesh out your ${activeSection === 'default' ? 'profile' : activeSection} section.`
-        },
-        {
-          id: 'q1',
-          role: 'ai',
-          text: randomQuestion
-        }
-      ]);
+    if (open && isReady) {
+      if (messages.length === 0) {
+        const sectionKey = SECTION_QUESTIONS[activeSection] ? activeSection : 'default';
+        const questions = SECTION_QUESTIONS[sectionKey];
+        const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+        
+        setMessages([
+          {
+            role: 'assistant',
+            content: `I can help you flesh out your ${activeSection === 'default' ? 'profile' : activeSection} section. ${randomQuestion}`
+          }
+        ]);
+      }
     }
-  }, [open, activeSection]);
+  }, [open, activeSection, isReady]);
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+  }, [messages]);
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
-    const userMsg = { id: Date.now(), role: 'user', text: inputText };
-    setMessages(prev => [...prev, userMsg]);
-    setInputText("");
-    setIsTyping(true);
-
-    // Simulate AI processing time
-    setTimeout(() => {
-      setIsTyping(false);
-      handleAiResponse(userMsg.text);
-    }, 1500);
-  };
-
-  const handleAiResponse = (userResponse) => {
-    // 1. Identify potential information to extract
-    // For this prototype, we treat the entire user response as the "value" 
-    // but in a real app, this would be an API call to an LLM extractor.
-    const extractedValue = userResponse; 
+    const userMsg = { role: 'user', content: inputText };
+    const newHistory = [...messages, userMsg];
     
-    // 2. Open confirmation modal
-    setExtractionModal({
-      open: true,
-      data: extractedValue,
-      section: activeSection
-    });
+    setMessages(newHistory);
+    setInputText("");
+
+    // Add placeholder for AI response
+    setMessages(prev => [...prev, { role: 'assistant', content: "..." }]);
+
+    const fullHistory = [
+        { role: "system", content: SYSTEM_PROMPT },
+        ...newHistory
+    ];
+
+    generate(
+        fullHistory,
+        (delta) => {
+            // Update the last message (AI placeholder)
+            setMessages(prev => {
+                const updated = [...prev];
+                const lastMsg = updated[updated.length - 1];
+                if (lastMsg.content === "...") lastMsg.content = ""; // Clear placeholder on first chunk
+                lastMsg.content += delta;
+                return updated;
+            });
+        },
+        (finalText) => {
+            // Check for extractions
+            if (finalText.includes("EXTRACTED:")) {
+                const parts = finalText.split("EXTRACTED:");
+                if (parts[1]) {
+                    const extractedContent = parts[1].trim().split('\n')[0]; // Take the first line after marker
+                    // We might want to remove the extraction marker from the visible chat or keep it
+                    // For now, let's keep it but trigger the modal
+                     setExtractionModal({
+                        open: true,
+                        data: extractedContent,
+                        section: activeSection
+                     });
+                }
+            }
+        },
+        (err) => {
+            setMessages(prev => [...prev, { role: 'system', content: `Error: ${err}` }]);
+        }
+    );
   };
 
   const handleConfirmExtraction = (finalValue) => {
-    // 3. Update profile
     onUpdateProfile(activeSection, finalValue);
-    
     setExtractionModal({ open: false, data: null, section: null });
     
+    // Add a system note that it was saved
     setMessages(prev => [...prev, {
-      id: Date.now(),
-      role: 'ai',
-      text: "Great! I've added that to your profile. Is there anything else you'd like to include?"
+      role: 'system',
+      content: "✅ Information saved to your profile."
     }]);
   };
 
-  return (
-    <>
-      <Drawer
-        anchor="right"
-        open={open}
-        onClose={onClose}
-        PaperProps={{
-          sx: { width: { xs: '100%', sm: 400 }, display: 'flex', flexDirection: 'column' }
-        }}
-      >
-        {/* Header */}
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'primary.main', color: 'primary.contrastText' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <SparklesIcon />
-            <Typography variant="h6">AI Assist</Typography>
-          </Box>
-          <IconButton onClick={onClose} color="inherit">
-            <CloseIcon />
-          </IconButton>
+  const renderContent = () => {
+    if (!isReady) {
+      return (
+        <Box sx={{ 
+            height: '100%', 
+            display: 'flex',
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            p: 3, 
+            textAlign: 'center' 
+        }}>
+          <ChipIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h6" gutterBottom>
+            Download AI Assistant
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            To protect your privacy, we run the AI directly in your browser. 
+            This requires a one-time download (~2GB).
+          </Typography>
+          
+          {isLoading ? (
+            <Box sx={{ width: '100%' }}>
+              <LinearProgress variant="determinate" value={(progress?.progress || 0) * 100} sx={{ height: 10, borderRadius: 5, mb: 1 }} />
+              <Typography variant="caption" color="text.secondary">
+                {progress?.text || "Initializing..."}
+              </Typography>
+            </Box>
+          ) : (
+            <Button 
+                variant="contained" 
+                startIcon={<DownloadIcon />} 
+                onClick={() => initializeModel()}
+            >
+                Download & Start AI
+            </Button>
+          )}
+          
+          {isLoading && (
+            <Alert severity="info" sx={{ mt: 2, textAlign: 'left', fontSize: '0.8rem' }}>
+                Please keep this tab open. This usually takes 1-3 minutes depending on your internet connection.
+            </Alert>
+          )}
         </Box>
+      );
+    }
 
+    return (
+      <>
         {/* Chat Area */}
         <Box sx={{ flexGrow: 1, p: 2, overflowY: 'auto', bgcolor: 'grey.50' }}>
           <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', color: 'text.secondary', mb: 2 }}>
-            Don’t exaggerate—focus on real experiences. Dig deep and think of stories that show your strengths.
+            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                <Box sx={{ width: 8, height: 8, bgcolor: '#4caf50', borderRadius: '50%' }} />
+                AI is running locally on your device
+            </Box>
           </Typography>
 
-          {messages.map((msg) => (
-            <Box 
-              key={msg.id} 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                mb: 2 
-              }}
-            >
-              {msg.role === 'ai' && (
-                <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, mr: 1 }}>
-                  <AiIcon fontSize="small" />
-                </Avatar>
-              )}
-              <Paper 
+          {messages.map((msg, index) => (
+            msg.role !== 'system' && (
+                <Box 
+                key={index} 
                 sx={{ 
-                  p: 2, 
-                  maxWidth: '80%', 
-                  bgcolor: msg.role === 'user' ? 'primary.light' : 'white',
-                  color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary',
-                  borderRadius: 2
+                    display: 'flex', 
+                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                    mb: 2 
                 }}
-              >
-                <Typography variant="body2">{msg.text}</Typography>
-              </Paper>
-            </Box>
-          ))}
-          
-          {isTyping && (
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, mr: 1 }}>
-                <AiIcon fontSize="small" />
-              </Avatar>
-              <Paper sx={{ p: 2, borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                  <Box sx={{ width: 6, height: 6, bgcolor: 'text.secondary', borderRadius: '50%', animation: 'pulse 1s infinite' }} />
-                  <Box sx={{ width: 6, height: 6, bgcolor: 'text.secondary', borderRadius: '50%', animation: 'pulse 1s infinite 0.2s' }} />
-                  <Box sx={{ width: 6, height: 6, bgcolor: 'text.secondary', borderRadius: '50%', animation: 'pulse 1s infinite 0.4s' }} />
+                >
+                {msg.role === 'assistant' && (
+                    <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, mr: 1 }}>
+                    <AiIcon fontSize="small" />
+                    </Avatar>
+                )}
+                <Paper 
+                    sx={{ 
+                    p: 2, 
+                    maxWidth: '85%', 
+                    bgcolor: msg.role === 'user' ? 'primary.light' : 'white',
+                    color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary',
+                    borderRadius: 2
+                    }}
+                >
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Typography>
+                </Paper>
                 </Box>
-              </Paper>
-            </Box>
-          )}
+            )
+          ))}
           <div ref={messagesEndRef} />
         </Box>
 
@@ -227,12 +280,39 @@ export default function AiAssistPanel({
             <IconButton 
               color="primary" 
               onClick={handleSendMessage}
-              disabled={!inputText.trim() || isTyping}
+              disabled={!inputText.trim()}
             >
               <SendIcon />
             </IconButton>
           </Box>
         </Box>
+      </>
+    );
+  };
+
+  return (
+    <>
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={onClose}
+        PaperProps={{
+          sx: { width: { xs: '100%', sm: 400 }, display: 'flex', flexDirection: 'column' }
+        }}
+      >
+        {/* Header */}
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <SparklesIcon />
+            <Typography variant="h6">AI Assist (Local)</Typography>
+          </Box>
+          <IconButton onClick={onClose} color="inherit">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        {renderContent()}
+
       </Drawer>
 
       {/* Confirmation Modal */}

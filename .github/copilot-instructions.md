@@ -202,3 +202,125 @@ cd api && ./deploy-to-cloud-run.sh  # Backend
 2. **PDF Generation Memory:** Requires 1Gi memory allocation. Puppeteer uses `/usr/bin/chromium-browser`.
 3. **CORS Origins:** Whitelist in `api/index.js` (`allowedOrigins` array). Add new environments there.
 4. **Module Systems:** Backend is CommonJS (`require`), Frontend is ESM (`import`). Check `"type"` in each `package.json`.
+
+---
+
+## 🤖 AI Assistant Workflow Automation
+
+### MANDATORY: After Completing Any Feature
+
+When you complete implementing a feature, enhancement, or fix, you **MUST** perform these steps automatically:
+
+#### Step 1: Check GitHub Issues
+
+Before creating a new issue, search existing issues to avoid duplicates:
+
+```bash
+# Use GitHub MCP tools or gh CLI:
+gh issue list --state open --limit 50
+gh issue search "<feature keywords>"
+```
+
+#### Step 2: Create or Update Issue
+
+- **If no matching issue exists:** Create a new issue documenting the feature
+- **If issue exists:** Update it with implementation details, mark checkboxes complete, add comments
+
+**Issue creation template:**
+
+```markdown
+## Summary
+
+[Brief description of what was implemented]
+
+## Implementation Details
+
+- Files created/modified: [list files]
+- Key changes: [bullet points]
+
+## Status
+
+✅ Implemented in branch: `[branch-name]`
+
+## Testing
+
+- [ ] Manual testing completed
+- [ ] E2E tests added (if applicable)
+```
+
+#### Step 3: Commit and Push Changes
+
+After completing work, always:
+
+```bash
+# 1. Stage all changes
+git add -A
+
+# 2. Commit with conventional commit message
+git commit -m "feat|fix|docs|refactor(scope): brief description
+
+- Bullet point details
+- Related to #XX (issue number if applicable)"
+
+# 3. Push to current branch
+git push origin $(git branch --show-current)
+```
+
+**Commit message conventions:**
+
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation only
+- `refactor:` - Code change that neither fixes nor adds
+- `test:` - Adding tests
+- `chore:` - Maintenance tasks
+
+#### Step 4: Update Session Handoff (Optional)
+
+If significant work was done, update or create `SESSION_XX_HANDOFF.md` with:
+
+- What was accomplished
+- What remains to be done
+- Any blockers or notes for next session
+
+### Quick Reference Commands
+
+```bash
+# Check current branch
+git branch --show-current
+
+# See all changes
+git status
+git diff --stat
+
+# Stage, commit, push in one flow
+git add -A && git commit -m "feat(scope): message" && git push origin $(git branch --show-current)
+
+# List open issues
+gh issue list --state open
+
+# Create issue
+gh issue create --title "Title" --body "Description"
+
+# Update issue (add comment)
+gh issue comment <number> --body "Update: ..."
+
+# Close issue
+gh issue close <number> --comment "Completed in commit abc123"
+```
+
+### Repository Info
+
+- **Owner:** wyofalcon
+- **Repo:** cvstomize
+- **Default branch:** main
+- **Current working branch:** Check with `git branch --show-current`
+
+### When User Says "We're Done" or Ends Session
+
+Automatically:
+
+1. Commit any uncommitted changes
+2. Push to remote
+3. Create/update relevant issues
+4. Optionally create a session handoff document
