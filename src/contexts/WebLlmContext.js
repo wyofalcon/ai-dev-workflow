@@ -38,6 +38,7 @@ export function WebLlmProvider({ children }) {
           setIsReady(true);
           setIsLoading(false);
           setProgress(null);
+          localStorage.setItem("cvstomize_llm_cached", "true"); // Mark as cached
           break;
         case "UPDATE":
           if (responseCallbacksRef.current.onUpdate) {
@@ -77,6 +78,15 @@ export function WebLlmProvider({ children }) {
       payload: { modelId }
     });
   }, []);
+
+  // Auto-initialize if previously cached
+  useEffect(() => {
+    const isCached = localStorage.getItem("cvstomize_llm_cached") === "true";
+    if (isCached && workerRef.current) {
+        // Short delay to ensure worker is mounted
+        setTimeout(() => initializeModel(), 500);
+    }
+  }, [initializeModel]);
 
   const generate = useCallback((messages, onUpdate, onDone, onError) => {
     if (!workerRef.current || !isReady) {

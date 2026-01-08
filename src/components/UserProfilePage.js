@@ -5,6 +5,7 @@ import onetSkillsData from "../data/onet-skills.json";
 import LocationAutocomplete from "./LocationAutocomplete.js";
 import UserProfileSearch from "./profile-search/UserProfileSearch.js";
 import AiAssistPanel from "./AiAssistPanel.js";
+import SkillOrganizerModal from "./SkillOrganizerModal.js";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -81,6 +82,9 @@ import {
   ViewList as SimpleViewIcon,
   ViewModule as DetailedViewIcon,
   AutoAwesome as SparklesIcon,
+  Sort as SortIcon,
+  Category as CategoryIcon,
+  SortByAlpha as SortByAlphaIcon,
 } from "@mui/icons-material";
 
 // All possible resume sections with their configurations
@@ -498,6 +502,9 @@ function UserProfilePage() {
   // Input states for chip-based fields
   const [skillInput, setSkillInput] = useState("");
   const [interestInput, setInterestInput] = useState("");
+  const [skillSort, setSkillSort] = useState("default"); // default, industry, az
+  const [topSkills, setTopSkills] = useState([]);
+  const [organizerModalOpen, setOrganizerModalOpen] = useState(false);
 
   // Dialog states
   const [dialogState, setDialogState] = useState({
@@ -642,6 +649,9 @@ function UserProfilePage() {
         setSkills(
           prefs.skills?.length > 0 ? prefs.skills : userProfile.skills || []
         );
+      }
+      if (userProfile.topSkills?.length > 0) {
+          setTopSkills(userProfile.topSkills);
       }
 
       // Add optional sections based on data
@@ -1068,6 +1078,7 @@ function UserProfilePage() {
             : null,
           careerLevel: profileData.careerLevel,
           skills: skills,
+          topSkills: topSkills,
           certifications: certifications.map((c) =>
             typeof c === "string" ? c : c.name
           ),
@@ -1336,6 +1347,15 @@ function UserProfilePage() {
             }
             action={
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    onClick={() => navigate('/build-resume')}
+                    startIcon={<SparklesIcon />}
+                    size="small"
+                >
+                    Build from Scratch AI
+                </Button>
                 <Tooltip
                   title={
                     contactViewMode === "simple"
@@ -2853,8 +2873,31 @@ function UserProfilePage() {
   ) => {
     const section = ALL_SECTIONS[type];
     const SectionIcon = section?.icon || SkillsIcon;
-    // Core sections can now be removed
     const canRemove = true;
+
+    // Helper to get industry for a skill
+    const getIndustry = (skillName) => {
+        // Search in flat list first
+        const skillObj = GROUPED_SKILLS.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+        return skillObj ? skillObj.industry : "Other";
+    };
+
+    // Sorting Logic
+    let sortedItems = [...items];
+    if (type === "skills") {
+        if (skillSort === "az") {
+            sortedItems.sort((a, b) => a.localeCompare(b));
+        } else if (skillSort === "industry") {
+            sortedItems.sort((a, b) => {
+                const indA = getIndustry(a);
+                const indB = getIndustry(b);
+                if (indA === indB) return a.localeCompare(b);
+                return indA.localeCompare(indB);
+            });
+        }
+        // default: insertion order (no sort)
+    }
+
     return (
       <Box>
         {section?.importance && (
@@ -2913,17 +2956,60 @@ function UserProfilePage() {
             subheader={subheader}
             avatar={<SectionIcon color="primary" />}
             action={
-              canRemove && (
-                <Tooltip title="Remove this section">
-                  <IconButton
-                    onClick={() => handleRemoveSection(type)}
-                    color="error"
-                    size="small"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              )
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {type === "skills" && items.length > 1 && (
+                    <>
+                        <Tooltip title="AI Auto Organize & Top Skills">
+                            <IconButton 
+                                onClick={() => setOrganizerModalOpen(true)}
+                                color="secondary"
+                                size="small"
+                            >
+                                <SparklesIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Sort by Industry (Auto)">
+                            <IconButton 
+                                onClick={() => setSkillSort("industry")}
+                                color={skillSort === "industry" ? "primary" : "default"}
+                                size="small"
+                            >
+                                <CategoryIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Sort Alphabetically">
+                            <IconButton 
+                                onClick={() => setSkillSort("az")} 
+                                color={skillSort === "az" ? "primary" : "default"}
+                                size="small"
+                            >
+                                <SortByAlphaIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Default Order">
+                            <IconButton 
+                                onClick={() => setSkillSort("default")} 
+                                color={skillSort === "default" ? "primary" : "default"}
+                                size="small"
+                            >
+                                <SortIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+                    </>
+                )}
+                {canRemove && (
+                    <Tooltip title="Remove this section">
+                    <IconButton
+                        onClick={() => handleRemoveSection(type)}
+                        color="error"
+                        size="small"
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                    </Tooltip>
+                )}
+              </Box>
             }
           />
           <CardContent>
@@ -3004,17 +3090,48 @@ function UserProfilePage() {
                 sx: { maxHeight: 400 },
               }}
             />
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {items.map((item, index) => (
-                <Chip
-                  key={index}
-                  label={item}
-                  onDelete={() => handleRemoveChip(item, items, setItems)}
-                  color="primary"
-                  variant="outlined"
-                />
-              ))}
-            </Box>
+            
+            {/* Render Sorted Items */}
+            {/* If Industry Sort, Group them visually */}
+            {type === "skills" && skillSort === "industry" ? (
+                Object.entries(
+                    sortedItems.reduce((acc, item) => {
+                        const ind = getIndustry(item);
+                        if (!acc[ind]) acc[ind] = [];
+                        acc[ind].push(item);
+                        return acc;
+                    }, {})
+                ).sort().map(([industry, skills]) => (
+                    <Box key={industry} sx={{ mb: 2 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 'bold' }}>
+                            {industry}
+                        </Typography>
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                            {skills.map((item, index) => (
+                                <Chip
+                                key={item}
+                                label={item}
+                                onDelete={() => handleRemoveChip(item, items, setItems)}
+                                color="primary"
+                                variant="outlined"
+                                />
+                            ))}
+                        </Box>
+                    </Box>
+                ))
+            ) : (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                {sortedItems.map((item, index) => (
+                    <Chip
+                    key={index}
+                    label={item}
+                    onDelete={() => handleRemoveChip(item, items, setItems)}
+                    color="primary"
+                    variant="outlined"
+                    />
+                ))}
+                </Box>
+            )}
           </CardContent>
         </Card>
       </Box>
@@ -3428,10 +3545,23 @@ function UserProfilePage() {
           <Typography
             data-testid="profile-title"
             variant="h4"
-            sx={{ flexGrow: 1 }}
+            sx={{ flexGrow: 0, mr: 4 }}
           >
             My Profile
           </Typography>
+          
+          <Box sx={{ flexGrow: 1, mx: 4, display: 'flex', justifyContent: 'center', maxWidth: 600 }}>
+            <UserProfileSearch
+              allSections={ALL_SECTIONS}
+              profileData={profileData}
+              sectionData={sectionData}
+              enabledSections={enabledSections}
+              onOpenDialog={openDialog}
+              onAddSection={handleAddSection}
+              onScrollToSection={handleScrollToSection}
+            />
+          </Box>
+
           <Button
             variant="outlined"
             startIcon={<SparklesIcon />}
@@ -3461,16 +3591,6 @@ function UserProfilePage() {
           autoHideDuration={3000}
           onClose={() => setSuccess("")}
           message={success}
-        />
-
-        <UserProfileSearch
-          allSections={ALL_SECTIONS}
-          profileData={profileData}
-          sectionData={sectionData}
-          enabledSections={enabledSections}
-          onOpenDialog={openDialog}
-          onAddSection={handleAddSection}
-          onScrollToSection={handleScrollToSection}
         />
 
         <Paper sx={{ mb: 3 }}>
@@ -3674,6 +3794,16 @@ function UserProfilePage() {
           onClose={() => setAiAssistOpen(false)}
           activeSection={enabledSections[activeTab] || 'default'}
           onUpdateProfile={handleUpdateProfileFromAi}
+        />
+        <SkillOrganizerModal
+            open={organizerModalOpen}
+            onClose={() => setOrganizerModalOpen(false)}
+            skills={skills}
+            onSave={(result) => {
+                setTopSkills(result.top);
+                // Optionally update skills list order or grouping if needed
+                // For now we just save the top skills preference
+            }}
         />
       </Box>
     </Container>

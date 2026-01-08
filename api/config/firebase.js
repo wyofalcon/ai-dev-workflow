@@ -43,7 +43,15 @@ async function initializeFromLocalFile() {
     console.log(`✅ Firebase Admin SDK initialized from local file (project: ${projectId})`);
     return app;
   } catch (error) {
-    console.error('❌ Failed to initialize Firebase from local file:', error);
+    console.error('❌ Failed to initialize Firebase from local file:', error.message);
+    
+    // In development, allow proceeding without Firebase (for Dev Auth only)
+    if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️  CONTINUING WITHOUT FIREBASE (Dev Auth only). Some features may be broken.');
+        // Return a mock app object if needed, or just null. 
+        // The server will start, but verifyFirebaseToken must rely on dev tokens.
+        return null; 
+    }
     throw error;
   }
 }

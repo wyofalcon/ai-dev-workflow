@@ -24,6 +24,7 @@ import ResetPasswordPage from "./components/ResetPasswordPage.js";
 import OnboardingPage from "./components/OnboardingPage.js";
 import GoldStandardWizard from "./components/GoldStandardWizard.js";
 import LandingPage from "./components/LandingPage.js";
+import ConversationalOnboarding from "./components/ConversationalOnboarding.js";
 import DemoExperience from "./components/DemoExperience.js";
 import TermsPage from "./components/TermsPage.js";
 import {
@@ -411,6 +412,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ConversationalResumePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/build-resume"
+              element={
+                <ProtectedRoute>
+                  <ConversationalOnboarding />
                 </ProtectedRoute>
               }
             />

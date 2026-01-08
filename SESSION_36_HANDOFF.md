@@ -1,14 +1,20 @@
 # Session 36 Handoff Document
 
-**Date:** December 10, 2025
+**Date:** January 7, 2026
 **Branch:** `TimeMachine1`
-**Status:** 🚧 IN PROGRESS - Extensive UX Overhaul
+**Status:** ✅ COMPLETED - Merged to Production
 
 ---
 
 ## Summary
 
-This session focused on a major UX simplification and value proposition clarity overhaul. The goal was to align CVstomize with the "Simplicity over feature overload" philosophy and create a compelling pre-signup experience.
+This session delivered a major UX simplification, value proposition clarity overhaul, and AI-powered features. The goal was to align CVstomize with the "Simplicity over feature overload" philosophy, create a compelling pre-signup experience, and add conversational AI capabilities.
+
+### Production Deployment
+
+- All changes merged to `main` branch
+- Cloud Build auto-deployed to production
+- Issues #41-48 created/updated to track work
 
 ---
 
@@ -72,6 +78,39 @@ This session focused on a major UX simplification and value proposition clarity 
 
 - **`api/fix-prod-db.js`:** Database fix script for uploaded_resumes table
 - **`api/inspect-db.js`:** Database inspection utility
+- **`api/check-user-data.js`:** User data inspection for debugging
+
+### 10. Conversational Onboarding (`src/components/ConversationalOnboarding.js`) ✅
+
+- **New `/build-resume` route:** AI-guided resume building from scratch
+- **WebLLM integration:** Uses local AI for conversational flow
+- **Step-by-step interview:** Intro → Contact → Work → Education → Skills → Summary → Finish
+- **Company search integration:** Auto-fill employer details
+
+### 11. Skill Organizer Modal (`src/components/SkillOrganizerModal.js`) ✅
+
+- **AI-powered categorization:** Groups skills into professional categories
+- **Top skills selection:** Allows selecting up to 10 "Top Skills" for highlighting
+- **Categories:** Languages, Frameworks, Tools, Soft Skills, etc.
+
+### 12. Company Search API (`api/routes/search.js`) ✅
+
+- **New endpoint:** `/api/search/companies`
+- **Google Custom Search integration:** With mock fallback for dev
+- **Auto-fill support:** Company addresses and contact info
+
+### 13. WebLLM Enhancements (`src/contexts/WebLlmContext.js`) ✅
+
+- **Auto-restore from cache:** Model loads from IndexedDB on page load
+- **LocalStorage caching indicator:** `cvstomize_llm_cached` key
+- **Improved progress messages:** Better UX during model loading
+
+### 14. AI Workflow Automation ✅
+
+- **`.github/copilot-instructions.md`:** Added mandatory AI assistant workflow
+- **`.gemini/config.md`:** Created Gemini CLI configuration
+- **Automatic issue tracking:** AI assistants now create/update GitHub issues
+- **Session handoff requirement:** Made handoff updates mandatory
 
 ---
 
@@ -116,57 +155,57 @@ This session focused on a major UX simplification and value proposition clarity 
 
 ---
 
-## Next Steps
+## Next Steps (For Session 37)
 
-### Immediate
+### Testing Priorities
 
-1. [ ] Review and test new LandingPage + DemoExperience flow
-2. [ ] Test UploadResumeModal profile persistence
-3. [ ] Verify routing works (/, /demo, /terms, etc.)
-4. [ ] Commit changes with appropriate messages
+1. [ ] E2E tests for ConversationalOnboarding flow
+2. [ ] E2E tests for SkillOrganizerModal
+3. [ ] Test Company Search API with real Google API keys
+4. [ ] Mobile testing on actual devices
 
-### Follow-up
+### Future Enhancements
 
-1. [ ] Add E2E tests for demo experience flow
-2. [ ] A/B test landing page conversion rates
-3. [ ] Mobile testing on actual devices
-4. [ ] Add more autocomplete suggestions from O\*NET data
+1. [ ] Add more O\*NET skill suggestions
+2. [ ] Implement tagline rotation (#47)
+3. [ ] Add theme toggle (#45)
+4. [ ] Expand UserProfileSearch to include autocomplete options (#46)
 
 ---
 
 ## Related Issues
 
-- #37 - User Type Selector (partially addressed by role-based landing page)
-- #34 - Pre-Launch Checklist (terms page added)
-- New issues to create for remaining work
+- #41 - Auth Pages Test Coverage
+- #42 - Role-Based Landing Page with Demo Experience
+- #43 - User Profile Enhancements
+- #44 - Onboarding Simplification
+- #45 - Theme Toggle (future)
+- #46 - UserProfileSearch enhancements (future)
+- #47 - User-Type Taglines (future)
+- #48 - Session 36: Conversational Onboarding, Skill Organizer, Company Search API
 
 ---
 
 ## Context for Next Session
 
-The TimeMachine1 branch has extensive unstaged changes representing a cohesive UX overhaul. The main goal was shifting from a "tool dashboard" feel to a "guided discovery experience."
+Session 36 is **COMPLETE** and merged to production. The TimeMachine1 branch work has been deployed.
 
-Key insight: Users don't want to build resumes - they want to be understood and have their value articulated for them. The new flow emphasizes discovery ("We find skills you forgot you had") over construction ("Build your resume").
+Key outcomes:
+
+- New landing page with role-based UX and demo experience
+- Conversational onboarding for building resumes from scratch
+- AI-powered skill organization
+- Company search API for auto-filling job history
+- WebLLM auto-caching for faster subsequent loads
+- AI workflow automation added to ensure future sessions track work properly
 
 ---
 
-## How to Continue
+## Deployment Notes
 
 ```bash
-# See all changes
-git status
-git diff
-
-# Stage and commit
-git add -A
-git commit -m "feat(ux): major landing page and demo experience overhaul"
-
-# Or commit in logical chunks:
-git add src/components/LandingPage.js src/components/DemoExperience.js
-git commit -m "feat(landing): role-based landing page with demo experience"
-
-git add src/components/UploadResumeModal.js src/components/OnboardingPage.js
-git commit -m "feat(onboarding): simplify to upload-only flow"
-
-# etc.
+# Production deployment triggered automatically on merge to main
+# Monitor at: https://console.cloud.google.com/cloud-build
+# Frontend: https://cvstomize.com
+# API: https://cvstomize-api-*.run.app
 ```

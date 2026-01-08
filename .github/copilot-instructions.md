@@ -288,14 +288,17 @@ After completing work, **ALWAYS** update the current session handoff document (e
 4. **Add any blockers or notes** for the next session
 
 **Handoff update template:**
+
 ```markdown
 ### [Feature Name]
+
 - **Files:** `path/to/file.js`, `path/to/other.js`
 - **Changes:** Brief description of what was done
 - **Issue:** #XX (if applicable)
 ```
 
 If no handoff exists for the current session, create one:
+
 ```bash
 # Check current session number
 ls SESSION_*_HANDOFF.md | tail -1

@@ -187,10 +187,10 @@ export default function AiAssistPanel({
             textAlign: 'center' 
         }}>
           <ChipIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h6" gutterBottom color="text.primary">
             Download AI Assistant
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.primary" sx={{ mb: 3, opacity: 0.9 }}>
             To protect your privacy, we run the AI directly in your browser. 
             This requires a one-time download (~2GB).
           </Typography>
@@ -199,7 +199,9 @@ export default function AiAssistPanel({
             <Box sx={{ width: '100%' }}>
               <LinearProgress variant="determinate" value={(progress?.progress || 0) * 100} sx={{ height: 10, borderRadius: 5, mb: 1 }} />
               <Typography variant="caption" color="text.secondary">
-                {progress?.text || "Initializing..."}
+                {localStorage.getItem("cvstomize_llm_cached") === "true" 
+                    ? "Restoring AI from cache..." 
+                    : (progress?.text || "Initializing...")}
               </Typography>
             </Box>
           ) : (
@@ -251,12 +253,13 @@ export default function AiAssistPanel({
                     sx={{ 
                     p: 2, 
                     maxWidth: '85%', 
-                    bgcolor: msg.role === 'user' ? 'primary.light' : 'white',
-                    color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary',
-                    borderRadius: 2
+                    bgcolor: msg.role === 'user' ? 'primary.main' : '#f0f0f0',
+                    color: msg.role === 'user' ? 'primary.contrastText' : 'rgba(0, 0, 0, 0.87)',
+                    borderRadius: 2,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                     }}
                 >
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontWeight: 500 }}>{msg.content}</Typography>
                 </Paper>
                 </Box>
             )
@@ -346,13 +349,13 @@ function ExtractionConfirmationModal({ open, data, section, onClose, onConfirm }
         New Information Found
       </DialogTitle>
       <DialogContent>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
+        <Typography variant="body2" color="text.primary" gutterBottom sx={{ mb: 2 }}>
           I found some new information for your <strong>{section}</strong> section. 
           Please review it before adding.
         </Typography>
         
-        <Box sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 1, border: '1px dashed', borderColor: 'divider' }}>
-            <Typography variant="subtitle2" gutterBottom color="primary">
+        <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="subtitle2" gutterBottom color="primary.dark" sx={{ fontWeight: 'bold' }}>
               Proposed Value:
             </Typography>
             {isEditing ? (
@@ -365,7 +368,7 @@ function ExtractionConfirmationModal({ open, data, section, onClose, onConfirm }
                 autoFocus
               />
             ) : (
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+              <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', color: 'rgba(0, 0, 0, 0.87)' }}>
                 {editedData}
               </Typography>
             )}
