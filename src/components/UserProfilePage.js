@@ -5,6 +5,7 @@ import onetSkillsData from "../data/onet-skills.json";
 import LocationAutocomplete from "./LocationAutocomplete.js";
 import UserProfileSearch from "./profile-search/UserProfileSearch.js";
 import AiAssistPanel from "./AiAssistPanel.js";
+import SmartSkillInput from "./SmartSkillInput.js";
 import SkillOrganizerModal from "./SkillOrganizerModal.js";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -478,6 +479,9 @@ function UserProfilePage() {
     additionalTitles: [], // Array of additional job titles: { title: "", label: "" }
     selectedTitleForResume: "primary", // "primary" or index of additional title
     summary: "",
+    // Recruiter Discovery Settings
+    isOpenToWork: false,
+    recruiterVisibility: "anonymous", // 'none', 'anonymous', 'full'
   });
 
   // Section data states
@@ -589,6 +593,8 @@ function UserProfilePage() {
         additionalTitles: prefs.additionalTitles || [],
         selectedTitleForResume: prefs.selectedTitleForResume || "primary",
         summary: prefs.summary || userProfile.summary || "",
+        isOpenToWork: userProfile.isOpenToWork || false,
+        recruiterVisibility: userProfile.recruiterVisibility || "anonymous",
       });
 
       // Build enabled sections based on what data exists
@@ -1077,6 +1083,8 @@ function UserProfilePage() {
             ? parseInt(profileData.yearsExperience)
             : null,
           careerLevel: profileData.careerLevel,
+          isOpenToWork: profileData.isOpenToWork,
+          recruiterVisibility: profileData.recruiterVisibility,
           skills: skills,
           topSkills: topSkills,
           certifications: certifications.map((c) =>
@@ -2184,10 +2192,104 @@ function UserProfilePage() {
                         }}
                         sx={{ mt: 1, alignSelf: "flex-start" }}
                       >
-                        Add Another Phone
-                      </Button>
-                    )}
                   </FormControl>
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                {/* Privacy & Visibility Section */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant="subtitle2"
+                    color="primary"
+                    sx={{
+                      mb: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <InfoIcon fontSize="small" />
+                    Privacy & Visibility
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block", mb: 2 }}
+                  >
+                    Control how recruiters can find you. To keep CVstomize free, we may share
+                    anonymized profiles with recruiters matching your skills.
+                  </Typography>
+
+                  <FormControlLabel
+                    control={
+                      <Radio
+                        checked={profileData.isOpenToWork}
+                        onClick={() => {
+                          if (editingContact) {
+                            setProfileData((prev) => ({
+                              ...prev,
+                              isOpenToWork: !prev.isOpenToWork,
+                            }));
+                          }
+                        }}
+                        disabled={!editingContact}
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" fontWeight={500}>
+                        I am open to new job opportunities
+                      </Typography>
+                    }
+                    sx={{ mb: 2 }}
+                  />
+
+                  {profileData.isOpenToWork && (
+                    <FormControl component="fieldset" fullWidth sx={{ ml: 4 }}>
+                      <Typography variant="caption" color="text.secondary" gutterBottom>
+                        Visibility Level
+                      </Typography>
+                      <RadioGroup
+                        value={profileData.recruiterVisibility}
+                        onChange={(e) => {
+                          if (editingContact) {
+                            setProfileData((prev) => ({
+                              ...prev,
+                              recruiterVisibility: e.target.value,
+                            }));
+                          }
+                        }}
+                      >
+                        <FormControlLabel
+                          value="anonymous"
+                          control={<Radio size="small" disabled={!editingContact} />}
+                          label={
+                            <Box>
+                              <Typography variant="body2">Anonymous (Recommended)</Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Recruiters see your skills & experience but NOT your name or contact info. 
+                                You decide if you want to connect when they reach out.
+                              </Typography>
+                            </Box>
+                          }
+                          sx={{ mb: 1, alignItems: 'flex-start' }}
+                        />
+                        <FormControlLabel
+                          value="full"
+                          control={<Radio size="small" disabled={!editingContact} />}
+                          label={
+                            <Box>
+                              <Typography variant="body2">Full Profile</Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Recruiters can see your full profile and contact you directly.
+                              </Typography>
+                            </Box>
+                          }
+                          sx={{ alignItems: 'flex-start' }}
+                        />
+                      </RadioGroup>
+                    </FormControl>
+                  )}
                 </Box>
 
                 <Divider sx={{ my: 2 }} />
@@ -3013,124 +3115,104 @@ function UserProfilePage() {
             }
           />
           <CardContent>
-            <Autocomplete
-              freeSolo
-              options={
-                type === "skills"
-                  ? GROUPED_SKILLS.filter((s) => !items.includes(s.name))
-                  : type === "interests"
-                  ? INTEREST_SUGGESTIONS.filter((s) => !items.includes(s))
-                  : []
-              }
-              getOptionLabel={(option) =>
-                typeof option === "string" ? option : option.name
-              }
-              groupBy={(option) =>
-                type === "skills" && typeof option === "object"
-                  ? option.industry
-                  : null
-              }
-              filterOptions={(options, { inputValue }) => {
-                const filterValue = inputValue.toLowerCase();
-                if (!filterValue) return options.slice(0, 50); // Show first 50 when empty
-                return options
-                  .filter((opt) => {
-                    const name = typeof opt === "string" ? opt : opt.name;
-                    return name.toLowerCase().includes(filterValue);
-                  })
-                  .slice(0, 100); // Limit results for performance
-              }}
-              inputValue={input}
-              onInputChange={(event, newValue) => setInput(newValue)}
-              onChange={(event, newValue) => {
-                const value =
-                  typeof newValue === "string" ? newValue : newValue?.name;
-                if (value) {
-                  handleAddChip(value, items, setItems, setInput);
-                }
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  label={`Add ${title.toLowerCase()} (press Enter)`}
-                  helperText={
+            {type === "skills" ? (
+                <SmartSkillInput 
+                    skills={sortedItems}
+                    onSkillsChange={setItems}
+                    placeholder="Type a skill (e.g. 'React', 'Leadership')..."
+                />
+            ) : (
+                <>
+                <Autocomplete
+                  freeSolo
+                  options={
                     type === "skills"
-                      ? "💡 4,400+ skills organized by industry — or type your own!"
-                      : "💡 Type anything you want — suggestions are just ideas!"
+                      ? GROUPED_SKILLS.filter((s) => !items.includes(s.name))
+                      : type === "interests"
+                      ? INTEREST_SUGGESTIONS.filter((s) => !items.includes(s))
+                      : []
                   }
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && input.trim()) {
-                      e.preventDefault();
-                      handleAddChip(input, items, setItems, setInput);
+                  getOptionLabel={(option) =>
+                    typeof option === "string" ? option : option.name
+                  }
+                  groupBy={(option) =>
+                    type === "skills" && typeof option === "object"
+                      ? option.industry
+                      : null
+                  }
+                  filterOptions={(options, { inputValue }) => {
+                    const filterValue = inputValue.toLowerCase();
+                    if (!filterValue) return options.slice(0, 50); // Show first 50 when empty
+                    return options
+                      .filter((opt) => {
+                        const name = typeof opt === "string" ? opt : opt.name;
+                        return name.toLowerCase().includes(filterValue);
+                      })
+                      .slice(0, 100); // Limit results for performance
+                  }}
+                  inputValue={input}
+                  onInputChange={(event, newValue) => setInput(newValue)}
+                  onChange={(event, newValue) => {
+                    const value =
+                      typeof newValue === "string" ? newValue : newValue?.name;
+                    if (value) {
+                      handleAddChip(value, items, setItems, setInput);
                     }
                   }}
-                />
-              )}
-              renderGroup={(params) => (
-                <li key={params.key}>
-                  <Typography
-                    sx={{
-                      position: "sticky",
-                      top: "-8px",
-                      padding: "4px 10px",
-                      backgroundColor: "primary.main",
-                      color: "primary.contrastText",
-                      fontWeight: "bold",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    {params.group}
-                  </Typography>
-                  <ul style={{ padding: 0 }}>{params.children}</ul>
-                </li>
-              )}
-              sx={{ mb: 2 }}
-              ListboxProps={{
-                sx: { maxHeight: 400 },
-              }}
-            />
-            
-            {/* Render Sorted Items */}
-            {/* If Industry Sort, Group them visually */}
-            {type === "skills" && skillSort === "industry" ? (
-                Object.entries(
-                    sortedItems.reduce((acc, item) => {
-                        const ind = getIndustry(item);
-                        if (!acc[ind]) acc[ind] = [];
-                        acc[ind].push(item);
-                        return acc;
-                    }, {})
-                ).sort().map(([industry, skills]) => (
-                    <Box key={industry} sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 'bold' }}>
-                            {industry}
-                        </Typography>
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                            {skills.map((item, index) => (
-                                <Chip
-                                key={item}
-                                label={item}
-                                onDelete={() => handleRemoveChip(item, items, setItems)}
-                                color="primary"
-                                variant="outlined"
-                                />
-                            ))}
-                        </Box>
-                    </Box>
-                ))
-            ) : (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {sortedItems.map((item, index) => (
-                    <Chip
-                    key={index}
-                    label={item}
-                    onDelete={() => handleRemoveChip(item, items, setItems)}
-                    color="primary"
-                    variant="outlined"
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      label={`Add ${title.toLowerCase()} (press Enter)`}
+                      helperText={
+                        type === "skills"
+                          ? "💡 4,400+ skills organized by industry — or type your own!"
+                          : "💡 Type anything you want — suggestions are just ideas!"
+                      }
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter" && input.trim()) {
+                          e.preventDefault();
+                          handleAddChip(input, items, setItems, setInput);
+                        }
+                      }}
                     />
-                ))}
+                  )}
+                  renderGroup={(params) => (
+                    <li key={params.key}>
+                      <Typography
+                        sx={{
+                          position: "sticky",
+                          top: "-8px",
+                          padding: "4px 10px",
+                          backgroundColor: "primary.main",
+                          color: "primary.contrastText",
+                          fontWeight: "bold",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        {params.group}
+                      </Typography>
+                      <ul style={{ padding: 0 }}>{params.children}</ul>
+                    </li>
+                  )}
+                  sx={{ mb: 2 }}
+                  ListboxProps={{
+                    sx: { maxHeight: 400 },
+                  }}
+                />
+                
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {sortedItems.map((item, index) => (
+                        <Chip
+                        key={index}
+                        label={item}
+                        onDelete={() => handleRemoveChip(item, items, setItems)}
+                        color="primary"
+                        variant="outlined"
+                        />
+                    ))}
                 </Box>
+                </>
             )}
           </CardContent>
         </Card>
@@ -3512,6 +3594,22 @@ function UserProfilePage() {
     }
   };
 
+  const handleToggleFavorite = (skillName) => {
+    // 1. Ensure it's in the main skills list
+    if (!skills.includes(skillName)) {
+        setSkills(prev => [...prev, skillName]);
+    }
+
+    // 2. Toggle in topSkills
+    setTopSkills(prev => {
+        if (prev.includes(skillName)) {
+            return prev.filter(s => s !== skillName);
+        } else {
+            return [...prev, skillName];
+        }
+    });
+  };
+
   const sectionData = {
     workExperience,
     education,
@@ -3529,13 +3627,15 @@ function UserProfilePage() {
   };
 
   return (
-    <Container data-testid="profile-page" maxWidth="lg">
+    <Container id="profile-page-container" data-testid="profile-page" maxWidth="lg">
       <Box sx={{ py: 4 }}>
         <Box
+          id="profile-header-container"
           data-testid="profile-header"
           sx={{ display: "flex", alignItems: "center", mb: 4 }}
         >
           <IconButton
+            id="profile-back-btn"
             data-testid="profile-back-btn"
             onClick={() => navigate("/")}
             sx={{ mr: 2 }}
@@ -3543,6 +3643,7 @@ function UserProfilePage() {
             <BackIcon />
           </IconButton>
           <Typography
+            id="profile-title"
             data-testid="profile-title"
             variant="h4"
             sx={{ flexGrow: 0, mr: 4 }}
@@ -3550,7 +3651,7 @@ function UserProfilePage() {
             My Profile
           </Typography>
           
-          <Box sx={{ flexGrow: 1, mx: 4, display: 'flex', justifyContent: 'center', maxWidth: 600 }}>
+          <Box id="profile-search-container" sx={{ flexGrow: 1, mx: 4, display: 'flex', justifyContent: 'center', maxWidth: 600 }}>
             <UserProfileSearch
               allSections={ALL_SECTIONS}
               profileData={profileData}
@@ -3559,10 +3660,13 @@ function UserProfilePage() {
               onOpenDialog={openDialog}
               onAddSection={handleAddSection}
               onScrollToSection={handleScrollToSection}
+              onToggleFavorite={handleToggleFavorite}
+              favoriteSkills={topSkills}
             />
           </Box>
 
           <Button
+            id="profile-ai-assist-btn"
             variant="outlined"
             startIcon={<SparklesIcon />}
             onClick={() => setAiAssistOpen(true)}
@@ -3571,6 +3675,7 @@ function UserProfilePage() {
             AI Assist
           </Button>
           <Button
+            id="profile-save-btn"
             data-testid="profile-save-btn"
             variant="contained"
             startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
@@ -3593,12 +3698,13 @@ function UserProfilePage() {
           message={success}
         />
 
-        <Paper sx={{ mb: 3 }}>
+        <Paper id="profile-tabs-container" sx={{ mb: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Tooltip title="Drag tabs to reorder" placement="top">
               <DragIcon sx={{ ml: 1, color: "text.secondary", fontSize: 20 }} />
             </Tooltip>
             <Tabs
+              id="profile-tabs"
               value={activeTab}
               onChange={handleTabChange}
               variant="scrollable"
@@ -3613,6 +3719,7 @@ function UserProfilePage() {
                 const isDragOver = dragOverTab?.sectionId === sectionId;
                 return (
                   <Tab
+                    id={`profile-tab-${sectionId}`}
                     key={sectionId}
                     icon={<IconComponent />}
                     label={section.label}
@@ -3640,6 +3747,7 @@ function UserProfilePage() {
               // Show remove zone when dragging a non-core section
               <Tooltip title="Drop here to remove section">
                 <IconButton
+                  id="profile-remove-section-btn"
                   color="error"
                   sx={{
                     mr: 1,
@@ -3671,6 +3779,7 @@ function UserProfilePage() {
               // Show add button when not dragging
               <Tooltip title="Add a new section">
                 <IconButton
+                  id="profile-add-section-btn"
                   color="primary"
                   onClick={(e) => setAddSectionAnchor(e.currentTarget)}
                   sx={{ mr: 1 }}
@@ -3722,7 +3831,12 @@ function UserProfilePage() {
         </Menu>
 
         {enabledSections.map((sectionId, index) => (
-          <TabPanel key={sectionId} value={activeTab} index={index}>
+          <TabPanel 
+            id={`profile-tabpanel-${sectionId}`}
+            key={sectionId} 
+            value={activeTab} 
+            index={index}
+          >
             {renderSectionContent(sectionId)}
           </TabPanel>
         ))}

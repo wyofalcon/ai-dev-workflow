@@ -3,6 +3,7 @@ import { Box, Button, Typography, Tooltip, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import BuildIcon from "@mui/icons-material/Build";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import TargetIcon from "@mui/icons-material/TrackChanges";
 import HomeGraphic from "./HomeGraphic.js";
 import BuildResumeModal from "./BuildResumeModal.js";
@@ -41,39 +42,39 @@ function HomePage({ onStart }) {
   const options = [
     {
       id: "build",
-      title: "BUILD NEW RESUME/CV",
+      title: "Build Resume/CV from Scratch",
       icon: <BuildIcon sx={{ fontSize: 40 }} />,
       tooltip:
-        "✨ Tell your story, discover your skills. Our AI guides you through thoughtful questions that uncover abilities you didn't know you had — from hobbies, side projects, and life experiences.",
+        "🛠️ The classic way. Manually enter your details step-by-step using our structured wizard. Perfect if you know exactly what you want to say.",
       action: () => setShowBuildModal(true),
       color: "#9d99e5",
       disabled: false,
     },
     {
       id: "upload",
-      title: "UPLOAD EXISTING RESUME/CV",
+      title: "CVstomize Mine",
       icon: <CloudUploadIcon sx={{ fontSize: 40 }} />,
       tooltip:
-        "📄 Already have a resume? Upload it and we'll populate your profile. Then our AI will help you discover the skills you forgot to mention.",
+        "📄 Already have a resume? Upload it and we'll extract your info to populate your profile instantly. A great starting point for upgrades.",
       action: () => setShowUploadModal(true),
       color: "#7c78d8",
       disabled: false,
     },
     {
-      id: "tailor",
-      title: "TAILOR TO SPECIFIC JOB (GOLD STANDARD)",
-      icon: <TargetIcon sx={{ fontSize: 40 }} />,
-      tooltip: hasResumes
-        ? "🎯 PREMIUM: Your personality + your stories = a resume that's authentically YOU. Our Gold Standard uses personality science and your real experiences to create must-interview content."
-        : "You need at least 1 resume/CV saved before using this option.",
-      action: () => hasResumes && navigate("/gold-standard"),
+      id: "journey",
+      title: "Share My Journey",
+      icon: <AutoAwesomeIcon sx={{ fontSize: 40 }} />,
+      tooltip:
+        "✨ AI-Powered Discovery. Chat with our AI assistant to share your life stories and experiences. We'll uncover hidden skills and build your profile for you.",
+      action: () => navigate('/build-resume'),
       color: "#fdbb2d",
-      disabled: !hasResumes,
+      disabled: false,
     },
   ];
 
   return (
     <Box
+      id="home-page-container"
       data-testid="home-page"
       sx={{
         display: "flex",
@@ -86,6 +87,7 @@ function HomePage({ onStart }) {
     >
       <HomeGraphic />
       <Typography
+        id="home-title"
         data-testid="home-title"
         variant="h3"
         component="h1"
@@ -95,6 +97,7 @@ function HomePage({ onStart }) {
       </Typography>
 
       <Typography
+        id="home-subtitle"
         variant="body1"
         color="text.secondary"
         sx={{ mt: 2, mb: 1, maxWidth: 700 }}
@@ -108,6 +111,7 @@ function HomePage({ onStart }) {
       </Typography>
 
       <Typography
+        id="home-description"
         variant="body2"
         color="text.secondary"
         sx={{ mb: 4, maxWidth: 600, fontStyle: "italic" }}
@@ -115,11 +119,17 @@ function HomePage({ onStart }) {
         Stop feeling undervalued. Let's discover what makes you truly valuable.
       </Typography>
 
-      <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+      <Typography
+        id="home-path-label"
+        variant="h6"
+        color="text.secondary"
+        sx={{ mb: 2 }}
+      >
         Choose your path:
       </Typography>
 
       <Box
+        id="home-options-container"
         data-testid="home-options"
         sx={{
           display: "flex",
@@ -151,6 +161,7 @@ function HomePage({ onStart }) {
             }}
           >
             <Paper
+              id={`home-option-${option.id}`}
               data-testid={`home-option-${option.id}`}
               elevation={hoveredOption === option.id ? 8 : 2}
               onMouseEnter={() =>

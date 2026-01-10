@@ -75,6 +75,7 @@ services:
       - REACT_APP_API_URL=http://localhost:3001
       - CHOKIDAR_USEPOLLING=true
       - WDS_SOCKET_PORT=0
+      - DANGEROUSLY_DISABLE_HOST_CHECK=true
     ports:
       - "3000:3000"
     volumes:

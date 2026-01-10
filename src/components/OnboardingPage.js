@@ -114,6 +114,7 @@ function OnboardingPage() {
 
   const [activeStep, setActiveStep] = useState(0);
   const [method, setMethod] = useState(null); // 'upload' or 'manual'
+  const [hasSelectedPath, setHasSelectedPath] = useState(false);
   const [loading, setLoading] = useState(false);
   const [parsing, setParsing] = useState(false);
   const [error, setError] = useState("");
@@ -154,6 +155,33 @@ function OnboardingPage() {
     } catch (err) {
       console.error("Logout error:", err);
     }
+  };
+
+  // Handle path selection
+  const handlePathSelection = (path) => {
+    if (path === 'upload') {
+      setMethod('upload');
+      setHasSelectedPath(true);
+      setActiveStep(0);
+    } else if (path === 'ai') {
+      navigate('/build-resume');
+    } else if (path === 'manual') {
+      setMethod('manual');
+      setHasSelectedPath(true);
+      setActiveStep(1); // Skip upload, go to details
+    }
+  };
+
+  const handleBack = () => {
+    if (activeStep === 0 && hasSelectedPath) {
+      setHasSelectedPath(false);
+      setMethod(null);
+      return;
+    }
+    if (activeStep === 0) return;
+    setActiveStep((prev) => prev - 1);
+    setError("");
+    setSuccess("");
   };
 
   // File upload with react-dropzone
@@ -400,12 +428,7 @@ function OnboardingPage() {
     }
   };
 
-  const handleBack = () => {
-    if (activeStep === 0) return;
-    setActiveStep((prev) => prev - 1);
-    setError("");
-    setSuccess("");
-  };
+
 
   const handleNext = () => {
     if (activeStep === 0 && !method) {
@@ -559,6 +582,93 @@ function OnboardingPage() {
           </Button>
         </Box>
       )}
+    </Box>
+  );
+
+  // Step 0: Path Selection (New)
+  const renderPathSelection = () => (
+    <Box sx={{ mt: 2 }}>
+      <Typography variant="h5" align="center" gutterBottom>
+        How would you like to start?
+      </Typography>
+      <Typography variant="body1" align="center" color="text.secondary" sx={{ mb: 6 }}>
+        Choose the best way to build your profile.
+      </Typography>
+
+      <Grid container spacing={3} justifyContent="center">
+        {/* Path 1: Upload */}
+        <Grid item xs={12} md={4}>
+          <Card 
+            sx={{ 
+              height: '100%', 
+              cursor: 'pointer', 
+              transition: 'transform 0.2s',
+              '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }
+            }}
+            onClick={() => handlePathSelection('upload')}
+          >
+            <CardContent sx={{ textAlign: 'center', py: 4 }}>
+              <UploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Upload Resume
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Already have a resume? We'll extract your details automatically.
+              </Typography>
+              <Chip label="Fastest" color="success" size="small" sx={{ mt: 2 }} />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Path 2: AI Build */}
+        <Grid item xs={12} md={4}>
+          <Card 
+            sx={{ 
+              height: '100%', 
+              cursor: 'pointer', 
+              transition: 'transform 0.2s',
+              '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 },
+              border: '2px solid',
+              borderColor: 'secondary.main'
+            }}
+            onClick={() => handlePathSelection('ai')}
+          >
+            <CardContent sx={{ textAlign: 'center', py: 4 }}>
+              <SkillsIcon sx={{ fontSize: 48, color: 'secondary.main', mb: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Build with AI
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                No resume? No problem. Our AI will interview you to build one from scratch.
+              </Typography>
+              <Chip label="Recommended" color="secondary" size="small" sx={{ mt: 2 }} />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Path 3: Manual */}
+        <Grid item xs={12} md={4}>
+          <Card 
+            sx={{ 
+              height: '100%', 
+              cursor: 'pointer', 
+              transition: 'transform 0.2s',
+              '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }
+            }}
+            onClick={() => handlePathSelection('manual')}
+          >
+            <CardContent sx={{ textAlign: 'center', py: 4 }}>
+              <PersonIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Fill Manually
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Prefer full control? Enter your professional details step-by-step.
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   );
 
@@ -1091,13 +1201,13 @@ function OnboardingPage() {
             mb: 4,
           }}
         >
-          {isReturningUser ? (
+          {isReturningUser || hasSelectedPath ? (
             <Button
               data-testid="onboarding-back-btn"
               variant="text"
               color="inherit"
               size="small"
-              onClick={() => navigate("/")}
+              onClick={handleBack}
               startIcon={<BackIcon />}
               sx={{
                 opacity: 0.7,
@@ -1152,18 +1262,20 @@ function OnboardingPage() {
         </Typography>
 
         {/* Stepper */}
-        <Stepper
-          data-testid="onboarding-stepper"
-          activeStep={activeStep}
-          alternativeLabel
-          sx={{ mb: 4 }}
-        >
-          {(isReturningUser ? stepsUpload : stepsOnboarding).map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+        {(hasSelectedPath || isReturningUser) && (
+          <Stepper
+            data-testid="onboarding-stepper"
+            activeStep={activeStep}
+            alternativeLabel
+            sx={{ mb: 4 }}
+          >
+            {(isReturningUser ? stepsUpload : stepsOnboarding).map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        )}
 
         {/* Alerts */}
         {error && (
@@ -1187,9 +1299,10 @@ function OnboardingPage() {
           elevation={3}
           sx={{ p: 4, borderRadius: 2 }}
         >
-          {activeStep === 0 && renderMethodSelection()}
-          {activeStep === 1 && renderDetailsForm()}
-          {activeStep === 2 && renderReview()}
+          {(!hasSelectedPath && !isReturningUser) && renderPathSelection()}
+          {(hasSelectedPath || isReturningUser) && activeStep === 0 && renderMethodSelection()}
+          {(hasSelectedPath || isReturningUser) && activeStep === 1 && renderDetailsForm()}
+          {(hasSelectedPath || isReturningUser) && activeStep === 2 && renderReview()}
         </Paper>
       </Box>
     </Container>

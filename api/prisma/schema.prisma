@@ -69,6 +69,11 @@ model UserProfile {
   certifications  String[]
   languages       String[]
   workPreferences Json?    @map("work_preferences")
+  
+  // Recruiter Discovery Settings
+  isOpenToWork       Boolean @default(false) @map("is_open_to_work")
+  recruiterVisibility String  @default("anonymous") @map("recruiter_visibility") // 'none', 'anonymous', 'full'
+
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 

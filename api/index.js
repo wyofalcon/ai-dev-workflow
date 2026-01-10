@@ -170,6 +170,7 @@ const resumeRoutes = require("./routes/resume");
 const goldStandardRoutes = require("./routes/goldStandard");
 const proxyRoutes = require('./routes/proxy');
 const searchRoutes = require('./routes/search');
+const aiRoutes = require('./routes/ai');
 const adminMigrationRoutes = require("./routes/adminMigration");
 
 // Development-only routes
@@ -186,6 +187,7 @@ app.use("/api/resume", resumeRoutes);
 app.use("/api/gold-standard", goldStandardRoutes);
 app.use('/api/proxy', proxyRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/ai', aiRoutes);
 
 // --- Base Route ---
 app.use("/api/admin-migration", adminMigrationRoutes); // TEMPORARY - for migration only

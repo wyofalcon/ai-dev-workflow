@@ -8,7 +8,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext.js";
-import { WebLlmProvider } from "./contexts/WebLlmContext.js";
+import { WebLlmProvider, useWebLlm } from "./contexts/WebLlmContext.js";
 import { useCvState } from "./hooks/useCvState.js";
 import HomePage from "./components/HomePage.js";
 import TutorialModal from "./components/TutorialModal.js";
@@ -27,6 +27,9 @@ import LandingPage from "./components/LandingPage.js";
 import ConversationalOnboarding from "./components/ConversationalOnboarding.js";
 import DemoExperience from "./components/DemoExperience.js";
 import TermsPage from "./components/TermsPage.js";
+import LocalAISetupModal, { AIStatusBadge } from "./components/LocalAISetupModal.js";
+import LocalAINudge from "./components/LocalAINudge.js";
+import ExtensionPromoModal from "./components/ExtensionPromoModal.js";
 import {
   Container,
   Button,
@@ -104,10 +107,20 @@ function MainLayout({ children }) {
   const cvState = useCvState();
   const { isTutorialOpen, setIsTutorialOpen } = cvState;
   const { currentUser, userProfile, logout } = useAuth();
+  const { shouldShowLocalAISetup } = useWebLlm();
   const navigate = useNavigate();
 
   const [isProcessStarted, setIsProcessStarted] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [showLocalAIModal, setShowLocalAIModal] = useState(false);
+
+  // Show local AI setup prompt on first visit (after a brief delay for UX)
+  React.useEffect(() => {
+    if (shouldShowLocalAISetup) {
+      const timer = setTimeout(() => setShowLocalAIModal(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldShowLocalAISetup]);
 
   const handleStart = () => {
     setIsProcessStarted(true);
@@ -226,6 +239,9 @@ function MainLayout({ children }) {
           {/* Auth Section */}
           {currentUser ? (
             <>
+              {/* AI Status Indicator */}
+              <AIStatusBadge onClick={() => setShowLocalAIModal(true)} />
+
               {/* User Info */}
               <Typography
                 variant="body2"
@@ -234,6 +250,14 @@ function MainLayout({ children }) {
                 {userProfile?.resumesGenerated || 0} /{" "}
                 {userProfile?.resumesLimit || 1} resumes
               </Typography>
+
+              <Button
+                color="primary"
+                onClick={() => navigate("/profile")}
+                sx={{ mr: 1 }}
+              >
+                User Profile
+              </Button>
 
               {/* User Menu */}
               <IconButton
@@ -322,6 +346,19 @@ function MainLayout({ children }) {
           />
         )}
       </Container>
+      
+      {/* Local AI Setup Modal - shows once for new users */}
+      <LocalAISetupModal 
+        open={showLocalAIModal} 
+        onClose={() => setShowLocalAIModal(false)} 
+      />
+      
+      {/* Extension Promo Modal - shows once for new users */}
+      <ExtensionPromoModal />
+
+      {/* Nudge to enable Local AI after multiple server calls */}
+      <LocalAINudge onOpenSetup={() => setShowLocalAIModal(true)} />
+      
       <Footer />
     </Box>
   );
@@ -375,9 +412,7 @@ function App() {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <MainLayout>
-                    <UserProfilePage />
-                  </MainLayout>
+                  <MainLayout />
                 </ProtectedRoute>
               }
             />

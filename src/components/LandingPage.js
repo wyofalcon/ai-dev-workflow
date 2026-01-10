@@ -736,11 +736,13 @@ function LandingPage() {
 
   return (
     <Box
+      id="landing-page-container"
       data-testid="landing-page"
       sx={{ minHeight: "100vh", backgroundColor: "#121212" }}
     >
       {/* Navigation */}
       <Box
+        id="landing-nav-container"
         data-testid="landing-nav"
         sx={{
           display: "flex",
@@ -752,6 +754,7 @@ function LandingPage() {
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <img
+            id="landing-logo"
             src={logo}
             alt="CVstomize"
             style={{ height: 40 }}
@@ -760,6 +763,7 @@ function LandingPage() {
         </Box>
         <Box sx={{ display: "flex", gap: 2 }}>
           <Button
+            id="landing-signin-btn"
             data-testid="landing-signin-btn"
             variant="text"
             color="inherit"
@@ -768,6 +772,7 @@ function LandingPage() {
             Sign In
           </Button>
           <Button
+            id="landing-getstarted-btn"
             data-testid="landing-getstarted-btn"
             variant="contained"
             color="secondary"
@@ -783,11 +788,13 @@ function LandingPage() {
 
       {/* Final CTA - Always at bottom */}
       <Box
+        id="landing-final-cta-container"
         data-testid="landing-final-cta"
         sx={{ backgroundColor: "#fdbb2d", py: 6 }}
       >
         <Container maxWidth="md" sx={{ textAlign: "center" }}>
           <Typography
+            id="landing-final-cta-title"
             data-testid="landing-final-cta-title"
             variant="h4"
             sx={{ color: "#000", mb: 1 }}
@@ -799,6 +806,7 @@ function LandingPage() {
             values it.
           </Typography>
           <Button
+            id="landing-final-cta-btn"
             data-testid="landing-final-cta-btn"
             variant="contained"
             size="large"

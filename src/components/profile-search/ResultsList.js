@@ -9,22 +9,27 @@ import {
   Paper, 
   Box,
   Divider,
-  Button
+  Button,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { 
   CheckCircle as SavedIcon, 
   Warning as MissingIcon, 
   Lightbulb as SuggestionIcon,
   Edit as EditIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  AutoAwesome as AiIcon,
+  Star as StarIcon,
+  StarBorder as StarBorderIcon
 } from '@mui/icons-material';
 
-export default function ResultsList({ results, onSelect }) {
+export default function ResultsList({ results, onSelect, onToggleFavorite }) {
   if (!results || results.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
         <Typography variant="body1">
-          No matches yet. You can add fields to your profile.
+          No matches yet.
         </Typography>
       </Box>
     );
@@ -42,10 +47,13 @@ export default function ResultsList({ results, onSelect }) {
     <Box sx={{ mt: 2 }}>
       {Object.entries(grouped).map(([section, items]) => (
         <Paper key={section} sx={{ mb: 2, overflow: 'hidden' }} variant="outlined">
-          <Box sx={{ bgcolor: 'action.hover', px: 2, py: 1 }}>
+          <Box sx={{ bgcolor: 'action.hover', px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
               {section}
             </Typography>
+            {items.some(i => i.status === 'AI Suggestion') && (
+                <Chip label="AI Powered" size="small" color="secondary" variant="outlined" sx={{ height: 20, fontSize: '0.65rem' }} />
+            )}
           </Box>
           <List disablePadding>
             {items.map((item, index) => {
@@ -61,7 +69,13 @@ export default function ResultsList({ results, onSelect }) {
                 StatusIcon = MissingIcon;
                 statusColor = 'warning';
                 statusLabel = 'Missing';
+              } else if (item.status === 'AI Suggestion') {
+                StatusIcon = AiIcon;
+                statusColor = 'secondary';
+                statusLabel = 'AI Suggestion';
               }
+
+              const isSkill = item.sectionId === 'skills';
 
               return (
                 <React.Fragment key={item.id}>
@@ -69,12 +83,13 @@ export default function ResultsList({ results, onSelect }) {
                   <ListItem 
                     button 
                     onClick={() => onSelect(item)}
-                    alignItems="flex-start"
+                    alignItems="center"
+                    sx={{ pr: 12 }} // Make room for actions
                   >
                     <ListItemText
                       primary={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="subtitle1">
+                          <Typography variant="subtitle1" fontWeight={item.status === 'AI Suggestion' ? 'bold' : 'normal'}>
                             {item.label}
                           </Typography>
                           <Chip 
@@ -93,18 +108,34 @@ export default function ResultsList({ results, onSelect }) {
                           color={item.value ? 'text.primary' : 'text.secondary'}
                           sx={{ mt: 0.5, fontStyle: item.value ? 'normal' : 'italic' }}
                         >
-                          {item.value || (item.status === 'New Suggestion' ? 'Click to add this field' : 'No value set')}
+                          {item.value || (item.status === 'Saved' ? '' : 'Click to add')}
                         </Typography>
                       }
                     />
-                    <ListItemSecondaryAction>
-                      <Button 
-                        size="small" 
-                        startIcon={item.status === 'Saved' ? <EditIcon /> : <AddIcon />}
-                        onClick={() => onSelect(item)}
-                      >
-                        {item.status === 'Saved' ? 'Edit' : 'Add'}
-                      </Button>
+                    <ListItemSecondaryAction sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {isSkill && onToggleFavorite && (
+                            <Tooltip title={item.isFavorite ? "Remove from favorites" : "Mark as favorite"}>
+                                <IconButton 
+                                    edge="end" 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onToggleFavorite(item.label);
+                                    }}
+                                    color={item.isFavorite ? "warning" : "default"}
+                                >
+                                    {item.isFavorite ? <StarIcon /> : <StarBorderIcon />}
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        <Button 
+                            size="small" 
+                            startIcon={item.status === 'Saved' ? <EditIcon /> : <AddIcon />}
+                            onClick={() => onSelect(item)}
+                            variant={item.status === 'AI Suggestion' ? 'contained' : 'text'}
+                            color={item.status === 'AI Suggestion' ? 'secondary' : 'primary'}
+                        >
+                            {item.status === 'Saved' ? 'Edit' : 'Add'}
+                        </Button>
                     </ListItemSecondaryAction>
                   </ListItem>
                 </React.Fragment>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Drawer,
   Box,
   Typography,
   IconButton,
@@ -15,7 +14,8 @@ import {
   DialogActions,
   CircularProgress,
   LinearProgress,
-  Alert
+  Alert,
+  Collapse
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -25,7 +25,9 @@ import {
   Edit as EditIcon,
   Check as CheckIcon,
   Download as DownloadIcon,
-  Memory as ChipIcon
+  Memory as ChipIcon,
+  Minimize as MinimizeIcon,
+  OpenInFull as ExpandIcon
 } from '@mui/icons-material';
 import { useWebLlm } from '../contexts/WebLlmContext.js';
 
@@ -86,6 +88,7 @@ export default function AiAssistPanel({
 
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
+  const [isMinimized, setIsMinimized] = useState(false);
   const [extractionModal, setExtractionModal] = useState({ open: false, data: null, section: null });
   const messagesEndRef = useRef(null);
 
@@ -147,8 +150,6 @@ export default function AiAssistPanel({
                 const parts = finalText.split("EXTRACTED:");
                 if (parts[1]) {
                     const extractedContent = parts[1].trim().split('\n')[0]; // Take the first line after marker
-                    // We might want to remove the extraction marker from the visible chat or keep it
-                    // For now, let's keep it but trigger the modal
                      setExtractionModal({
                         open: true,
                         data: extractedContent,
@@ -174,23 +175,26 @@ export default function AiAssistPanel({
     }]);
   };
 
+  if (!open) return null;
+
   const renderContent = () => {
     if (!isReady) {
       return (
         <Box sx={{ 
-            height: '100%', 
+            height: '400px', 
             display: 'flex',
             flexDirection: 'column', 
             alignItems: 'center', 
             justifyContent: 'center', 
             p: 3, 
-            textAlign: 'center' 
+            textAlign: 'center',
+            bgcolor: 'background.paper'
         }}>
           <ChipIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
           <Typography variant="h6" gutterBottom color="text.primary">
             Download AI Assistant
           </Typography>
-          <Typography variant="body2" color="text.primary" sx={{ mb: 3, opacity: 0.9 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             To protect your privacy, we run the AI directly in your browser. 
             This requires a one-time download (~2GB).
           </Typography>
@@ -224,9 +228,9 @@ export default function AiAssistPanel({
     }
 
     return (
-      <>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '500px' }}>
         {/* Chat Area */}
-        <Box sx={{ flexGrow: 1, p: 2, overflowY: 'auto', bgcolor: 'grey.50' }}>
+        <Box sx={{ flexGrow: 1, p: 2, overflowY: 'auto', bgcolor: 'background.default' }}>
           <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', color: 'text.secondary', mb: 2 }}>
             <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
                 <Box sx={{ width: 8, height: 8, bgcolor: '#4caf50', borderRadius: '50%' }} />
@@ -245,7 +249,7 @@ export default function AiAssistPanel({
                 }}
                 >
                 {msg.role === 'assistant' && (
-                    <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, mr: 1 }}>
+                    <Avatar sx={{ bgcolor: 'secondary.main', width: 32, height: 32, mr: 1 }}>
                     <AiIcon fontSize="small" />
                     </Avatar>
                 )}
@@ -253,10 +257,10 @@ export default function AiAssistPanel({
                     sx={{ 
                     p: 2, 
                     maxWidth: '85%', 
-                    bgcolor: msg.role === 'user' ? 'primary.main' : '#f0f0f0',
-                    color: msg.role === 'user' ? 'primary.contrastText' : 'rgba(0, 0, 0, 0.87)',
+                    bgcolor: msg.role === 'user' ? 'primary.main' : 'background.paper',
+                    color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary',
                     borderRadius: 2,
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    boxShadow: 1
                     }}
                 >
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontWeight: 500 }}>{msg.content}</Typography>
@@ -268,7 +272,7 @@ export default function AiAssistPanel({
         </Box>
 
         {/* Input Area */}
-        <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'white' }}>
+        <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <TextField
               fullWidth
@@ -279,6 +283,7 @@ export default function AiAssistPanel({
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               multiline
               maxRows={3}
+              sx={{ bgcolor: 'background.default' }}
             />
             <IconButton 
               color="primary" 
@@ -289,34 +294,62 @@ export default function AiAssistPanel({
             </IconButton>
           </Box>
         </Box>
-      </>
+      </Box>
     );
   };
 
   return (
     <>
-      <Drawer
-        anchor="right"
-        open={open}
-        onClose={onClose}
-        PaperProps={{
-          sx: { width: { xs: '100%', sm: 400 }, display: 'flex', flexDirection: 'column' }
+      <Paper
+        elevation={6}
+        sx={{
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+          width: { xs: '100%', sm: 400 },
+          maxHeight: '80vh',
+          zIndex: 1200, // Above normal content but below standard Dialogs
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper'
         }}
       >
         {/* Header */}
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+        <Box sx={{ 
+          p: 1.5, 
+          borderBottom: isMinimized ? 0 : 1, 
+          borderColor: 'divider', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          bgcolor: 'primary.main', 
+          color: 'primary.contrastText',
+          cursor: 'pointer'
+        }}
+        onClick={() => setIsMinimized(!isMinimized)}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <SparklesIcon />
-            <Typography variant="h6">AI Assist (Local)</Typography>
+            <Typography variant="subtitle1" fontWeight="bold">AI Assist</Typography>
           </Box>
-          <IconButton onClick={onClose} color="inherit">
-            <CloseIcon />
-          </IconButton>
+          <Box>
+            <IconButton size="small" onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }} color="inherit">
+               {isMinimized ? <ExpandIcon /> : <MinimizeIcon />}
+            </IconButton>
+            <IconButton size="small" onClick={(e) => { e.stopPropagation(); onClose(); }} color="inherit">
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </Box>
 
-        {renderContent()}
-
-      </Drawer>
+        <Collapse in={!isMinimized} timeout="auto" unmountOnExit={false}>
+            {renderContent()}
+        </Collapse>
+      </Paper>
 
       {/* Confirmation Modal */}
       <ExtractionConfirmationModal
@@ -349,13 +382,13 @@ function ExtractionConfirmationModal({ open, data, section, onClose, onConfirm }
         New Information Found
       </DialogTitle>
       <DialogContent>
-        <Typography variant="body2" color="text.primary" gutterBottom sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 2 }}>
           I found some new information for your <strong>{section}</strong> section. 
           Please review it before adding.
         </Typography>
         
-        <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-            <Typography variant="subtitle2" gutterBottom color="primary.dark" sx={{ fontWeight: 'bold' }}>
+        <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="subtitle2" gutterBottom color="primary.main" sx={{ fontWeight: 'bold' }}>
               Proposed Value:
             </Typography>
             {isEditing ? (
@@ -368,7 +401,7 @@ function ExtractionConfirmationModal({ open, data, section, onClose, onConfirm }
                 autoFocus
               />
             ) : (
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', color: 'rgba(0, 0, 0, 0.87)' }}>
+              <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', color: 'text.primary' }}>
                 {editedData}
               </Typography>
             )}

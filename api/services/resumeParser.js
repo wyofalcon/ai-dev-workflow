@@ -15,19 +15,23 @@ async function parseResume(resumeText) {
     throw new Error('Resume text is too short to parse');
   }
 
-  const model = geminiService.getFlashModel();
+  // Use Pro model for "Smart" parsing (better extraction and reasoning)
+  const model = geminiService.getProModel();
 
-  const prompt = `You are an expert resume parser. Extract structured profile information from the following resume text.
+  const prompt = `You are a world-class AI Resume Strategist and Data Extraction Specialist. 
+Your goal is to perform a DEEP analysis of the provided resume text and extract high-fidelity structured data.
 
 **RESUME TEXT:**
 ${resumeText}
 
 ---
 
-**INSTRUCTIONS:**
-Extract the following information from the resume. Return ONLY valid JSON, no markdown code blocks.
-For any field you cannot find or confidently extract, use null.
-For arrays, return empty array [] if no items found.
+**CORE TASKS:**
+1. **ENTITY EXTRACTION**: Identify all standard fields (name, contact, work, education).
+2. **SKILL INFERENCE**: Look beyond the "Skills" section. Identify "hidden skills" demonstrated in work descriptions (e.g., if they mention "A/B testing", infer "Data-Driven Decision Making" and "Product Analytics").
+3. **ACHIEVEMENT ANALYSIS**: For every work experience, identify the key quantifiable impact. If no numbers are present, summarize the core value delivered.
+4. **STANDARDIZATION**: Normalize job titles and education levels to standard industry terms.
+5. **CAREER LEVEL**: Based on the progression and years of experience, determine if the candidate is entry, mid, senior, or executive.
 
 **REQUIRED JSON STRUCTURE:**
 {
@@ -36,42 +40,49 @@ For arrays, return empty array [] if no items found.
   "phone": "string or null",
   "location": "string (City, State format) or null",
   "linkedinUrl": "string or null",
-  "summary": "string (professional summary if present) or null",
-  "yearsExperience": number or null,
-  "careerLevel": "entry|mid|senior|executive or null",
-  "currentTitle": "string (most recent job title) or null",
-  "skills": ["array", "of", "skills"],
-  "industries": ["array", "of", "industries"],
+  "summary": "A 2-3 sentence professional summary optimized for modern ATS",
+  "yearsExperience": total number of years across all roles,
+  "careerLevel": "entry|mid|senior|executive",
+  "currentTitle": "Standardized job title",
+  "skills": ["Broad array of skills, including inferred ones"],
+  "industries": ["Target industries based on experience"],
   "education": [
     {
-      "degree": "string",
-      "school": "string",
-      "year": "string or null",
-      "field": "string or null"
+      "degree": "Standardized degree name",
+      "school": "Institution name",
+      "year": "Graduation year",
+      "field": "Major/Field of study"
     }
   ],
-  "certifications": ["array", "of", "certifications"],
-  "languages": ["array", "of", "languages"],
+  "certifications": ["array of certifications"],
+  "languages": ["array of languages"],
   "experience": [
     {
-      "title": "string",
-      "company": "string",
-      "location": "string or null",
-      "startDate": "string or null",
-      "endDate": "string or null (or 'Present')",
-      "highlights": ["array", "of", "bullet", "points"]
+      "title": "Standardized title",
+      "company": "Company name",
+      "location": "City, State",
+      "startDate": "MMM YYYY",
+      "endDate": "MMM YYYY or 'Present'",
+      "highlights": ["Power bullets: Action Verb + Task + Quantifiable Result"],
+      "inferredSkills": ["Skills demonstrated specifically in this role"]
     }
   ]
 }
 
-Return ONLY the JSON object, nothing else:`;
+**INSTRUCTIONS:**
+- Return ONLY valid JSON. No markdown code blocks.
+- Ensure all dates are consistent.
+- Be aggressive in finding skills.
+- If a section is missing, return an empty array [].
+
+Return ONLY the JSON object:`;
 
   try {
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        maxOutputTokens: 4096,
-        temperature: 0.1, // Low temperature for consistent parsing
+        maxOutputTokens: 8192,
+        temperature: 0.1,
       },
     });
 

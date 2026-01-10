@@ -9,20 +9,15 @@ import {
   Box,
   CircularProgress,
   Chip,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Checkbox,
-  Divider,
   Paper
 } from '@mui/material';
 import {
   AutoAwesome as SparklesIcon,
   Check as CheckIcon,
-  Close as CloseIcon,
   Star as StarIcon,
-  StarBorder as StarBorderIcon
+  StarBorder as StarBorderIcon,
+  Cloud as CloudIcon,
+  Memory as ChipIcon
 } from '@mui/icons-material';
 import { useWebLlm } from '../contexts/WebLlmContext.js';
 
@@ -32,73 +27,45 @@ export default function SkillOrganizerModal({
   skills, 
   onSave 
 }) {
-  const { isReady, generate } = useWebLlm();
+  const { organizeSkillsWithFallback, isReady } = useWebLlm();
   const [isProcessing, setIsProcessing] = useState(false);
   const [organizedSkills, setOrganizedSkills] = useState({});
   const [topSkills, setTopSkills] = useState([]);
   const [error, setError] = useState("");
+  const [aiSource, setAiSource] = useState(null); // "local" or "server"
 
   // Reset state when opened
   useEffect(() => {
-    if (open) {
+    if (open && skills.length > 0) {
       setOrganizedSkills({});
       setTopSkills([]);
       setError("");
+      setAiSource(null);
       setIsProcessing(true);
-      
-      if (isReady && skills.length > 0) {
-        organizeSkillsWithAI();
-      } else {
-        // Fallback or wait
-        setIsProcessing(false);
-      }
+      organizeSkillsWithAI();
     }
-  }, [open, isReady]);
+  }, [open]);
 
   const organizeSkillsWithAI = async () => {
-    const prompt = `
-    You are an expert resume optimizer. 
-    Analyze the following list of skills and group them into logical professional categories (e.g., "Languages", "Frameworks", "Tools", "Soft Skills", etc.).
-    Also, identify the 5 most high-impact/marketable skills from this list that should be highlighted as "Top Skills".
-    
-    Return ONLY a valid JSON object with this structure:
-    {
-        "categories": {
-            "Category Name 1": ["Skill A", "Skill B"],
-            "Category Name 2": ["Skill C", "Skill D"]
-        },
-        "topSkills": ["Skill A", "Skill C"]
-    }
-
-    Skills List: ${skills.join(", ")}
-    `;
-
-    generate(
-        [{ role: 'user', content: prompt }],
-        () => {}, // streaming update not needed for this
-        (finalText) => {
-            try {
-                // Extract JSON
-                const jsonMatch = finalText.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    const result = JSON.parse(jsonMatch[0]);
-                    setOrganizedSkills(result.categories || {});
-                    setTopSkills(result.topSkills || []);
-                } else {
-                    throw new Error("Failed to parse AI response");
-                }
-            } catch (err) {
-                console.error("AI Organization Failed:", err);
-                setError("Could not organize skills automatically. Please try again.");
-            } finally {
-                setIsProcessing(false);
-            }
+    try {
+      await organizeSkillsWithFallback(
+        skills,
+        (result) => {
+          setOrganizedSkills(result.categories || {});
+          setTopSkills(result.topSkills || []);
+          setAiSource(result.source || (isReady ? "local" : "server"));
+          setIsProcessing(false);
         },
         (err) => {
-            setError(err);
-            setIsProcessing(false);
+          console.error("AI Organization Failed:", err);
+          setError("Could not organize skills automatically. Please try again.");
+          setIsProcessing(false);
         }
-    );
+      );
+    } catch (err) {
+      setError(err.message);
+      setIsProcessing(false);
+    }
   };
 
   const handleToggleTopSkill = (skill) => {
@@ -127,6 +94,16 @@ export default function SkillOrganizerModal({
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <SparklesIcon color="primary" />
         AI Skill Organizer
+        {aiSource && (
+          <Chip 
+            icon={aiSource === "local" ? <ChipIcon /> : <CloudIcon />}
+            label={aiSource === "local" ? "Local AI" : "Server AI"}
+            size="small"
+            variant="outlined"
+            color={aiSource === "local" ? "success" : "primary"}
+            sx={{ ml: 'auto' }}
+          />
+        )}
       </DialogTitle>
       
       <DialogContent dividers>
