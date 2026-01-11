@@ -2192,6 +2192,9 @@ function UserProfilePage() {
                         }}
                         sx={{ mt: 1, alignSelf: "flex-start" }}
                       >
+                        Add Another Phone
+                      </Button>
+                    )}
                   </FormControl>
                 </Box>
 

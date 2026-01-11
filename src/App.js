@@ -57,8 +57,8 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/welcome" replace />;
   }
 
-  // Redirect to onboarding if not completed (but not if already on onboarding page)
-  if (onboardingCompleted === false && location.pathname !== "/onboarding") {
+  // Redirect to onboarding if not completed (but not if already on onboarding page or build-resume page)
+  if (onboardingCompleted === false && location.pathname !== "/onboarding" && location.pathname !== "/build-resume") {
     return <Navigate to="/onboarding" replace />;
   }
 
