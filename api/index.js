@@ -173,11 +173,15 @@ const searchRoutes = require('./routes/search');
 const aiRoutes = require('./routes/ai');
 const adminMigrationRoutes = require("./routes/adminMigration");
 
-// Development-only routes
+// Development-only routes (available in dev OR when ENABLE_DEV_AUTH=true)
+// SECURITY: Never set ENABLE_DEV_AUTH in production!
 let devAuthRoutes = null;
-if (process.env.NODE_ENV === "development") {
+const enableDevAuth =
+  process.env.NODE_ENV === "development" ||
+  process.env.ENABLE_DEV_AUTH === "true";
+if (enableDevAuth) {
   devAuthRoutes = require("./routes/devAuth");
-  logger.info("🔧 Dev auth routes loaded (development mode)");
+  logger.info("🔧 Dev auth routes loaded (ENABLE_DEV_AUTH=true)");
 }
 
 app.use("/api/auth", authRoutes);

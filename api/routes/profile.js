@@ -10,6 +10,85 @@ const {
 
 const prisma = new PrismaClient();
 
+/**
+ * Sync parsed resume data to user profile
+ * Updates profile with data from parsed resume
+ * Always updates fields with new parsed data (latest resume wins)
+ * @param {string} userId - Database user ID
+ * @param {Object} parsedData - Parsed resume data from AI
+ * @returns {Promise<boolean>} - Whether profile was updated
+ */
+async function syncParsedResumeToProfile(userId, parsedData) {
+  if (!userId || !parsedData) return false;
+
+  try {
+    // Build profile update object - only include non-null/non-empty values
+    const profileUpdate = {};
+
+    // Contact & Basic Info
+    if (parsedData.fullName) profileUpdate.fullName = parsedData.fullName;
+    if (parsedData.phone) profileUpdate.phone = parsedData.phone;
+    if (parsedData.location) profileUpdate.location = parsedData.location;
+    if (parsedData.linkedinUrl)
+      profileUpdate.linkedinUrl = parsedData.linkedinUrl;
+
+    // Professional Info
+    if (parsedData.summary) profileUpdate.summary = parsedData.summary;
+    if (typeof parsedData.yearsExperience === "number") {
+      profileUpdate.yearsExperience = parsedData.yearsExperience;
+    }
+    if (parsedData.careerLevel)
+      profileUpdate.careerLevel = parsedData.careerLevel;
+    if (parsedData.currentTitle)
+      profileUpdate.currentTitle = parsedData.currentTitle;
+
+    // Arrays - only update if non-empty
+    if (parsedData.skills?.length > 0) profileUpdate.skills = parsedData.skills;
+    if (parsedData.industries?.length > 0)
+      profileUpdate.industries = parsedData.industries;
+    if (parsedData.certifications?.length > 0)
+      profileUpdate.certifications = parsedData.certifications;
+    if (parsedData.languages?.length > 0)
+      profileUpdate.languages = parsedData.languages;
+
+    // Complex data - education and experience as JSON
+    if (parsedData.education?.length > 0)
+      profileUpdate.education = parsedData.education;
+    if (parsedData.experience?.length > 0)
+      profileUpdate.experience = parsedData.experience;
+
+    // Only update if we have something to update
+    if (Object.keys(profileUpdate).length === 0) {
+      console.log("📋 No profile data to sync from parsed resume");
+      return false;
+    }
+
+    console.log(
+      "📋 Syncing parsed resume data to profile:",
+      Object.keys(profileUpdate)
+    );
+
+    // Upsert profile - always update with new parsed data (latest resume wins)
+    await prisma.userProfile.upsert({
+      where: { userId },
+      create: {
+        userId,
+        ...profileUpdate,
+      },
+      update: profileUpdate,
+    });
+
+    console.log(
+      "✅ Profile synced with parsed resume data:",
+      Object.keys(profileUpdate)
+    );
+    return true;
+  } catch (error) {
+    console.warn("⚠️ Failed to sync parsed resume to profile:", error.message);
+    return false;
+  }
+}
+
 // Configure multer for file uploads (in-memory storage)
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -77,15 +156,21 @@ router.post(
       // Parse resume using AI
       const result = await parseResume(resumeText);
 
+      // Always sync parsed resume data to user profile
+      const { firebaseUid } = req.user;
+      let user = await prisma.user.findUnique({
+        where: { firebaseUid },
+        select: { id: true },
+      });
+
+      let profileSynced = false;
+      if (user) {
+        profileSynced = await syncParsedResumeToProfile(user.id, result.data);
+      }
+
       // If saveToAccount is true, save the uploaded resume
       let savedResume = null;
       if (saveToAccount === "true" || saveToAccount === true) {
-        const { firebaseUid } = req.user;
-        const user = await prisma.user.findUnique({
-          where: { firebaseUid },
-          select: { id: true },
-        });
-
         if (user) {
           // Check existing resume count - limit to 5 uploaded resumes
           const existingCount = await prisma.uploadedResume.count({
@@ -122,6 +207,7 @@ router.post(
         message: "Resume parsed successfully",
         extractedData: result.data,
         tokensUsed: result.tokensUsed,
+        profileSynced,
         savedResume: savedResume
           ? {
               id: savedResume.id,
@@ -161,10 +247,23 @@ router.post(
       // Parse resume using AI
       const result = await parseResume(resumeText);
 
+      // Sync parsed resume data to user profile
+      const { firebaseUid } = req.user;
+      let profileSynced = false;
+      const user = await prisma.user.findUnique({
+        where: { firebaseUid },
+        select: { id: true },
+      });
+
+      if (user) {
+        profileSynced = await syncParsedResumeToProfile(user.id, result.data);
+      }
+
       res.status(200).json({
         message: "Resume parsed successfully",
         extractedData: result.data,
         tokensUsed: result.tokensUsed,
+        profileSynced,
       });
     } catch (error) {
       console.error("Resume parsing error:", error);
@@ -586,14 +685,14 @@ router.put(
       let profileUpdated = false;
       if (syncToProfile && rawText) {
         try {
-          // Use Gemini to re-parse the resume
-          const geminiService = require("../services/geminiServiceVertex");
+          // Use factory to auto-switch between mock (free) and Vertex AI (GCP)
+          const { geminiService } = require("../services/geminiServiceFactory");
           const model = geminiService.getFlashModel();
 
           const parsePrompt = `Parse this resume text and extract structured data. Return ONLY valid JSON with these fields:
 {
   "fullName": "string",
-  "email": "string", 
+  "email": "string",
   "phone": "string",
   "location": "string",
   "headline": "string (professional title/headline)",

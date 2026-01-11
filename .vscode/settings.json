@@ -56,13 +56,84 @@
     {
       "file": ".github/copilot-instructions.md"
     }
-  ]
+  ],
 
-  // AI Assistant Workflow Automation Reminder
-  // Both Copilot and Gemini should follow these rules after completing features:
-  // 1. Check GitHub issues for duplicates before creating new ones
-  // 2. Create/update issues to document completed work
-  // 3. Commit and push changes to current branch
-  // 4. Use conventional commit messages (feat/fix/docs/refactor)
-  // See .github/copilot-instructions.md for full details
+  // Microsoft Edge Tools settings
+  "vscode-edge-devtools.defaultUrl": "http://localhost:3000",
+  "vscode-edge-devtools.autoAttachViaDebuggerForEdge": true,
+  "vscode-edge-devtools.headless": false,
+  "vscode-edge-devtools.webhint": true,
+  "vscode-edge-devtools.mirrorEdits": true,
+  "vscode-edge-devtools.sourceMaps": true,
+
+  // GitHub Pull Requests and Issues
+  "githubIssues.issueBranchTitle": "issue${issueNumber}/${sanitizedIssueTitle}",
+  "githubIssues.useBranchForIssues": "prompt",
+  "githubIssues.queries": [
+    { "label": "My Issues", "query": "is:open assignee:@me" },
+    { "label": "All Open", "query": "is:open" }
+  ],
+  "githubPullRequests.showInSCM": true,
+
+  // Debug settings for Edge
+  "debug.javascript.autoAttachFilter": "smart",
+
+  // Gemini Code Assist MCP Servers
+  "geminicodeassist.mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-fetch"]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-server-git",
+        "--repository",
+        "/home/wyofalcon/cvstomize"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-server-filesystem",
+        "/home/wyofalcon/cvstomize"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "docker": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-v",
+        "/var/run/docker.sock:/var/run/docker.sock",
+        "mcp/docker"
+      ]
+    }
+  }
 }

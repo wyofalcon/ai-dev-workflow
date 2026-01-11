@@ -86,7 +86,7 @@ function SignupPage() {
 
       // Redirect after 2 seconds
       setTimeout(() => {
-        navigate("/");
+        navigate("/", { replace: true });
       }, 2000);
     } catch (error) {
       setError(error.message || "Failed to create account");
@@ -106,7 +106,7 @@ function SignupPage() {
       setSuccess("");
       setLoading(true);
       await signInWithGoogle();
-      navigate("/"); // Redirect to home after successful signup
+      navigate("/", { replace: true }); // Redirect to home after successful signup
     } catch (error) {
       setError(error.message || "Failed to sign up with Google");
     } finally {

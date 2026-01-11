@@ -15,7 +15,10 @@ const prisma = require("../config/database");
 const cloudStorage = require("../services/cloudStorage");
 
 // Security gate - block all routes in production
-const isDevMode = process.env.NODE_ENV === "development";
+// SECURITY: ENABLE_DEV_AUTH should NEVER be set in production deployments!
+const isDevMode =
+  process.env.NODE_ENV === "development" ||
+  process.env.ENABLE_DEV_AUTH === "true";
 
 if (!isDevMode) {
   router.use((req, res) => {

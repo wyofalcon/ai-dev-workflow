@@ -1,349 +1,97 @@
-# CVstomize AI Coding Instructions
+# AI Coding Instructions (Auditor 2)
 
-## ⚠️ Design Philosophy (READ FIRST)
+## ⚠️ MANDATORY: Session Context Check
 
-**Simplicity over feature overload.** CVstomize prioritizes a clean, focused UX that reduces decision anxiety.
+**EVERY TIME a user starts a conversation, do this FIRST:**
 
-### Core UX Principles
+1. Read `.context/SESSION.md` to understand current state
+2. Read `.context/RELAY_MODE` to check prompt relay mode (`review` or `auto`)
+3. Briefly summarize what's in progress
+4. Ask if they want to continue with the listed next steps or do something else
 
-1. **Fewer choices = less anxiety.** Too many options overwhelm users. Each screen should have ONE clear primary action.
-2. **Progressive disclosure.** Show only what's needed now. Advanced options are hidden until relevant.
-3. **Guided flows over dashboards.** Users prefer being led through a process rather than dropped into a control panel.
-4. **Conversational > Transactional.** Our AI asks questions and guides—it doesn't dump forms.
-5. **Mobile-first mindset.** If it doesn't fit on a phone screen cleanly, simplify it.
-6. **App-store ready.** Design for eventual iOS/Android deployment via React Native or Capacitor.
-
-### When Adding Features
-
-- **Ask:** "Does this NEED to be visible, or can it be tucked away?"
-- **Default:** Hide advanced options behind "More options" or settings
-- **Validate:** Each new button/link should have a clear user story
-- **Test:** If users pause > 2 seconds deciding, there are too many choices
-
-### Anti-Patterns to Avoid
-
-❌ Multi-column option grids
-❌ Settings pages with 20+ toggles
-❌ "Power user" features exposed to everyone
-❌ Modals with multiple CTAs
-❌ Dense text explanations (use visuals or progressive reveal)
-
-### 📱 Mobile App Migration Strategy
-
-CVstomize is designed for **eventual Play Store / App Store deployment**. Keep these patterns:
-
-- **Use touch-friendly targets:** Buttons ≥44px height, adequate spacing
-- **Avoid hover-only interactions:** Everything must work with tap
-- **No browser-specific APIs:** Avoid `window.print()`, use PDF generation instead
-- **Offline-aware:** Design for spotty connectivity (queue actions, show status)
-- **Native-feeling navigation:** Bottom tabs, swipe gestures, pull-to-refresh patterns
-- **Camera/file access:** Use standard file inputs that Capacitor/React Native can bridge
-- **Push notifications ready:** Firebase Cloud Messaging already integrated
-
-**Migration path:** React web → Capacitor (same codebase) or React Native (rewrite components)
+**Update `.context/SESSION.md` after completing significant tasks.**
 
 ---
 
-## Architecture Overview
+## 🔄 Prompt Relay Workflow
 
-```
-┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│  Frontend (src) │──────▶│  Backend (api)  │──────▶│   Vertex AI     │
-│  React 18 + MUI │       │  Express/Prisma │       │  Gemini 2.5 Pro │
-│  Firebase Auth  │       │  Cloud Run      │       │  Cloud SQL      │
-└─────────────────┘       └─────────────────┘       └─────────────────┘
-```
+**When the user describes an idea or feature request:**
 
-- **Frontend:** React 18 (CRA), Material-UI v7, Firebase Auth (`src/`). Deployed to Cloud Run via Nginx.
-- **Backend:** Node.js 20, Express 5, Prisma ORM, PostgreSQL 15 (`api/`). Deployed to Cloud Run.
-- **AI Services:** Vertex AI (Gemini 2.5 Pro for resume generation, 2.0 Flash for conversations).
-- **Infrastructure:** GCP (Cloud Run, Cloud SQL, Secret Manager, Cloud Build). **NO Vercel**.
+1. **Refine the idea** into a clear, well-structured prompt for the Builder
+2. **Check `.context/RELAY_MODE`** for the current mode:
+   - `review` (default): Write the prompt to `.context/PROMPT.md` for user review
+   - `auto`: Write to PROMPT.md AND tell user to run `./scripts/send-prompt.sh`
+3. **Format the prompt** with clear context, requirements, and constraints
 
-## Critical Rules
+**Prompt Template for Builder:**
 
-### AI Service Usage
+```markdown
+## Task: [Brief Title]
 
-```javascript
-// ✅ ALWAYS use Vertex AI service (GCP-native, service account auth)
-const geminiService = require("./services/geminiServiceVertex");
-const model = geminiService.getProModel(); // Gemini 2.5 Pro for complex tasks
+### Context
 
-// ❌ NEVER use deprecated API-key service
-// const geminiService = require('./services/geminiService'); // DEPRECATED
-```
+[What the user is trying to accomplish]
 
-### Secrets Management
+### Requirements
 
-**NEVER hardcode secrets.** All credentials live in GCP Secret Manager.
+- [Specific requirement 1]
+- [Specific requirement 2]
 
-```bash
-./scripts/manage-secrets.sh list              # List all secrets
-./scripts/manage-secrets.sh get DATABASE_URL  # Get specific secret
-./scripts/manage-secrets.sh export .env.local # Export all to local env
+### Constraints
+
+- Follow existing code patterns in the codebase
+- [Any specific constraints]
+
+### Files to Consider
+
+- [Relevant files if known]
 ```
 
-### Database Changes
-
-Schema source of truth: `api/prisma/schema.prisma`
-
-```bash
-cd api
-npx prisma migrate dev --name descriptive_name  # Local development
-npx prisma generate                              # Regenerate client after schema changes
-```
-
-**Key tables:** `users` (auth + limits), `conversations` (session state as JSONB), `resumes` (generated content), `personality_traits` (Big 5 scores).
-
-### Error Handling Pattern
-
-All routes must pass errors to Express error handler:
-
-```javascript
-router.post("/endpoint", verifyFirebaseToken, async (req, res, next) => {
-  try {
-    // ... business logic
-  } catch (error) {
-    next(error); // Let errorHandler.js handle it
-  }
-});
-```
-
-## Core Data Flows
-
-### Resume Generation Pipeline
-
-```
-1. POST /api/conversation/start (jobDescription, existingResume?)
-   └─▶ jobDescriptionAnalyzer.js → Gap analysis + 2-5 targeted questions
-
-2. POST /api/conversation/message (sessionId, answer)
-   └─▶ Store answers in conversations.messages (JSONB)
-
-3. POST /api/conversation/complete (sessionId)
-   └─▶ personalityInferenceGemini.js → Big 5 traits from conversation
-
-4. POST /api/resume/generate (sessionId, jobDescription, selectedSections)
-   └─▶ geminiServiceVertex.js → Personality-aware resume generation
-   └─▶ pdfGenerator.js → Puppeteer renders 3 templates (Classic/Modern/Minimal)
-```
-
-### Authentication Flow
-
-```
-Frontend: Firebase Auth (src/contexts/AuthContext.js)
-   │
-   ▼  getIdToken() → Authorization: Bearer <token>
-   │
-Backend: verifyFirebaseToken (api/middleware/authMiddleware.js)
-   │
-   ▼  Firebase Admin SDK verifies token
-   │
-req.user = { firebaseUid, email, displayName, photoUrl }
-```
-
-## Testing Commands
-
-### Backend (Jest + Supertest)
-
-```bash
-cd api
-npm test                          # Run all tests
-npm test -- --coverage            # With coverage report
-npm test jobDescriptionAnalyzer   # Single file
-```
-
-Target: 80%+ coverage. Critical tests: `api/__tests__/integration/resume.test.js`, `api/__tests__/unit/jobDescriptionAnalyzer.test.js`
-
-### E2E (Playwright)
-
-```bash
-npm run test:e2e        # Headless
-npm run test:e2e:ui     # Interactive UI (best for debugging)
-npm run test:report     # View HTML report
-```
-
-Test specs in `tests/e2e/`. Test data in `tests/fixtures/test-data.json`.
-
-## Deployment
-
-### Quick Deploy (CI/CD)
-
-```bash
-git push origin dev      # Auto-deploy to dev environment
-git push origin staging  # Auto-deploy to staging
-git push origin main     # Auto-deploy to production
-```
-
-### Manual Deploy
-
-```bash
-cd api && ./deploy-to-cloud-run.sh  # Backend
-# Frontend deploys via Cloud Build triggers
-```
-
-## Key Files Reference
-
-| Purpose                    | File                                         |
-| -------------------------- | -------------------------------------------- |
-| Express app entry          | `api/index.js`                               |
-| Resume generation endpoint | `api/routes/resume.js`                       |
-| Conversation flow          | `api/routes/conversation.js`                 |
-| Vertex AI wrapper          | `api/services/geminiServiceVertex.js`        |
-| JD analysis + questions    | `api/services/jobDescriptionAnalyzer.js`     |
-| Big 5 inference            | `api/services/personalityInferenceGemini.js` |
-| PDF rendering              | `api/services/pdfGenerator.js`               |
-| Auth context               | `src/contexts/AuthContext.js`                |
-| Main resume UI             | `src/components/ConversationalResumePage.js` |
-| Database schema            | `api/prisma/schema.prisma`                   |
-
-## Common Gotchas
-
-1. **Cloud Run Stateless:** Don't use in-memory `Map()` for session data—it won't survive scaling/restarts. Store in database (`conversations` table).
-2. **PDF Generation Memory:** Requires 1Gi memory allocation. Puppeteer uses `/usr/bin/chromium-browser`.
-3. **CORS Origins:** Whitelist in `api/index.js` (`allowedOrigins` array). Add new environments there.
-4. **Module Systems:** Backend is CommonJS (`require`), Frontend is ESM (`import`). Check `"type"` in each `package.json`.
+**To switch modes:** User can say "switch to auto mode" or "switch to review mode"
 
 ---
 
-## 🤖 AI Assistant Workflow Automation
+## 🚀 First Time Setup
 
-### MANDATORY: After Completing Any Feature
-
-When you complete implementing a feature, enhancement, or fix, you **MUST** perform these steps automatically:
-
-#### Step 1: Check GitHub Issues
-
-Before creating a new issue, search existing issues to avoid duplicates:
+**If the user is new to this dev container, point them to the onboarding wizard:**
 
 ```bash
-# Use GitHub MCP tools or gh CLI:
-gh issue list --state open --limit 50
-gh issue search "<feature keywords>"
+bash .devcontainer/onboarding.sh
 ```
 
-#### Step 2: Create or Update Issue
+This sets up their AI CLI (Gemini or Claude) and GitHub authentication.
 
-- **If no matching issue exists:** Create a new issue documenting the feature
-- **If issue exists:** Update it with implementation details, mark checkboxes complete, add comments
+## Role & Responsibility
 
-**Issue creation template:**
+You are the **Senior Auditor**. Your goal is to provide deep reasoning, architectural guidance, and complex troubleshooting when the Local Auditor (Auditor 1) fails or is insufficient.
 
-```markdown
-## Summary
+## Workflow Overview
 
-[Brief description of what was implemented]
-
-## Implementation Details
-
-- Files created/modified: [list files]
-- Key changes: [bullet points]
-
-## Status
-
-✅ Implemented in branch: `[branch-name]`
-
-## Testing
-
-- [ ] Manual testing completed
-- [ ] E2E tests added (if applicable)
+```
+Builder (Gemini/Claude CLI) → Pre-commit (Pattern checks) → PR Review (GitHub Copilot)
 ```
 
-#### Step 3: Commit and Push Changes
+- **Builder:** Gemini CLI or Claude CLI (user's choice)
+- **Auditor:** GitHub Copilot (you, for complex reviews)
+- **Pre-commit:** Automated pattern checks (secrets, console.log, etc.)
 
-After completing work, always:
+## 🛡️ Critical Rules
 
-```bash
-# 1. Stage all changes
-git add -A
+1.  **Security First:** Never introduce secrets, API keys, or PII into the codebase.
+2.  **No Deprecated Code:** Always verify libraries are up to date and supported.
+3.  **Strict Typing:** Enforce strong typing where applicable (TypeScript, Python hints, etc.).
+4.  **Testing is Mandatory:** All new features must be accompanied by tests.
 
-# 2. Commit with conventional commit message
-git commit -m "feat|fix|docs|refactor(scope): brief description
+## 🏗️ Architecture
 
-- Bullet point details
-- Related to #XX (issue number if applicable)"
+- **Frontend:** React 18, Material-UI v7, Firebase Auth
+- **Backend:** Node.js 20, Express 5, Prisma ORM, PostgreSQL 15
+- **Infrastructure:** GCP (Cloud Run, Cloud SQL, Vertex AI)
 
-# 3. Push to current branch
-git push origin $(git branch --show-current)
-```
+## 📝 Workflow
 
-**Commit message conventions:**
+1.  **Builder (Gemini/Claude):** Generates initial code and features.
+2.  **Auditor 1 (Pre-commit):** Pattern-based checks on staged changes.
+3.  **Auditor 2 (You):** Complex review, refactoring, and "unstucking" the user.
 
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation only
-- `refactor:` - Code change that neither fixes nor adds
-- `test:` - Adding tests
-- `chore:` - Maintenance tasks
-
-#### Step 4: Update Session Handoff (REQUIRED)
-
-After completing work, **ALWAYS** update the current session handoff document (e.g., `SESSION_36_HANDOFF.md`):
-
-1. **Find the current handoff:** Look for the highest-numbered `SESSION_XX_HANDOFF.md` file in the project root
-2. **Add completed work** to the "Completed This Session" section:
-   - Brief description of each feature/fix
-   - Files created or modified
-   - Related issue numbers (e.g., "Related to #45")
-3. **Update "Remaining Work"** if items were completed or new items discovered
-4. **Add any blockers or notes** for the next session
-
-**Handoff update template:**
-
-```markdown
-### [Feature Name]
-
-- **Files:** `path/to/file.js`, `path/to/other.js`
-- **Changes:** Brief description of what was done
-- **Issue:** #XX (if applicable)
-```
-
-If no handoff exists for the current session, create one:
-
-```bash
-# Check current session number
-ls SESSION_*_HANDOFF.md | tail -1
-# Create next session (e.g., if SESSION_36 exists, create SESSION_37)
-```
-
-### Quick Reference Commands
-
-```bash
-# Check current branch
-git branch --show-current
-
-# See all changes
-git status
-git diff --stat
-
-# Stage, commit, push in one flow
-git add -A && git commit -m "feat(scope): message" && git push origin $(git branch --show-current)
-
-# List open issues
-gh issue list --state open
-
-# Create issue
-gh issue create --title "Title" --body "Description"
-
-# Update issue (add comment)
-gh issue comment <number> --body "Update: ..."
-
-# Close issue
-gh issue close <number> --comment "Completed in commit abc123"
-```
-
-### Repository Info
-
-- **Owner:** wyofalcon
-- **Repo:** cvstomize
-- **Default branch:** main
-- **Current working branch:** Check with `git branch --show-current`
-
-### When User Says "We're Done" or Ends Session
-
-Automatically:
-
-1. Commit any uncommitted changes
-2. Push to remote
-3. Create/update relevant issues
-4. **Update session handoff document with all completed work**
-5. Commit and push the handoff update
+If the user says "Auditor 1 failed", analyzing the git diff and the specific error report is your highest priority.

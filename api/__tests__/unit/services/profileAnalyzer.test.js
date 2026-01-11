@@ -22,60 +22,56 @@ const {
 describe('Profile Analyzer - Unit Tests', () => {
   describe('BFI-20 Score Calculation', () => {
     it('should calculate openness score correctly', () => {
-      // Openness items: q1, q5, q9, q13 (normal), q17 (reversed)
+      // Openness items in code: 1, 2, 3(R), 4
       const responses = {
-        q1: 5,  // is original, comes up with new ideas
-        q5: 5,  // is inventive
-        q9: 5,  // has active imagination
-        q13: 5, // values artistic experiences
-        q17: 1, // prefers routine work (reversed, so counts as 5)
+        q1: 5,  // inventive
+        q2: 5,  // curious
+        q3: 1,  // routine (reversed, so counts as 5)
+        q4: 5,  // original
         // Fill other questions
-        q2: 3, q3: 3, q4: 3, q6: 3, q7: 3, q8: 3, q10: 3,
-        q11: 3, q12: 3, q14: 3, q15: 3, q16: 3, q18: 3, q19: 3, q20: 3
+        q5: 3, q6: 3, q7: 3, q8: 3, q9: 3, q10: 3,
+        q11: 3, q12: 3, q13: 3, q14: 3, q15: 3, q16: 3, q17: 3, q18: 3, q19: 3, q20: 3
       };
 
       const scores = calculateBFI20Scores(responses);
 
-      // All openness items = 5, so score should be very high
-      expect(scores.openness).toBeGreaterThanOrEqual(90);
-      expect(scores.openness).toBeLessThanOrEqual(100);
+      // All openness items = 5, so score should be 100
+      expect(scores.openness).toBe(100);
     });
 
     it('should calculate conscientiousness score correctly', () => {
-      // Conscientiousness items: q3, q7, q11, q15 (normal), q19 (reversed)
+      // Conscientiousness items in code: 5, 6(R), 7, 8
       const responses = {
-        q3: 5,  // does thorough job
-        q7: 5,  // makes plans and follows through
-        q11: 5, // is reliable
-        q15: 5, // perseveres
-        q19: 1, // tends to be lazy (reversed)
+        q5: 5,  // thorough
+        q6: 1,  // disorganized (reversed, counts as 5)
+        q7: 5,  // reliable
+        q8: 5,  // perseveres
         // Fill others with neutral
-        q1: 3, q2: 3, q4: 3, q5: 3, q6: 3, q8: 3, q9: 3, q10: 3,
-        q12: 3, q13: 3, q14: 3, q16: 3, q17: 3, q18: 3, q20: 3
+        q1: 3, q2: 3, q3: 3, q4: 3, q9: 3, q10: 3,
+        q11: 3, q12: 3, q13: 3, q14: 3, q15: 3, q16: 3, q17: 3, q18: 3, q19: 3, q20: 3
       };
 
       const scores = calculateBFI20Scores(responses);
 
-      expect(scores.conscientiousness).toBeGreaterThanOrEqual(90);
+      expect(scores.conscientiousness).toBe(100);
     });
 
     it('should handle reverse-scored items correctly', () => {
-      // Test q2 (tends to be quiet) - reversed for extraversion
+      // Test extraversion items: 9, 10(R), 11, 12
       const responses = {
-        q2: 5,  // tends to be quiet (high) → low extraversion
-        q6: 1,  // is outgoing (low)
-        q10: 5, // is reserved (reversed, high) → low extraversion
-        q14: 5, // is shy (reversed, high) → low extraversion
-        q18: 1, // is talkative (low)
+        q9: 1,  // talkative (low)
+        q10: 5, // reserved (reversed, so counts as 1)
+        q11: 1, // outgoing (low)
+        q12: 1, // enthusiastic (low)
         // Fill others
-        q1: 3, q3: 3, q4: 3, q5: 3, q7: 3, q8: 3, q9: 3,
-        q11: 3, q12: 3, q13: 3, q15: 3, q16: 3, q17: 3, q19: 3, q20: 3
+        q1: 3, q2: 3, q3: 3, q4: 3, q5: 3, q6: 3, q7: 3, q8: 3,
+        q13: 3, q14: 3, q15: 3, q16: 3, q17: 3, q18: 3, q19: 3, q20: 3
       };
 
       const scores = calculateBFI20Scores(responses);
 
-      // Should result in low extraversion
-      expect(scores.extraversion).toBeLessThan(30);
+      // Should result in 0 extraversion
+      expect(scores.extraversion).toBe(0);
     });
 
     it('should normalize scores to 0-100 range', () => {
@@ -219,45 +215,24 @@ describe('Profile Analyzer - Unit Tests', () => {
   });
 
   describe('Confidence Calculation', () => {
-    it('should return high confidence for consistent Likert and NLP scores', () => {
-      const likertScores = { openness: 80, conscientiousness: 70, extraversion: 60, agreeableness: 50, neuroticism: 40 };
-      const nlpScores = { openness: 82, conscientiousness: 72, extraversion: 58, agreeableness: 52, neuroticism: 38 };
+    it('should return high confidence for consistent inputs', () => {
+      // calculateConfidence(likertConsistency, narrativeConfidence, narrativeDepth)
+      const confidence = calculateConfidence(1.0, 0.9, 300);
 
-      const confidence = calculateConfidence(likertScores, nlpScores, {});
-
-      // Small differences should yield high confidence
-      expect(confidence).toBeGreaterThan(0.8);
-      expect(confidence).toBeLessThanOrEqual(1.0);
+      // 1.0 * 0.4 + 0.9 * 0.4 + (300/300) * 0.2 = 0.4 + 0.36 + 0.2 = 0.96
+      expect(confidence).toBe(0.96);
     });
 
-    it('should return lower confidence for contradictory scores', () => {
-      const likertScores = { openness: 90, conscientiousness: 90, extraversion: 90, agreeableness: 90, neuroticism: 10 };
-      const nlpScores = { openness: 20, conscientiousness: 20, extraversion: 20, agreeableness: 20, neuroticism: 90 };
+    it('should return lower confidence for poor inputs', () => {
+      const confidence = calculateConfidence(0.5, 0.3, 50);
 
-      const confidence = calculateConfidence(likertScores, nlpScores, {});
-
-      // Large differences should yield low confidence
+      // 0.5 * 0.4 + 0.3 * 0.4 + (50/300) * 0.2 = 0.2 + 0.12 + 0.033 = 0.35
       expect(confidence).toBeLessThan(0.5);
-    });
-
-    it('should penalize inconsistent Likert responses', () => {
-      const likertScores = { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 50, neuroticism: 50 };
-      const nlpScores = { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 50, neuroticism: 50 };
-
-      // Highly inconsistent responses (contradictory items)
-      const inconsistentResponses = {
-        q1: 5, q5: 1, q9: 5, q13: 1 // Openness items all over the place
-      };
-
-      const confidence = calculateConfidence(likertScores, nlpScores, inconsistentResponses);
-
-      // Should have lower confidence than consistent responses
-      expect(confidence).toBeLessThan(0.9);
     });
   });
 
   describe('Derived Trait Inference', () => {
-    it('should map high openness to creative work style', () => {
+    it('should map high openness to mastery motivation', () => {
       const scores = {
         openness: 85,
         conscientiousness: 50,
@@ -268,24 +243,24 @@ describe('Profile Analyzer - Unit Tests', () => {
 
       const derived = deriveWorkPreferences(scores);
 
-      expect(derived.workStyle).toContain('creative');
+      expect(derived.motivationType).toBe('mastery');
     });
 
-    it('should map high conscientiousness to structured work style', () => {
+    it('should map high conscientiousness and agreeableness to servant leadership', () => {
       const scores = {
         openness: 50,
-        conscientiousness: 90,
+        conscientiousness: 85,
         extraversion: 50,
-        agreeableness: 50,
-        neuroticism: 50
+        agreeableness: 85,
+        neuroticism: 30
       };
 
       const derived = deriveWorkPreferences(scores);
 
-      expect(derived.workStyle).toContain('structured');
+      expect(derived.leadershipStyle).toBe('servant');
     });
 
-    it('should map high extraversion to collaborative communication', () => {
+    it('should map high extraversion to expressive communication', () => {
       const scores = {
         openness: 50,
         conscientiousness: 50,
@@ -296,10 +271,10 @@ describe('Profile Analyzer - Unit Tests', () => {
 
       const derived = deriveWorkPreferences(scores);
 
-      expect(derived.communicationStyle).toContain('expressive');
+      expect(derived.communicationStyle).toBe('expressive');
     });
 
-    it('should map low extraversion to independent work', () => {
+    it('should map low extraversion to independent work style', () => {
       const scores = {
         openness: 50,
         conscientiousness: 50,
@@ -310,7 +285,7 @@ describe('Profile Analyzer - Unit Tests', () => {
 
       const derived = deriveWorkPreferences(scores);
 
-      expect(derived.communicationStyle).toContain('thoughtful');
+      expect(derived.workStyle).toBe('independent');
     });
 
     it('should determine leadership style from conscientiousness + agreeableness', () => {

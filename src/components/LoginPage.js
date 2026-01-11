@@ -38,7 +38,7 @@ function LoginPage() {
       setError("");
       setLoading(true);
       await signin(email, password);
-      navigate("/"); // Redirect to home after successful login
+      navigate("/", { replace: true }); // Redirect to home after successful login
     } catch (error) {
       setError(error.message || "Failed to sign in");
     } finally {
@@ -51,7 +51,7 @@ function LoginPage() {
       setError("");
       setLoading(true);
       await signInWithGoogle();
-      navigate("/"); // Redirect to home after successful login
+      navigate("/", { replace: true }); // Redirect to home after successful login
     } catch (error) {
       setError(error.message || "Failed to sign in with Google");
     } finally {

@@ -223,7 +223,7 @@ async function incrementStoryUsage(storyId, usageType) {
           timesUsedInResumes: { increment: 1 }
         }
       });
-    } else if (usageType === 'coverLetter') {
+    } else if (usageType === 'coverLetter' || usageType === 'cover_letter') {
       await prisma.profileStory.update({
         where: { id: storyId },
         data: {

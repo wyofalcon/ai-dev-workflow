@@ -30,11 +30,11 @@ const mockPrisma = {
   },
 };
 
-jest.mock('../config/database', () => mockPrisma);
+jest.mock('../../../config/database', () => mockPrisma);
 
 // Mock Firebase config
 const mockGetFirebaseAdmin = jest.fn(() => mockAdmin);
-jest.mock('../config/firebase', () => ({
+jest.mock('../../../config/firebase', () => ({
   getFirebaseAdmin: mockGetFirebaseAdmin,
 }));
 

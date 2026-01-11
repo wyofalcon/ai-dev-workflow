@@ -9,100 +9,107 @@
  */
 
 const request = require('supertest');
+// Mock Prisma Client to bypass pgvector requirement
+jest.mock('@prisma/client', () => {
+  const { PrismaClient: ActualPrismaClient } = jest.requireActual('@prisma/client');
+  return {
+    PrismaClient: class extends ActualPrismaClient {
+      constructor(options) {
+        super(options);
+        this.$executeRawUnsafe = jest.fn().mockResolvedValue(1);
+        this.$queryRawUnsafe = jest.fn((query) => {
+          if (query.includes('SELECT COUNT(*)')) {
+            return Promise.resolve([{ count: 15 }]); // Mock count of stories with embeddings
+          }
+          return Promise.resolve([]);
+        });
+      }
+    }
+  };
+});
+
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = new PrismaClient(); // Use mocked client (which extends actual) for test setup/teardown
 
 // Mock Firebase Admin
-jest.mock('firebase-admin', () => ({
-  initializeApp: jest.fn(),
-  credential: {
-    cert: jest.fn()
-  },
-  auth: () => ({
-    verifyIdToken: jest.fn((token) => {
-      if (token === 'valid-gold-token') {
-        return Promise.resolve({ uid: 'test-gold-user' });
-      }
-      if (token === 'valid-free-token') {
-        return Promise.resolve({ uid: 'test-free-user' });
-      }
-      return Promise.reject(new Error('Invalid token'));
-    })
-  })
-}));
-
-// Mock Vertex AI
 jest.mock('@google-cloud/vertexai', () => ({
   VertexAI: jest.fn().mockImplementation(() => ({
-    preview: {
-      getGenerativeModel: jest.fn(() => ({
-        generateContent: jest.fn((prompt) => {
-          // Mock Gemini Flash response for story extraction
-          if (prompt.includes('STORY ANALYSIS')) {
-            return Promise.resolve({
-              response: {
-                candidates: [{
-                  content: {
-                    parts: [{
-                      text: JSON.stringify({
-                        story_summary: 'Led team to launch collaboration platform',
-                        category: 'technical_leadership',
-                        themes: ['leadership', 'architecture', 'mentoring'],
-                        skills_demonstrated: ['kubernetes', 'ci/cd', 'team leadership'],
-                        personality_signals: {
-                          openness: 85,
-                          conscientiousness: 90,
-                          extraversion: 70
-                        },
-                        relevance_tags: ['engineering', 'leadership']
-                      })
-                    }]
-                  }
-                }]
-              }
-            });
-          }
-
-          // Mock Gemini Flash response for NLP personality analysis
-          if (prompt.includes('NARRATIVE PERSONALITY ANALYSIS')) {
-            return Promise.resolve({
-              response: {
-                candidates: [{
-                  content: {
-                    parts: [{
-                      text: JSON.stringify({
-                        openness: 82,
-                        conscientiousness: 85,
-                        extraversion: 65,
-                        agreeableness: 75,
-                        neuroticism: 28,
-                        confidence: 0.88,
-                        reasoning: 'Strong innovation and learning signals'
-                      })
-                    }]
-                  }
-                }],
-                usageMetadata: { totalTokenCount: 1500 }
-              }
-            });
-          }
-
+    getGenerativeModel: jest.fn(() => ({
+      generateContent: jest.fn((prompt) => {
+        // Mock Gemini Flash response for story extraction
+        if (prompt.includes('analyzing a professional narrative')) {
           return Promise.resolve({
             response: {
-              candidates: [{ content: { parts: [{ text: '{}' }] } }]
+              candidates: [{
+                content: {
+                  parts: [{
+                    text: JSON.stringify({
+                      summary: 'Led team to launch collaboration platform',
+                      category: 'technical_leadership',
+                      themes: ['leadership', 'architecture', 'mentoring'],
+                      skills_demonstrated: ['kubernetes', 'ci/cd', 'team leadership'],
+                      personality_signals: {
+                        openness: 85,
+                        conscientiousness: 90,
+                        extraversion: 70
+                      },
+                      relevance_tags: ['engineering', 'leadership']
+                    })
+                  }]
+                }
+              }]
             }
           });
-        }),
-        embedContent: jest.fn(() => {
-          // Mock embedding generation (768-dim vector)
-          const mockEmbedding = Array.from({ length: 768 }, () => Math.random() * 0.2 - 0.1);
+        }
+
+        // Mock Gemini Flash response for NLP personality analysis
+        if (prompt.includes('personality')) {
           return Promise.resolve({
-            embedding: { values: mockEmbedding }
+            response: {
+              candidates: [{
+                content: {
+                  parts: [{
+                    text: JSON.stringify({
+                      openness: 82,
+                      conscientiousness: 85,
+                      extraversion: 65,
+                      agreeableness: 75,
+                      neuroticism: 28,
+                      confidence: 0.88,
+                      reasoning: {
+                        openness: 'Strong innovation',
+                        conscientiousness: 'Detail oriented'
+                      }
+                    })
+                  }]
+                }
+              }],
+              usageMetadata: { totalTokenCount: 1500 }
+            }
           });
-        })
-      }))
-    }
+        }
+
+        return Promise.resolve({
+          response: {
+            candidates: [{ content: { parts: [{ text: '{}' }] } }]
+          }
+        });
+      }),
+      embedContent: jest.fn(() => {
+        // Mock embedding generation (768-dim vector)
+        const mockEmbedding = Array.from({ length: 768 }, () => Math.random() * 0.2 - 0.1);
+        return Promise.resolve({
+          embedding: { values: mockEmbedding }
+        });
+      })
+    }))
   }))
+}));
+
+// Mock embedding generator
+jest.mock('../../services/embeddingGenerator', () => ({
+  generateStoryEmbedding: jest.fn().mockResolvedValue(new Array(768).fill(0.1)),
+  formatEmbeddingForPgVector: jest.fn((embedding) => `[${embedding.join(',')}]`)
 }));
 
 const {
@@ -120,6 +127,17 @@ describe('Gold Standard Personality Assessment - Integration Tests', () => {
   let testFreeUser;
 
   beforeAll(async () => {
+    // Configure global auth mock
+    global.mockVerifyIdToken.mockImplementation((token) => {
+      if (token === 'valid-gold-token') {
+        return Promise.resolve({ uid: 'test-gold-user', email: 'gold@test.com', firebase: { sign_in_provider: 'password' } });
+      }
+      if (token === 'valid-free-token') {
+        return Promise.resolve({ uid: 'test-free-user', email: 'free@test.com', firebase: { sign_in_provider: 'password' } });
+      }
+      return Promise.reject(new Error('Invalid token'));
+    });
+
     // Load app after mocks
     app = require('../../index').app;
 
@@ -203,6 +221,13 @@ describe('Gold Standard Personality Assessment - Integration Tests', () => {
     });
 
     it('should return existing profile if already complete', async () => {
+      // Ensure no existing profile
+      try {
+        await prisma.personalityProfile.delete({ where: { userId: testGoldUser.id } });
+      } catch (e) {
+        // Ignore if not found
+      }
+
       // Create completed profile
       const existingProfile = await prisma.personalityProfile.create({
         data: {
@@ -231,6 +256,14 @@ describe('Gold Standard Personality Assessment - Integration Tests', () => {
     let profileId;
 
     beforeEach(async () => {
+      // Reset profile to incomplete to ensure clean state
+      try {
+        await prisma.profileStory.deleteMany({ where: { userId: testGoldUser.id } });
+        await prisma.personalityProfile.deleteMany({ where: { userId: testGoldUser.id } });
+      } catch (e) {
+        console.error('Cleanup failed:', e);
+      }
+
       // Start fresh assessment
       const startRes = await request(app)
         .post('/api/gold-standard/start')
@@ -407,6 +440,13 @@ describe('Gold Standard Personality Assessment - Integration Tests', () => {
     }, 30000); // 30 second timeout for full flow
 
     it('should reject incomplete assessment', async () => {
+      // Reset profile to incomplete state by clearing answers
+      await prisma.profileStory.deleteMany({ where: { userId: testGoldUser.id } });
+      await prisma.personalityProfile.update({
+        where: { userId: testGoldUser.id },
+        data: { likertScores: null, isComplete: false }
+      });
+
       // Start assessment but don't complete all sections
       const startRes = await request(app)
         .post('/api/gold-standard/start')
@@ -424,8 +464,12 @@ describe('Gold Standard Personality Assessment - Integration Tests', () => {
       // Try to complete
       const completeRes = await request(app)
         .post('/api/gold-standard/complete')
-        .set('Authorization', 'Bearer valid-gold-token')
-        .expect(400);
+        .set('Authorization', 'Bearer valid-gold-token');
+
+      if (completeRes.status !== 400) {
+        console.log('DEBUG UNEXPECTED STATUS:', completeRes.status, completeRes.body);
+      }
+      expect(completeRes.status).toBe(400);
 
       expect(completeRes.body.error).toContain('Likert section not completed');
     });

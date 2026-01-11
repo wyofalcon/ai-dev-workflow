@@ -2,6 +2,143 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "🎯 Builder Setup",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/.devcontainer/builder-setup.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🔍 Audit Watch",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/audit-watch.sh",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "clear": true,
+        "group": "dev-workflow"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🤖 AI Builder",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/start-ai-cli.sh",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": true,
+        "group": "dev-workflow"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🖥️ Split Terminals",
+      "dependsOn": ["🔍 Audit Watch", "🤖 AI Builder"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "🚀 Start Dev Workflow",
+      "dependsOn": ["🎯 Builder Setup", "🖥️ Split Terminals"],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
+      "label": "🚀 Recalibrate Agents",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/recalibrate.py",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📊 Show Workflow Status",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/scripts/show-status.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚙️ Toggle Relay Mode",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/scripts/toggle-relay-mode.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📤 Send Prompt to Builder",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/scripts/send-prompt.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "� Toggle Audit Watch",
+      "type": "shell",
+      "command": "bash ${workspaceFolder}/scripts/toggle-audit-watch.sh",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "�🚀 Promote Branch",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/promote.py",
+      "group": "deploy",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Interactively promote code (Dev -> Staging -> Prod) with diff review."
+    },
+    {
       "label": "Git Sync",
       "type": "shell",
       "command": "./git-sync.sh",
@@ -66,6 +203,75 @@
       },
       "problemMatcher": [],
       "detail": "Open HTML test report in browser"
+    },
+    {
+      "label": "Start All Services",
+      "type": "shell",
+      "command": "docker compose up -d",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Start database, redis, backend, and frontend containers"
+    },
+    {
+      "label": "Stop All Services",
+      "type": "shell",
+      "command": "docker compose down",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Stop all running containers"
+    },
+    {
+      "label": "View Container Logs",
+      "type": "shell",
+      "command": "docker compose logs -f --tail=100",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "problemMatcher": [],
+      "detail": "Follow logs from all containers"
+    },
+    {
+      "label": "Run Backend Tests",
+      "type": "shell",
+      "command": "cd api && npm test",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Run Jest unit/integration tests for the API"
+    },
+    {
+      "label": "Prisma Studio",
+      "type": "shell",
+      "command": "cd api && npx prisma studio",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": [],
+      "detail": "Open Prisma Studio to view/edit database"
+    },
+    {
+      "label": "Reset Database",
+      "type": "shell",
+      "command": "docker compose down -v && docker compose up -d && sleep 5 && cd api && npx prisma migrate dev",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "⚠️ Destroys all data and recreates database"
     }
   ]
 }

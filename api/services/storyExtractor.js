@@ -8,7 +8,8 @@
  * - Categorization for RAG retrieval
  */
 
-const geminiService = require('./geminiServiceVertex');
+// Use factory to auto-switch between mock (free) and Vertex AI (GCP)
+const { geminiService } = require("./geminiServiceFactory");
 
 /**
  * Build Gemini prompt for story analysis
@@ -91,33 +92,41 @@ async function extractStoryData(story) {
 
     console.log(`📖 Extracting story data for: ${question_type}`);
 
-    const prompt = buildStoryAnalysisPrompt(question_type, question_text, story_text);
+    const prompt = buildStoryAnalysisPrompt(
+      question_type,
+      question_text,
+      story_text
+    );
     const model = geminiService.getFlashModel();
     const result = await model.generateContent(prompt);
     const response = result.response;
 
     // Extract text
     let responseText;
-    if (typeof response.text === 'function') {
+    if (typeof response.text === "function") {
       responseText = response.text();
     } else if (response.candidates && response.candidates[0]) {
       responseText = response.candidates[0].content.parts[0].text;
     } else {
-      throw new Error('Unexpected Gemini response format');
+      throw new Error("Unexpected Gemini response format");
     }
 
     // Clean JSON
     let cleanedResponse = responseText.trim();
-    cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    cleanedResponse = cleanedResponse
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "");
 
     const extracted = JSON.parse(cleanedResponse);
 
     // Validate structure
     if (!extracted.summary || !extracted.category) {
-      throw new Error('Invalid extraction response structure');
+      throw new Error("Invalid extraction response structure");
     }
 
-    console.log(`✅ Story extracted: ${extracted.category} (${extracted.skills_demonstrated.length} skills)`);
+    console.log(
+      `✅ Story extracted: ${extracted.category} (${extracted.skills_demonstrated.length} skills)`
+    );
 
     return {
       story_summary: extracted.summary,
@@ -125,20 +134,19 @@ async function extractStoryData(story) {
       themes: extracted.themes || [],
       skills_demonstrated: extracted.skills_demonstrated || [],
       personality_signals: extracted.personality_signals || {},
-      relevance_tags: extracted.relevance_tags || [extracted.category]
+      relevance_tags: extracted.relevance_tags || [extracted.category],
     };
-
   } catch (error) {
-    console.error('❌ Story extraction failed:', error);
+    console.error("❌ Story extraction failed:", error);
 
     // Return basic fallback
     return {
-      story_summary: story.story_text.substring(0, 200) + '...',
+      story_summary: story.story_text.substring(0, 200) + "...",
       category: story.question_type,
       themes: [],
       skills_demonstrated: [],
       personality_signals: {},
-      relevance_tags: [story.question_type]
+      relevance_tags: [story.question_type],
     };
   }
 }
@@ -157,19 +165,21 @@ async function batchExtractStories(stories) {
     const extracted = await extractStoryData(story);
     results.push({
       ...story,
-      ...extracted
+      ...extracted,
     });
 
     // Small delay to avoid rate limits
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  console.log(`✅ Batch extraction complete: ${results.length} stories processed`);
+  console.log(
+    `✅ Batch extraction complete: ${results.length} stories processed`
+  );
 
   return results;
 }
 
 module.exports = {
   extractStoryData,
-  batchExtractStories
+  batchExtractStories,
 };

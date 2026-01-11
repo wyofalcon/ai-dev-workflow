@@ -1,0 +1,25 @@
+services:
+  # Override backend to use real services
+  backend:
+    environment:
+      # Disable Mock AI -> Use Vertex AI
+      - USE_MOCK_AI=false
+      # Override Database URL (must be set in shell/env)
+      - DATABASE_URL=${DATABASE_URL}
+      # Allow Redis URL override (default to local container if unset)
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      # Set GCP Project ID (must be set in shell/env)
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      # Point to the mounted key file
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-key.json
+    volumes:
+      # Mount the GCP service account key
+      - ./gcp-key.json:/app/gcp-key.json
+
+  # Override frontend to enforce real authentication
+  frontend:
+    environment:
+      # Disable Dev Auth -> Force Real Firebase Auth flow
+      - REACT_APP_ENABLE_DEV_AUTH=false
+      # Ensure API URL points to the local backend container (which now proxies real services)
+      - REACT_APP_API_URL=http://localhost:3001

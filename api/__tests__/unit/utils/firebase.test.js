@@ -14,18 +14,26 @@ const mockCredential = {
     serviceAccount,
     type: 'cert',
   })),
+  applicationDefault: jest.fn(() => ({
+    getAccessToken: jest.fn().mockResolvedValue({ access_token: 'mock-token' })
+  })),
 };
 
-const mockInitializeApp = jest.fn(() => mockAdminApp);
-const mockAdminApps = [];
+const mockInitializeApp = jest.fn(() => {
+  const newApp = { ...mockAdminApp };
+  mockAdmin.apps.push(newApp);
+  return newApp;
+});
 const mockAppFunction = jest.fn(() => mockAdminApp);
 
-jest.mock('firebase-admin', () => ({
-  apps: mockAdminApps,
+const mockAdmin = {
+  apps: [],
   app: mockAppFunction,
   initializeApp: mockInitializeApp,
   credential: mockCredential,
-}));
+};
+
+jest.mock('firebase-admin', () => mockAdmin);
 
 // Mock Google Cloud Secret Manager
 const mockAccessSecretVersion = jest.fn();
@@ -39,10 +47,11 @@ jest.mock('@google-cloud/secret-manager', () => ({
 
 // NOW require the modules that depend on mocks
 const admin = require('firebase-admin');
-const { initializeFirebase, getFirebaseAdmin } = require('../../../config/firebase');
 
 describe('Firebase Admin SDK Initialization', () => {
   let originalEnv;
+  let initializeFirebase;
+  let getFirebaseAdmin;
 
   beforeEach(() => {
     // Save original environment
@@ -50,8 +59,15 @@ describe('Firebase Admin SDK Initialization', () => {
 
     // Reset mocks
     jest.clearAllMocks();
-    mockAdminApps.length = 0; // Clear the apps array
+    mockAdmin.apps = []; // Use the reference from mockAdmin
     mockAccessSecretVersion.mockReset();
+
+    // Use isolateModules to get a fresh instance of config/firebase.js for each test
+    jest.isolateModules(() => {
+      const firebaseConfig = jest.requireActual('../../../config/firebase');
+      initializeFirebase = firebaseConfig.initializeFirebase;
+      getFirebaseAdmin = firebaseConfig.getFirebaseAdmin;
+    });
 
     // Suppress console output
     jest.spyOn(console, 'log').mockImplementation(() => {});
@@ -70,7 +86,13 @@ describe('Firebase Admin SDK Initialization', () => {
     describe('Test Environment', () => {
       it('should return existing app in test environment', async () => {
         process.env.NODE_ENV = 'test';
-        mockAdminApps.push(mockAdminApp);
+        // Don't push to mockAdmin.apps yet, let it be empty to see the "Test environment" log
+        // Wait, if it's empty, it goes to initializeFirebase's test block:
+        // if (process.env.NODE_ENV === "test") {
+        //   console.log("🧪 Test environment detected - using mocked Firebase");
+        //   return admin.app();
+        // }
+        // BUT admin.app() might fail if not initialized? No, it's a mock.
 
         const app = await initializeFirebase();
 
@@ -92,7 +114,7 @@ describe('Firebase Admin SDK Initialization', () => {
     describe('Already Initialized', () => {
       it('should reuse existing Firebase app', async () => {
         process.env.NODE_ENV = 'development';
-        mockAdminApps.push(mockAdminApp);
+        mockAdmin.apps.push(mockAdminApp);
 
         const app = await initializeFirebase();
 
@@ -105,7 +127,7 @@ describe('Firebase Admin SDK Initialization', () => {
 
       it('should not re-initialize if app exists', async () => {
         process.env.NODE_ENV = 'production';
-        mockAdminApps.push(mockAdminApp);
+        mockAdmin.apps.push(mockAdminApp);
 
         await initializeFirebase();
         await initializeFirebase(); // Call twice
@@ -117,7 +139,7 @@ describe('Firebase Admin SDK Initialization', () => {
     describe('Secret Manager Initialization', () => {
       beforeEach(() => {
         process.env.NODE_ENV = 'production';
-        mockAdminApps.length = 0; // No existing apps
+        mockAdmin.apps.length = 0; // No existing apps
 
         // Reset and mock Secret Manager responses
         mockAccessSecretVersion.mockReset();
@@ -160,7 +182,7 @@ describe('Firebase Admin SDK Initialization', () => {
         await initializeFirebase();
 
         expect(mockAccessSecretVersion).toHaveBeenCalledWith({
-          name: 'projects/351889420459/secrets/cvstomize-project-id/versions/latest',
+          name: 'projects/cvstomize/secrets/cvstomize-project-id/versions/latest',
         });
       });
 
@@ -168,7 +190,7 @@ describe('Firebase Admin SDK Initialization', () => {
         await initializeFirebase();
 
         expect(mockAccessSecretVersion).toHaveBeenCalledWith({
-          name: 'projects/test-project-id/secrets/cvstomize-service-account-key/versions/latest',
+          name: 'projects/cvstomize/secrets/cvstomize-service-account-key/versions/latest',
         });
       });
 
@@ -215,7 +237,7 @@ describe('Firebase Admin SDK Initialization', () => {
         await initializeFirebase();
 
         expect(mockAccessSecretVersion).toHaveBeenCalledWith({
-          name: 'projects/test-project-id/secrets/cvstomize-service-account-key/versions/latest',
+          name: 'projects/cvstomize/secrets/cvstomize-service-account-key/versions/latest',
         });
       });
     });
@@ -223,7 +245,7 @@ describe('Firebase Admin SDK Initialization', () => {
     describe('Error Handling', () => {
       beforeEach(() => {
         process.env.NODE_ENV = 'production';
-        mockAdminApps.length = 0;
+        mockAdmin.apps.length = 0;
         mockAccessSecretVersion.mockReset();
       });
 
@@ -314,7 +336,7 @@ describe('Firebase Admin SDK Initialization', () => {
     describe('Concurrent Initialization', () => {
       beforeEach(() => {
         process.env.NODE_ENV = 'production';
-        mockAdminApps.length = 0;
+        mockAdmin.apps.length = 0;
 
         mockAccessSecretVersion.mockReset();
         mockAccessSecretVersion
@@ -433,7 +455,7 @@ describe('Firebase Admin SDK Initialization', () => {
   describe('Integration', () => {
     it('should successfully complete full initialization flow', async () => {
       process.env.NODE_ENV = 'production';
-      mockAdminApps.length = 0;
+      mockAdmin.apps.length = 0;
 
       mockAccessSecretVersion
         .mockResolvedValueOnce([

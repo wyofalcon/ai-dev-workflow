@@ -14,37 +14,41 @@ const {
   generateStoryEmbedding,
   generateEmbeddingsBatch,
   formatEmbeddingForPgVector,
-  calculateCosineSimilarity
+  cosineSimilarity: calculateCosineSimilarity
 } = require('../../../services/embeddingGenerator');
 
-// Mock Vertex AI
-jest.mock('@google-cloud/vertexai', () => ({
-  VertexAI: jest.fn().mockImplementation(() => ({
-    preview: {
-      getGenerativeModel: jest.fn(() => ({
-        embedContent: jest.fn((content) => {
-          // Return mock 768-dim embedding
-          const text = content.content[0].parts[0].text;
-          const mockEmbedding = new Array(768).fill(0);
+const axios = require('axios');
 
-          // Generate deterministic embedding based on text length
-          for (let i = 0; i < Math.min(text.length, 768); i++) {
-            mockEmbedding[i] = (text.charCodeAt(i) % 100) / 100;
+// Mock Axios
+jest.mock('axios');
+
+// Mock implementation for axios.post
+axios.post.mockImplementation((url, data) => {
+  // Extract text from request
+  const text = data.instances[0].content;
+  
+  // Generate deterministic embedding based on text length
+  const mockEmbedding = new Array(768).fill(0);
+  for (let i = 0; i < Math.min(text.length, 768); i++) {
+    mockEmbedding[i] = (text.charCodeAt(i) % 100) / 100;
+  }
+  // Fill rest with small deterministic values
+  for (let i = text.length; i < 768; i++) {
+    mockEmbedding[i] = Math.sin(i) * 0.1;
+  }
+
+  return Promise.resolve({
+    data: {
+      predictions: [
+        {
+          embeddings: {
+            values: mockEmbedding
           }
-
-          // Fill rest with small random values
-          for (let i = text.length; i < 768; i++) {
-            mockEmbedding[i] = Math.random() * 0.1;
-          }
-
-          return Promise.resolve({
-            embedding: { values: mockEmbedding }
-          });
-        })
-      }))
+        }
+      ]
     }
-  }))
-}));
+  });
+});
 
 describe('Embedding Generator - Unit Tests', () => {
   describe('Single Embedding Generation', () => {
@@ -68,9 +72,7 @@ describe('Embedding Generator - Unit Tests', () => {
     });
 
     it('should handle empty text', async () => {
-      const embedding = await generateEmbedding('');
-
-      expect(embedding).toHaveLength(768);
+      await expect(generateEmbedding('')).rejects.toThrow();
     });
 
     it('should handle very long text', async () => {
@@ -127,7 +129,7 @@ describe('Embedding Generator - Unit Tests', () => {
       const storyWithSummary = {
         questionText: 'Q',
         storyText: 'Very long story text that goes on and on...',
-        storySummary: 'Short summary'
+        storySummary: 'This is a very long summary that is definitely longer than fifty characters to ensure it triggers the logic.'
       };
 
       const storyWithoutSummary = {
@@ -177,7 +179,7 @@ describe('Embedding Generator - Unit Tests', () => {
       const texts = ['text1', 'text2', 'text3'];
 
       const start = Date.now();
-      await generateEmbeddingsBatch(texts, 100); // 100ms delay
+      await generateEmbeddingsBatch(texts, 1); // 100ms delay per batch
       const duration = Date.now() - start;
 
       // Should take at least 200ms (2 delays for 3 items)

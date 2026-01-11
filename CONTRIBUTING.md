@@ -5,6 +5,7 @@ Welcome! This guide will help you get started contributing to CVstomize.
 > ⚠️ **IMPORTANT: Dev Container Required**
 >
 > All development for CVstomize **must** be done inside the Dev Container. This ensures:
+>
 > - Identical development environments for all contributors
 > - Correct Node.js, npm, and tool versions
 > - Pre-configured extensions and editor settings

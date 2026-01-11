@@ -1,6 +1,6 @@
 // Test setup - must run BEFORE any imports
 process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
+process.env.DATABASE_URL = 'postgresql://dev_user:dev_password@localhost:5432/cvstomize_test';
 
 // Mock UUID package (v13 uses ES modules which Jest can't handle)
 jest.mock('uuid', () => ({
@@ -21,9 +21,21 @@ jest.mock('firebase-admin', () => ({
   app: jest.fn(() => mockFirebaseApp),
   initializeApp: jest.fn(() => mockFirebaseApp),
   credential: {
-    cert: jest.fn()
+    cert: jest.fn(),
+    applicationDefault: jest.fn(() => ({
+      getAccessToken: jest.fn().mockResolvedValue({ access_token: 'mock-token' })
+    }))
   },
   auth: jest.fn(() => mockAuth)
+}));
+
+// Mock marked to prevent ESM/CommonJS issues
+jest.mock('marked', () => ({
+  marked: {
+    parse: jest.fn((text) => text),
+    setOptions: jest.fn(),
+    use: jest.fn()
+  }
 }));
 
 // Mock Firebase config module to prevent Secret Manager calls

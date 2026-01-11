@@ -3,37 +3,53 @@ process.env.NODE_ENV = 'test';
 
 // Mock Gemini Service
 const mockGeminiAnalysis = {
-  jobTitle: 'Senior Software Engineer',
-  company: 'Google',
-  experienceLevel: 'senior',
-  requiredSkills: {
-    technical: ['React', 'Node.js', 'PostgreSQL'],
-    soft: ['Leadership', 'Communication'],
-    certifications: []
+  analysis: {
+    jobTitle: 'Senior Software Engineer',
+    company: 'Google',
+    experienceLevel: 'senior',
+    requiredSkills: {
+      technical: ['React', 'Node.js', 'PostgreSQL'],
+      soft: ['Leadership', 'Communication'],
+      certifications: []
+    },
+    keyResponsibilities: [
+      'Design scalable systems',
+      'Mentor junior engineers'
+    ],
+    culturalIndicators: {
+      workStyle: 'collaborative',
+      pace: 'fast-paced',
+      innovation: 'high'
+    },
+    educationRequired: 'Bachelor\'s in CS',
+    locationInfo: {
+      location: 'Mountain View, CA',
+      isRemote: false,
+      isHybrid: true
+    },
+    salaryRange: {
+      min: 150000,
+      max: 200000,
+      currency: 'USD',
+      disclosed: true
+    },
+    topKeywords: ['React', 'Node.js', 'PostgreSQL', 'Leadership', 'Scalability'],
+    personalityTraits: ['Innovative', 'Detail-oriented', 'Team player'],
+    resumeGapAnalysis: {
+      strengths: [],
+      weaknesses: [],
+      missingContent: [],
+      atsMatchScore: 0,
+      questionCount: 5
+    }
   },
-  keyResponsibilities: [
-    'Design scalable systems',
-    'Mentor junior engineers'
-  ],
-  culturalIndicators: {
-    workStyle: 'collaborative',
-    pace: 'fast-paced',
-    innovation: 'high'
-  },
-  educationRequired: 'Bachelor\'s in CS',
-  locationInfo: {
-    location: 'Mountain View, CA',
-    isRemote: false,
-    isHybrid: true
-  },
-  salaryRange: {
-    min: 150000,
-    max: 200000,
-    currency: 'USD',
-    disclosed: true
-  },
-  topKeywords: ['React', 'Node.js', 'PostgreSQL', 'Leadership', 'Scalability'],
-  personalityTraits: ['Innovative', 'Detail-oriented', 'Team player']
+  questions: [
+    { id: 'q1', type: 'technical', question: 'Q1', purpose: 'P1', gapType: 'comprehensive' },
+    { id: 'q2', type: 'technical', question: 'Q2', purpose: 'P2', gapType: 'comprehensive' },
+    { id: 'q3', type: 'technical', question: 'Q3', purpose: 'P3', gapType: 'comprehensive' },
+    { id: 'q4', type: 'technical', question: 'Q4', purpose: 'P4', gapType: 'comprehensive' },
+    { id: 'q5', type: 'technical', question: 'Q5', purpose: 'P5', gapType: 'comprehensive' }
+  ]
 };
 
 const mockGeminiService = {
@@ -196,28 +212,28 @@ describe('Job Description Analyzer Service', () => {
 
   describe('generateQuestions', () => {
     it('should generate technical question for technical roles', () => {
-      const questions = analyzer.generateQuestions(mockGeminiAnalysis);
+      const questions = analyzer.generateQuestions(mockGeminiAnalysis.analysis);
       const techQuestion = questions.find(q => q.id === 'jd_technical');
       expect(techQuestion).toBeDefined();
       expect(techQuestion.question).toContain('React');
     });
 
     it('should generate responsibility-based question', () => {
-      const questions = analyzer.generateQuestions(mockGeminiAnalysis);
+      const questions = analyzer.generateQuestions(mockGeminiAnalysis.analysis);
       const respQuestion = questions.find(q => q.id === 'jd_responsibility');
       expect(respQuestion).toBeDefined();
       expect(respQuestion.question).toContain('Design scalable systems');
     });
 
     it('should generate soft skill question', () => {
-      const questions = analyzer.generateQuestions(mockGeminiAnalysis);
+      const questions = analyzer.generateQuestions(mockGeminiAnalysis.analysis);
       const softSkillQ = questions.find(q => q.id === 'jd_soft_skill');
       expect(softSkillQ).toBeDefined();
       expect(softSkillQ.question).toContain('Leadership');
     });
 
     it('should include keywords for most questions', () => {
-      const questions = analyzer.generateQuestions(mockGeminiAnalysis);
+      const questions = analyzer.generateQuestions(mockGeminiAnalysis.analysis);
       // At least 3 questions should have keywords (technical, responsibility, soft skill)
       const questionsWithKeywords = questions.filter(q => q.keywords);
       expect(questionsWithKeywords.length).toBeGreaterThanOrEqual(3);

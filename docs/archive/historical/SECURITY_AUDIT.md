@@ -150,7 +150,7 @@ if (process.env.NODE_ENV === 'production') {
 **Issue:**
 ```bash
 # ❌ CRITICAL: Firebase keys in Git-tracked .env file
-REACT_APP_FIREBASE_API_KEY=AIzaSyDJd-QHJAbpj_vWcRCX4QD0vBj03z9B6qI
+REACT_APP_FIREBASE_API_KEY=[REDACTED]
 REACT_APP_FIREBASE_PROJECT_ID=cvstomize
 # ... more keys
 ```

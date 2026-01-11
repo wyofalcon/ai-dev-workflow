@@ -31,7 +31,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --region="$REGION" \
   --platform=managed \
   --allow-unauthenticated \
-  --set-env-vars="NODE_ENV=staging" \
+  --set-env-vars="NODE_ENV=staging,ENABLE_DEV_AUTH=true" \
   --set-secrets="DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,FIREBASE_PROJECT_ID=FIREBASE_PROJECT_ID:latest,FIREBASE_PRIVATE_KEY=FIREBASE_PRIVATE_KEY:latest,FIREBASE_CLIENT_EMAIL=FIREBASE_CLIENT_EMAIL:latest,GCS_BUCKET_NAME=GCS_BUCKET_NAME:latest" \
   --add-cloudsql-instances="$DB_INSTANCE" \
   --project="$PROJECT_ID" \
