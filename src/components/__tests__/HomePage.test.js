@@ -10,17 +10,6 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-// Mock AuthContext
-jest.mock('../../contexts/AuthContext', () => ({
-  useAuth: () => ({
-    currentUser: null,
-    loading: false,
-    createAuthAxios: jest.fn(() => Promise.resolve({
-      get: jest.fn(() => Promise.resolve({ data: { resumes: [] } }))
-    })),
-  }),
-}));
-
 describe('HomePage Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();

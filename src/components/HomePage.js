@@ -1,43 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { Box, Button, Typography, Tooltip, Paper } from "@mui/material";
+import React, { useState } from "react";
+import { Box, Typography, Tooltip, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import BuildIcon from "@mui/icons-material/Build";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import TargetIcon from "@mui/icons-material/TrackChanges";
 import HomeGraphic from "./HomeGraphic.js";
 import BuildResumeModal from "./BuildResumeModal.js";
 import UploadResumeModal from "./UploadResumeModal.js";
-import { useAuth } from "../contexts/AuthContext.js";
 
 function HomePage({ onStart }) {
   const navigate = useNavigate();
-  const { createAuthAxios } = useAuth();
   const [hoveredOption, setHoveredOption] = useState(null);
   const [showBuildModal, setShowBuildModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [hasResumes, setHasResumes] = useState(false);
-  const [loadingResumes, setLoadingResumes] = useState(true);
-
-  // Check if user has any resumes
-  useEffect(() => {
-    const checkResumes = async () => {
-      try {
-        const axiosInstance = await createAuthAxios();
-        const response = await axiosInstance.get("/resume/list");
-        setHasResumes(
-          response.data.resumes && response.data.resumes.length > 0
-        );
-      } catch (error) {
-        console.error("Error checking resumes:", error);
-        setHasResumes(false);
-      } finally {
-        setLoadingResumes(false);
-      }
-    };
-
-    checkResumes();
-  }, [createAuthAxios]);
 
   const options = [
     {
@@ -61,12 +36,12 @@ function HomePage({ onStart }) {
       disabled: false,
     },
     {
-      id: "journey",
-      title: "Share My Journey",
-      icon: <AutoAwesomeIcon sx={{ fontSize: 40 }} />,
+      id: "tailor",
+      title: "Tailor to Specific Job",
+      icon: <TargetIcon sx={{ fontSize: 40 }} />,
       tooltip:
-        "✨ AI-Powered Discovery. Chat with our AI assistant to share your life stories and experiences. We'll uncover hidden skills and build your profile for you.",
-      action: () => navigate('/build-resume'),
+        "🎯 Quick Tailor (~5 min). Paste a job description and we'll ask targeted questions to build a perfectly tailored resume. Upload your existing resume to make it even faster!",
+      action: () => navigate("/create-resume"),
       color: "#fdbb2d",
       disabled: false,
     },
