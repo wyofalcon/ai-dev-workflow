@@ -82,8 +82,8 @@ export default function ExtensionPromoModal() {
             <ListItem>
               <ListItemIcon><PrivacyIcon color="success" /></ListItemIcon>
               <ListItemText 
-                primary="100% Private & Local" 
-                secondary="Powered by WebLLM. Your data never leaves your device."
+                primary="Secure & Fast" 
+                secondary="Powered by Vertex AI. Professional-grade analysis in seconds."
               />
             </ListItem>
             <ListItem>
@@ -102,25 +102,6 @@ export default function ExtensionPromoModal() {
             </ListItem>
           </List>
         </Box>
-
-        <Alert 
-          icon={<GpuIcon fontSize="inherit" />} 
-          severity="info" 
-          variant="outlined"
-          sx={{ mt: 2 }}
-        >
-          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-            Recommended Specs
-          </Typography>
-          <Typography variant="caption" display="block">
-            This extension uses <strong>WebGPU</strong> technology to run AI locally.
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-            <Chip label="GPU with 4GB+ VRAM" size="small" />
-            <Chip label="8GB+ System RAM" size="small" />
-            <Chip label="Edge / Chrome Browser" size="small" />
-          </Box>
-        </Alert>
       </DialogContent>
 
       <DialogActions sx={{ flexDirection: 'column', gap: 1, pb: 3, px: 3 }}>

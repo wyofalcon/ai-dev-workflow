@@ -129,6 +129,54 @@ Skills List: ${skills.join(', ')}`;
 });
 
 /**
+ * POST /api/ai/extension/tailor
+ * Endpoint for Chrome Extension Quick Tailor feature
+ * Replaces the local WebLLM inference
+ */
+router.post('/extension/tailor', verifyFirebaseToken, async (req, res, next) => {
+  try {
+    const { jobDescription } = req.body;
+
+    if (!jobDescription || jobDescription.length < 50) {
+      return res.status(400).json({
+        error: 'Invalid Request',
+        message: 'Job description is too short'
+      });
+    }
+
+    console.log(`🧩 Extension Tailor request for user ${req.user.firebaseUid}`);
+
+    const model = geminiService.getFlashModel();
+
+    const prompt = `You are an expert resume tailorer. Your goal is to analyze a job description and suggest key skills and keywords to include in a resume.
+
+Analyze the following job description and list the top 5 most important technical skills and 3 key soft skills required. Also suggest a 1-sentence professional summary tailored to this role.
+
+JOB DESCRIPTION:
+${jobDescription}`;
+
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        maxOutputTokens: 1000,
+        temperature: 0.7,
+      }
+    });
+
+    const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    res.json({
+      result: text,
+      model: 'gemini-2.0-flash'
+    });
+
+  } catch (error) {
+    console.error('Extension Tailor error:', error);
+    next(error);
+  }
+});
+
+/**
  * Get appropriate system prompt based on task type
  */
 function getSystemPromptForTask(taskType) {

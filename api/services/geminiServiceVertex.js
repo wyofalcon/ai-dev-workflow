@@ -86,6 +86,61 @@ class GeminiServiceVertex {
     };
   }
 
+  /**
+   * Generate portfolio website code
+   */
+  async generatePortfolio(profileData, templateStyle = 'modern') {
+    const model = this.getProModel();
+    const prompt = this.buildPortfolioPrompt(profileData, templateStyle);
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    
+    // Extract code block if wrapped in markdown
+    let code = response.candidates[0].content.parts[0].text;
+    code = code.replace(/```html/g, '').replace(/```/g, '').trim();
+
+    return {
+      portfolioHtml: code,
+      tokensUsed: response.usageMetadata?.totalTokenCount || 0,
+    };
+  }
+
+  buildPortfolioPrompt(profileData, templateStyle) {
+    // Reuse the resume prompt logic for personality if available, 
+    // but for now let's keep it simple and focused on web structure.
+    
+    return `You are an expert web developer and UI designer.
+    
+Create a complete, single-page personal portfolio website for the candidate described below.
+The output must be a SINGLE valid HTML file with embedded CSS (<style>) and JS (<script>).
+
+**DESIGN STYLE:** ${templateStyle} (Clean, Professional, Responsive, Accessible)
+**THEME COLOR:** Use a professional color palette matching the style.
+
+**CANDIDATE PROFILE:**
+${JSON.stringify(profileData, null, 2)}
+
+**REQUIREMENTS:**
+1. **Hero Section**: Name, Title, Professional Photo (use placeholder: https://via.placeholder.com/150), and a compelling tagline.
+2. **About Section**: Professional summary.
+3. **Experience Section**: Timeline of work history.
+4. **Skills Section**: Visual representation of skills (tags, bars, or grid).
+5. **Projects/Portfolio**: If project data exists, list them. Otherwise omit or put a placeholder.
+6. **Contact Section**: Email, LinkedIn link, Github link.
+7. **Footer**: Copyright ${new Date().getFullYear()}.
+
+**TECHNICAL CONSTRAINTS:**
+- Use semantic HTML5.
+- Use modern CSS (Flexbox/Grid).
+- Make it fully responsive (mobile-first).
+- Ensure high accessibility (contrast, aria-labels).
+- NO external CSS/JS libraries (like Bootstrap/Tailwind/jQuery) unless via CDN, but prefer vanilla CSS for simplicity.
+- Output ONLY the HTML code.
+
+Generate the code now.`;
+  }
+
   buildResumePrompt({ resumeText, personalStories, jobDescription, selectedSections, personality }) {
     // Build personality-based framing guidance
     let personalityGuidance = '';

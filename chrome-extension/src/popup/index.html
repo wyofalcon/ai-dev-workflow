@@ -44,10 +44,15 @@
     Loading...
   </div>
   
-  <button id="tailor-btn" class="btn">✨ Tailor Resume (Local AI)</button>
+  <button id="tailor-btn" class="btn">✨ Tailor Resume</button>
   
   <div id="status" class="hidden">
     Initializing AI Model... <span id="progress">0%</span>
+  </div>
+
+  <div id="result-container" class="hidden" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px;">
+    <h3>Suggestions</h3>
+    <pre id="result-text" style="white-space: pre-wrap; font-size: 11px; background: #e3f2fd; padding: 10px; border-radius: 4px;"></pre>
   </div>
 
   <script type="module" src="popup.js"></script>

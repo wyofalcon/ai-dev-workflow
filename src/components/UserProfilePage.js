@@ -7,6 +7,7 @@ import UserProfileSearch from "./profile-search/UserProfileSearch.js";
 import AiAssistPanel from "./AiAssistPanel.js";
 import SmartSkillInput from "./SmartSkillInput.js";
 import SkillOrganizerModal from "./SkillOrganizerModal.js";
+import PortfolioGenerator from "./PortfolioGenerator.js";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -3912,9 +3913,10 @@ function UserProfilePage() {
           activeSection={enabledSections[activeTab] || 'default'}
           onUpdateProfile={handleUpdateProfileFromAi}
         />
-        <SkillOrganizerModal
-            open={organizerModalOpen}
-            onClose={() => setOrganizerModalOpen(false)}
+              <PortfolioGenerator />
+        
+              <SkillOrganizerModal
+                open={organizerModalOpen}            onClose={() => setOrganizerModalOpen(false)}
             skills={skills}
             onSave={(result) => {
                 setTopSkills(result.top);
