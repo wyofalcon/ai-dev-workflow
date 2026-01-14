@@ -1,3 +1,4 @@
+// [FEAT-EXT-001] Extension Promo Modal
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,

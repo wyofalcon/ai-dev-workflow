@@ -1,21 +1,36 @@
-const { Octokit } = require('octokit');
+// [FEAT-PORTFOLIO-001] GitHub Service
 const logger = require('../utils/logger');
 
 class GithubService {
   constructor() {
     this.pat = process.env.GITHUB_PAT;
     this.username = process.env.GITHUB_USERNAME || 'cvstomize-bot';
-    
-    if (this.pat) {
-      this.octokit = new Octokit({ auth: this.pat });
-    } else {
+    this.octokit = null;
+  }
+
+  async getOctokit() {
+    if (this.octokit) return this.octokit;
+
+    if (!this.pat) {
       logger.warn('⚠️ GITHUB_PAT not set. Portfolio features will fail.');
+      throw new Error('GitHub Personal Access Token (GITHUB_PAT) not configured');
+    }
+
+    try {
+      // Dynamic import for ESM module in CJS
+      const { Octokit } = await import('octokit');
+      this.octokit = new Octokit({ auth: this.pat });
+      return this.octokit;
+    } catch (error) {
+      logger.error('Failed to load Octokit:', error);
+      throw error;
     }
   }
 
   async ensureRepo(repoName) {
     try {
-      const { data } = await this.octokit.rest.repos.get({
+      const octokit = await this.getOctokit();
+      const { data } = await octokit.rest.repos.get({
         owner: this.username,
         repo: repoName,
       });
@@ -24,7 +39,8 @@ class GithubService {
       if (error.status === 404) {
         // Create repo
         logger.info(`Creating GitHub repo: ${repoName}`);
-        const { data } = await this.octokit.rest.repos.createForAuthenticatedUser({
+        const octokit = await this.getOctokit();
+        const { data } = await octokit.rest.repos.createForAuthenticatedUser({
           name: repoName,
           private: false, // Pages on private repos requires Pro
           auto_init: true, // Create with README to have a branch
@@ -38,10 +54,12 @@ class GithubService {
 
   async uploadFile(repoName, filePath, content, message = 'Update portfolio') {
     try {
+      const octokit = await this.getOctokit();
+      
       // Get file SHA if it exists
       let sha;
       try {
-        const { data } = await this.octokit.rest.repos.getContent({
+        const { data } = await octokit.rest.repos.getContent({
           owner: this.username,
           repo: repoName,
           path: filePath,
@@ -52,7 +70,7 @@ class GithubService {
       }
 
       // Create or Update
-      const { data } = await this.octokit.rest.repos.createOrUpdateFileContents({
+      const { data } = await octokit.rest.repos.createOrUpdateFileContents({
         owner: this.username,
         repo: repoName,
         path: filePath,
@@ -70,9 +88,11 @@ class GithubService {
 
   async enablePages(repoName) {
     try {
+      const octokit = await this.getOctokit();
+      
       // Check if pages enabled
       try {
-        await this.octokit.rest.repos.getPages({
+        await octokit.rest.repos.getPages({
           owner: this.username,
           repo: repoName,
         });
@@ -83,7 +103,7 @@ class GithubService {
 
       // Enable Pages
       logger.info(`Enabling GitHub Pages for ${repoName}`);
-      await this.octokit.rest.repos.createPagesSite({
+      await octokit.rest.repos.createPagesSite({
         owner: this.username,
         repo: repoName,
         source: {

@@ -4,6 +4,7 @@
  * Uses Gemini Flash for lightweight tasks (skill organization, chat, search)
  */
 
+// [FEAT-LOCALAI-001] AI Fallback Route
 const express = require('express');
 const router = express.Router();
 const { verifyFirebaseToken } = require('../middleware/authMiddleware');
@@ -30,30 +31,50 @@ router.post('/generate', verifyFirebaseToken, async (req, res, next) => {
 
     // Build conversation for Gemini
     const systemPrompt = getSystemPromptForTask(taskType);
-    const userMessage = messages[messages.length - 1]?.content || '';
-
-    // Use Flash model for these lightweight tasks (cheaper than Pro)
-    const model = geminiService.getFlashModel();
-
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: `${systemPrompt}\n\nUser Request:\n${userMessage}` }]
+    
+    // Convert frontend messages (OpenAI format) to Gemini format
+    // Frontend: [{ role: 'user'|'assistant'|'system', content: '...' }]
+    // Gemini: [{ role: 'user'|'model', parts: [{ text: '...' }] }]
+    
+    let history = [];
+    let lastUserMessage = '';
+    
+    // Process messages to separate history and the final new message
+    // Also handle system prompt by prepending to first user message if possible, 
+    // or just treating it as context.
+    
+    const relevantMessages = messages.filter(m => m.role !== 'system');
+    
+    if (relevantMessages.length > 0) {
+        lastUserMessage = relevantMessages[relevantMessages.length - 1].content;
+        
+        // History is everything BEFORE the last message
+        const historyMessages = relevantMessages.slice(0, -1);
+        
+        history = historyMessages.map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+        }));
+    }
+    
+    // Inject system prompt into history or the message
+    // Strategy: If history exists, prepend system prompt to the very first message's text.
+    // If no history, prepend to the current user message.
+    
+    if (history.length > 0) {
+        if (history[0].role === 'user') {
+            history[0].parts[0].text = `${systemPrompt}\n\n${history[0].parts[0].text}`;
         }
-      ],
-      generationConfig: {
-        maxOutputTokens: 1000,
-        temperature: 0.7,
-      }
-    });
+    } else {
+        lastUserMessage = `${systemPrompt}\n\n${lastUserMessage}`;
+    }
 
-    const response = result.response;
-    const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    // Use sendConversationalMessage which handles history
+    const result = await geminiService.sendConversationalMessage(lastUserMessage, history);
 
     res.json({
-      response: text,
-      tokensUsed: response.usageMetadata?.totalTokenCount || 0,
+      response: result.response,
+      tokensUsed: result.tokensUsed,
       model: 'gemini-2.0-flash',
       fallback: true // Flag to indicate this was server-side
     });

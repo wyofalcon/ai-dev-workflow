@@ -39,6 +39,13 @@ You are an expert AI programming assistant working on CVstomize. Follow these ru
 7. **Verify changes** - Check for errors after edits.
 8. **Follow project conventions** - CommonJS in backend, ESM in frontend.
 
+## Feature Tagging
+
+**ALL** new features must be tagged.
+1. Assign a unique ID (e.g., `FEAT-NAME-001`).
+2. Add the ID to `.context/FEATURE_LOG.md`.
+3. Add a comment at the top of key files/functions: `// [FEAT-NAME-001] Feature Name`.
+
 ## Project Overview
 
 CVstomize is a personality-aware resume builder that uses AI to generate tailored resumes based on job descriptions and user personality traits (Big 5 model).

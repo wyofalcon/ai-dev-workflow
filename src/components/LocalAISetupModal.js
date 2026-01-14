@@ -1,3 +1,4 @@
+// [FEAT-LOCALAI-001] Local AI Setup Modal
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,

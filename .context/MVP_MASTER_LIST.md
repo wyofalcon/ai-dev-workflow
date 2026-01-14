@@ -41,7 +41,7 @@
 
 | ID | Task | Tags | Status | GitHub Issue |
 |----|------|------|--------|--------------|
-| M1 | **Fix Production Build** | `MVP` `INFRA` | 🔴 Open | — (SESSION.md blocker) |
+| M1 | **Fix Production Build** | `MVP` `INFRA` | ✅ Done | — (Fixed with FAST_REFRESH=false) |
 | M2 | **Fix Test Configuration** | `MVP` `INFRA` | 🔴 Open | — (SESSION.md blocker) |
 
 ### 2️⃣ Dependencies (Required: No Deprecated Code)

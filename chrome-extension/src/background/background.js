@@ -1,3 +1,4 @@
+// [FEAT-EXT-001] Chrome Extension Background Script
 import { getAuthToken } from './auth.js';
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {

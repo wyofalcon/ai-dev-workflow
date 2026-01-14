@@ -1,3 +1,5 @@
+// [FEAT-ONBOARDING-001] Conversational Resume Builder (Build from Scratch)
+// EXPERIMENTAL: Originally built for Local AI (WebLLM), now proxied to Vertex AI backend via WebLlmContext fallback.
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,

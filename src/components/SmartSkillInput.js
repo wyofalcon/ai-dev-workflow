@@ -1,3 +1,4 @@
+// [FEAT-SKILL-001] Smart Skill Input Component
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Autocomplete, 

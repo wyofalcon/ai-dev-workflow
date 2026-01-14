@@ -1,3 +1,4 @@
+// [FEAT-PORTFOLIO-001] Portfolio Generator UI
 import React, { useState, useEffect } from 'react';
 import { 
   Box, 
@@ -21,7 +22,7 @@ import {
   CropSquare as MinimalIcon,
   Brush as CreativeIcon
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.js';
 
 export default function PortfolioGenerator() {
   const { createAuthAxios } = useAuth();

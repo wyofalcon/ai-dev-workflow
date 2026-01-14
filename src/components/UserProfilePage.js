@@ -1,3 +1,4 @@
+// [FEAT-PROFILE-001] User Profile Enhancements
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.js";
@@ -87,6 +88,9 @@ import {
   Sort as SortIcon,
   Category as CategoryIcon,
   SortByAlpha as SortByAlphaIcon,
+  PictureAsPdf as PdfIcon,
+  Description as DocIcon,
+  Article as ResumeFileIcon,
 } from "@mui/icons-material";
 
 // All possible resume sections with their configurations
@@ -520,6 +524,51 @@ function UserProfilePage() {
   });
 
   const [aiAssistOpen, setAiAssistOpen] = useState(false);
+  const [uploadedResumes, setUploadedResumes] = useState([]);
+  const [generatedResumes, setGeneratedResumes] = useState([]);
+  const [skillSortAnchor, setSkillSortAnchor] = useState(null);
+  const [skillCategories, setSkillCategories] = useState({}); // Stores AI-generated categories
+
+  // Calculate resume skills for sorting (Memoized)
+  const resumeSkills = React.useMemo(() => {
+      const skills = new Set();
+      uploadedResumes.forEach(r => {
+          if (r.parsedData && Array.isArray(r.parsedData.skills)) {
+              r.parsedData.skills.forEach(s => skills.add(s.toLowerCase()));
+          }
+      });
+      return skills;
+  }, [uploadedResumes]);
+
+  useEffect(() => {
+    const fetchResumes = async () => {
+        if (!currentUser) return;
+        try {
+            const token = await getIdToken();
+            
+            // Fetch uploaded resumes
+            const uploadedRes = await fetch(`${API_URL}/profile/uploaded-resumes`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (uploadedRes.ok) {
+                const data = await uploadedRes.json();
+                setUploadedResumes(data.uploadedResumes || []);
+            }
+
+            // Fetch generated resumes
+            const generatedRes = await fetch(`${API_URL}/resume/list`, {
+                 headers: { Authorization: `Bearer ${token}` }
+            });
+            if (generatedRes.ok) {
+                const data = await generatedRes.json();
+                setGeneratedResumes(data.resumes || []);
+            }
+        } catch (err) {
+            console.error("Error fetching resumes:", err);
+        }
+    };
+    fetchResumes();
+  }, [currentUser, getIdToken, API_URL]);
 
   const handleUpdateProfileFromAi = (section, value) => {
     // Determine how to update based on section type
@@ -659,6 +708,10 @@ function UserProfilePage() {
       }
       if (userProfile.topSkills?.length > 0) {
           setTopSkills(userProfile.topSkills);
+      }
+      
+      if (prefs.skillCategories) {
+          setSkillCategories(prefs.skillCategories);
       }
 
       // Add optional sections based on data
@@ -1096,6 +1149,7 @@ function UserProfilePage() {
           ),
           workPreferences: {
             enabledSections,
+            skillCategories, // Save organized categories
             summary: profileData.summary,
             currentTitle: profileData.currentTitle,
             additionalTitles: profileData.additionalTitles,
@@ -2983,7 +3037,14 @@ function UserProfilePage() {
 
     // Helper to get industry for a skill
     const getIndustry = (skillName) => {
-        // Search in flat list first
+        // Check AI categories first
+        for (const [category, skills] of Object.entries(skillCategories)) {
+            if (skills.map(s => s.toLowerCase()).includes(skillName.toLowerCase())) {
+                return category;
+            }
+        }
+        
+        // Fallback to O*NET flat list
         const skillObj = GROUPED_SKILLS.find(s => s.name.toLowerCase() === skillName.toLowerCase());
         return skillObj ? skillObj.industry : "Other";
     };
@@ -3000,6 +3061,14 @@ function UserProfilePage() {
                 if (indA === indB) return a.localeCompare(b);
                 return indA.localeCompare(indB);
             });
+        } else if (skillSort === "resume") {
+             sortedItems.sort((a, b) => {
+                 const aIn = resumeSkills.has(a.toLowerCase());
+                 const bIn = resumeSkills.has(b.toLowerCase());
+                 if (aIn && !bIn) return -1;
+                 if (!aIn && bIn) return 1;
+                 return a.localeCompare(b);
+             });
         }
         // default: insertion order (no sort)
     }
@@ -3074,33 +3143,38 @@ function UserProfilePage() {
                                 <SparklesIcon />
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Sort by Industry (Auto)">
+                        
+                        <Tooltip title="Sort Options">
                             <IconButton 
-                                onClick={() => setSkillSort("industry")}
-                                color={skillSort === "industry" ? "primary" : "default"}
-                                size="small"
-                            >
-                                <CategoryIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Sort Alphabetically">
-                            <IconButton 
-                                onClick={() => setSkillSort("az")} 
-                                color={skillSort === "az" ? "primary" : "default"}
-                                size="small"
-                            >
-                                <SortByAlphaIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Default Order">
-                            <IconButton 
-                                onClick={() => setSkillSort("default")} 
-                                color={skillSort === "default" ? "primary" : "default"}
+                                onClick={(e) => setSkillSortAnchor(e.currentTarget)}
+                                color={skillSort !== "default" ? "primary" : "default"}
                                 size="small"
                             >
                                 <SortIcon />
                             </IconButton>
                         </Tooltip>
+                        <Menu
+                            anchorEl={skillSortAnchor}
+                            open={Boolean(skillSortAnchor)}
+                            onClose={() => setSkillSortAnchor(null)}
+                        >
+                            <MenuItem onClick={() => { setSkillSort("default"); setSkillSortAnchor(null); }}>
+                                Default (As Added)
+                            </MenuItem>
+                            <MenuItem onClick={() => { setSkillSort("az"); setSkillSortAnchor(null); }}>
+                                <ListItemIcon><SortByAlphaIcon fontSize="small" /></ListItemIcon>
+                                Alphabetical
+                            </MenuItem>
+                            <MenuItem onClick={() => { setSkillSort("industry"); setSkillSortAnchor(null); }}>
+                                <ListItemIcon><CategoryIcon fontSize="small" /></ListItemIcon>
+                                By Category
+                            </MenuItem>
+                            <MenuItem onClick={() => { setSkillSort("resume"); setSkillSortAnchor(null); }}>
+                                <ListItemIcon><DocIcon fontSize="small" /></ListItemIcon>
+                                Added from my Resume
+                            </MenuItem>
+                        </Menu>
+
                         <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
                     </>
                 )}
@@ -3221,6 +3295,90 @@ function UserProfilePage() {
           </CardContent>
         </Card>
       </Box>
+    );
+  };
+
+  const renderResumesTab = () => {
+    return (
+        <Box>
+            <Grid container spacing={3}>
+                {/* Uploaded Resumes */}
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardHeader 
+                            title="Uploaded Resumes" 
+                            subheader="Resumes you've uploaded for analysis"
+                            avatar={<DocIcon color="primary" />}
+                        />
+                        <CardContent>
+                            {uploadedResumes.length === 0 ? (
+                                <Alert severity="info">No uploaded resumes found.</Alert>
+                            ) : (
+                                <List>
+                                    {uploadedResumes.map((resume) => (
+                                        <Paper key={resume.id} variant="outlined" sx={{ mb: 1 }}>
+                                            <ListItem>
+                                                <ListItemIcon>
+                                                    <DocIcon />
+                                                </ListItemIcon>
+                                                <ListItemText 
+                                                    primary={resume.filename} 
+                                                    secondary={dayjs(resume.createdAt).format("MMM D, YYYY")}
+                                                />
+                                                {/* Add download/view actions if backend supports it */}
+                                            </ListItem>
+                                        </Paper>
+                                    ))}
+                                </List>
+                            )}
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* Generated Resumes */}
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardHeader 
+                            title="Generated Resumes" 
+                            subheader="Resumes created with CVstomize"
+                            avatar={<PdfIcon color="secondary" />}
+                        />
+                        <CardContent>
+                            {generatedResumes.length === 0 ? (
+                                <Alert severity="info">No generated resumes yet.</Alert>
+                            ) : (
+                                <List>
+                                    {generatedResumes.map((resume) => (
+                                        <Paper key={resume.id} variant="outlined" sx={{ mb: 1 }}>
+                                            <ListItem
+                                                secondaryAction={
+                                                    <IconButton edge="end" onClick={() => navigate(`/resume/${resume.id}`)}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                            <Typography variant="caption">View</Typography>
+                                                            <PdfIcon />
+                                                        </Box>
+                                                    </IconButton>
+                                                }
+                                            >
+                                                <ListItemText 
+                                                    primary={resume.title || "Untitled Resume"} 
+                                                    secondary={
+                                                        <>
+                                                            {resume.targetCompany && `Target: ${resume.targetCompany} • `}
+                                                            {dayjs(resume.createdAt).format("MMM D, YYYY")}
+                                                        </>
+                                                    }
+                                                />
+                                            </ListItem>
+                                        </Paper>
+                                    ))}
+                                </List>
+                            )}
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
+        </Box>
     );
   };
 
@@ -3744,6 +3902,12 @@ function UserProfilePage() {
                   />
                 );
               })}
+              <Tab 
+                label="My Resumes" 
+                icon={<ResumeFileIcon />} 
+                value={enabledSections.length} 
+                sx={{ borderLeft: "1px solid rgba(0,0,0,0.12)" }}
+              />
             </Tabs>
             <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
             {draggedTab ? (
@@ -3845,6 +4009,10 @@ function UserProfilePage() {
           </TabPanel>
         ))}
 
+        <TabPanel value={activeTab} index={enabledSections.length}>
+            {renderResumesTab()}
+        </TabPanel>
+
         <Dialog
           open={dialogState.open}
           onClose={closeDialog}
@@ -3916,14 +4084,24 @@ function UserProfilePage() {
               <PortfolioGenerator />
         
               <SkillOrganizerModal
-                open={organizerModalOpen}            onClose={() => setOrganizerModalOpen(false)}
-            skills={skills}
-            onSave={(result) => {
-                setTopSkills(result.top);
-                // Optionally update skills list order or grouping if needed
-                // For now we just save the top skills preference
-            }}
-        />
+                open={organizerModalOpen}
+                onClose={() => setOrganizerModalOpen(false)}
+                skills={skills}
+                onSave={(result) => {
+                    setTopSkills(result.top);
+                    
+                    if (result.organized) {
+                        setSkillCategories(result.organized);
+                        setSkillSort("industry"); // Auto-switch to industry sort to see categories
+                        
+                        // Ensure all organized skills are present in the main list
+                        const allOrganizedSkills = Object.values(result.organized).flat();
+                        setSkills(prev => [...new Set([...prev, ...allOrganizedSkills])]);
+                        
+                        setSuccess("Skills organized and categories saved!");
+                    }
+                }}
+            />
       </Box>
     </Container>
   );
