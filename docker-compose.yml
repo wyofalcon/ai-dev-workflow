@@ -1,0 +1,135 @@
+services:
+  # Local PostgreSQL Database
+  # Completely isolated from Production/Staging Cloud SQL
+  database:
+    image: postgres:15-alpine
+    container_name: cvstomize-db-local
+    environment:
+      POSTGRES_DB: cvstomize_dev
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d cvstomize_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Local Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: cvstomize-redis-local
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Firebase Auth Emulator (FREE - no GCP costs)
+  # Provides local authentication without hitting Firebase servers
+  firebase-emulator:
+    image: node:20-alpine
+    container_name: cvstomize-firebase-emulator
+    working_dir: /app
+    command: >
+      sh -c "npm install -g firebase-tools &&
+             firebase emulators:start --only auth --project demo-cvstomize"
+    ports:
+      - "9099:9099" # Auth emulator
+      - "4000:4000" # Emulator UI
+    volumes:
+      - ./firebase.json:/app/firebase.json
+    environment:
+      - FIREBASE_AUTH_EMULATOR_HOST=0.0.0.0:9099
+    profiles:
+      - emulators # Only starts with: docker compose --profile emulators up
+
+  # Backend API
+  backend:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    container_name: cvstomize-api-local
+    environment:
+      - NODE_ENV=development
+      - ENABLE_DEV_AUTH=true
+      - DATABASE_URL=postgresql://dev_user:dev_password@database:5432/cvstomize_dev?schema=public
+      - REDIS_URL=redis://redis:6379
+      - PORT=3001
+      - JWT_SECRET=local-dev-secret-key
+      - CORS_ORIGIN=http://localhost:3000
+      # ─────────────────────────────────────────────────────────────
+      # 💰 COST-FREE LOCAL DEVELOPMENT OPTIONS
+      # ─────────────────────────────────────────────────────────────
+      # Option 1: Use mock AI (completely free, no GCP needed)
+      - USE_MOCK_AI=true
+      # Option 2: Use Firebase Auth Emulator (uncomment to enable)
+      # - FIREBASE_AUTH_EMULATOR_HOST=firebase-emulator:9099
+      # ─────────────────────────────────────────────────────────────
+      # To use real Vertex AI, set USE_MOCK_AI=false and provide credentials:
+      # - GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-key.json
+      - GCP_PROJECT_ID=cvstomize
+    ports:
+      - "3001:3001"
+      - "9229:9229"
+    command: npm run dev:debug
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+      # ⚠️ IMPORTANT: Only uncomment if you have a gcp-key.json FILE (not directory)
+      # If the file doesn't exist, Docker will create an empty DIRECTORY, breaking Firebase init
+      # - ./gcp-key.json:/app/gcp-key.json
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: cvstomize-frontend-local
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_ENABLE_DEV_AUTH=true
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=0
+      - DANGEROUSLY_DISABLE_HOST_CHECK=true
+      # Set to 'true' to use Firebase Auth Emulator (FREE)
+      # - REACT_APP_USE_FIREBASE_EMULATOR=true
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  # Storybook - Component Library & Feature Bank
+  storybook:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: cvstomize-storybook-local
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "6006:6006"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run storybook -- --host 0.0.0.0
+    profiles:
+      - storybook # Only starts with: docker compose --profile storybook up
+
+volumes:
+  postgres_data:

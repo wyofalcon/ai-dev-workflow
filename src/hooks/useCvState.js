@@ -25,7 +25,6 @@ export const useCvState = () => {
   const [error, setError] = useState('');
   const [selectedSections, setSelectedSections] = useState(RECOMMENDED_SECTIONS);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState('Modern');
 
   return {
     files,
@@ -46,8 +45,6 @@ export const useCvState = () => {
     setSelectedSections,
     isTutorialOpen,
     setIsTutorialOpen,
-    selectedStyle,
-    setSelectedStyle,
     ALL_SECTIONS,
     RECOMMENDED_SECTIONS,
   };

@@ -1,0 +1,209 @@
+{
+  "folders": [
+    {
+      "path": "..",
+      "name": "🧪 CVstomize Testing"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "node_modules": true,
+      ".git": true,
+      "build": true,
+      "dist": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/build": true,
+      "**/dist": true,
+      "**/.git": true
+    },
+    "files.associations": {
+      "*.spec.ts": "typescript",
+      "*.spec.js": "javascript"
+    },
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit"
+    },
+    // Highlight test files
+    "workbench.colorCustomizations": {
+      "[Default Dark+]": {
+        "tab.activeBorder": "#4CAF50"
+      }
+    },
+    // Testing recommendations
+    "recommendations": [
+      "ms-playwright.playwright",
+      "ms-vscode.live-server"
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-playwright.playwright",
+      "ritwickdey.liveserver"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "🎬 Record Test",
+        "program": "${workspaceFolder}/node_modules/.bin/playwright",
+        "args": ["codegen", "https://cvstomize-frontend-351889420459.us-central1.run.app"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "🎬 Record Test (Local)",
+        "program": "${workspaceFolder}/node_modules/.bin/playwright",
+        "args": ["codegen", "http://localhost:3000"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "🧪 Run All E2E Tests",
+        "program": "${workspaceFolder}/node_modules/.bin/playwright",
+        "args": ["test"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "🧪 Run E2E Tests (UI)",
+        "program": "${workspaceFolder}/node_modules/.bin/playwright",
+        "args": ["test", "--ui"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "🧪 Run E2E Tests (Headed)",
+        "program": "${workspaceFolder}/node_modules/.bin/playwright",
+        "args": ["test", "--headed"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "🐛 Debug Current Test",
+        "program": "${workspaceFolder}/node_modules/.bin/playwright",
+        "args": ["test", "${file}", "--debug"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "📊 Show Test Report",
+        "program": "${workspaceFolder}/node_modules/.bin/playwright",
+        "args": ["show-report", "tests/reports/html"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "🎬 Open Test Tracker",
+        "type": "shell",
+        "command": "open tools/test-tracker.html",
+        "presentation": {
+          "reveal": "never",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🎬 Record Test",
+        "type": "shell",
+        "command": "./scripts/record-test.sh",
+        "presentation": {
+          "reveal": "always",
+          "panel": "new",
+          "focus": true
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🎬 Record Test (Local)",
+        "type": "shell",
+        "command": "./scripts/record-test.sh --local",
+        "presentation": {
+          "reveal": "always",
+          "panel": "new",
+          "focus": true
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🧪 Run E2E Tests (UI Mode)",
+        "type": "shell",
+        "command": "npm run test:e2e:ui",
+        "group": "test",
+        "presentation": {
+          "reveal": "always",
+          "panel": "new",
+          "focus": true
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🧪 Run E2E Tests (Headed)",
+        "type": "shell",
+        "command": "npm run test:e2e:headed",
+        "group": "test",
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🧪 Run E2E Tests (Headless)",
+        "type": "shell",
+        "command": "npm run test:e2e",
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "📊 Show Test Report",
+        "type": "shell",
+        "command": "npm run test:report",
+        "presentation": {
+          "reveal": "never",
+          "panel": "new"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🔧 Install Playwright Browsers",
+        "type": "shell",
+        "command": "npx playwright install",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      }
+    ]
+  }
+}

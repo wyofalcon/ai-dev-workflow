@@ -1,0 +1,2 @@
+# Directory for recorded Playwright tests
+# Tests recorded with ./scripts/record-test.sh will be saved here

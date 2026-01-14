@@ -1,0 +1,18 @@
+# Development Dockerfile for Frontend
+# Includes hot reload with Create React App
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install --legacy-peer-deps
+
+# Expose port
+EXPOSE 3000
+
+# Development server with hot reload
+CMD ["npm", "start"]

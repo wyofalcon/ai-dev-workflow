@@ -1,0 +1,391 @@
+// Prisma schema for CVstomize
+// Database: PostgreSQL 15 on Google Cloud SQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User account - linked to Firebase Auth
+model User {
+  id                         String    @id @default(uuid())
+  firebaseUid                String    @unique @map("firebase_uid")
+  email                      String    @unique
+  emailVerified              Boolean   @default(false) @map("email_verified")
+  displayName                String?   @map("display_name")
+  photoUrl                   String?   @map("photo_url")
+  authProvider               String    @default("email") @map("auth_provider")
+  subscriptionTier           String    @default("free") @map("subscription_tier")
+  resumesGenerated           Int       @default(0) @map("resumes_generated")
+  resumesLimit               Int       @default(1) @map("resumes_limit")
+  lastLoginAt                DateTime? @map("last_login_at")
+  createdAt                  DateTime  @default(now()) @map("created_at")
+  updatedAt                  DateTime  @updatedAt @map("updated_at")
+  gdprConsent                Boolean   @default(false) @map("gdpr_consent")
+  gdprConsentDate            DateTime? @map("gdpr_consent_date")
+  dataRetentionUntil         DateTime? @map("data_retention_until")
+  onboardingCompleted        Boolean   @default(false) @map("onboarding_completed")
+  personalityProfileComplete Boolean   @default(false) @map("personality_profile_complete")
+
+  profile            UserProfile?
+  personalityTraits  PersonalityTraits?
+  personalityProfile PersonalityProfile?
+  profileStories     ProfileStory[]
+  conversations      Conversation[]
+  resumes            Resume[]
+  uploadedResumes    UploadedResume[]
+  subscriptions      Subscription[]
+  referrals          Referral[]          @relation("Referrer")
+  referredBy         Referral[]          @relation("Referred")
+  socialShares       SocialShare[]
+  auditLogs          AuditLog[]
+  apiUsage           ApiUsage[]
+
+  @@map("users")
+}
+
+// User profile - collected via AI conversation
+model UserProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  fullName        String?  @map("full_name")
+  phone           String?
+  location        String?
+  linkedinUrl     String?  @map("linkedin_url")
+  summary         String?  @map("professional_summary")
+  yearsExperience Int?     @map("years_experience")
+  careerLevel     String?  @map("career_level")
+  currentTitle    String?  @map("current_title")
+  targetRoles     String[] @map("target_roles")
+  industries      String[]
+  skills          String[]
+  educationLevel  String?  @map("education_level")
+  education       Json?    @map("education_details")
+  experience      Json?    @map("experience_details")
+  certifications  String[]
+  languages       String[]
+  workPreferences Json?    @map("work_preferences")
+  
+  // Recruiter Discovery Settings
+  isOpenToWork       Boolean @default(false) @map("is_open_to_work")
+  recruiterVisibility String  @default("anonymous") @map("recruiter_visibility") // 'none', 'anonymous', 'full'
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// Personality traits - inferred from conversation (Big Five model)
+// LEGACY: Basic inference from resume conversation (Free tier)
+model PersonalityTraits {
+  id                  String   @id @default(uuid())
+  userId              String   @unique @map("user_id")
+  openness            Int?
+  conscientiousness   Int?
+  extraversion        Int?
+  agreeableness       Int?
+  neuroticism         Int?
+  workStyle           String?  @map("work_style")
+  leadershipStyle     String?  @map("leadership_style")
+  communicationStyle  String?  @map("communication_style")
+  motivationType      String?  @map("motivation_type")
+  decisionMaking      String?  @map("decision_making")
+  inferenceConfidence Float?   @map("inference_confidence")
+  analysisVersion     String?  @map("analysis_version")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("personality_traits")
+}
+
+// Personality profiles - GOLD STANDARD: Hybrid OCEAN assessment (90%+ accuracy)
+// Premium feature: Combines BFI-20 Likert (70%) + Gemini NLP (30%)
+// Requires: subscriptionTier = 'gold' or higher
+model PersonalityProfile {
+  id     String @id @default(uuid())
+  userId String @unique @map("user_id")
+
+  // OCEAN Scores (0-100, scientifically validated)
+  openness          Int? @db.SmallInt
+  conscientiousness Int? @db.SmallInt
+  extraversion      Int? @db.SmallInt
+  agreeableness     Int? @db.SmallInt
+  neuroticism       Int? @db.SmallInt
+
+  // Methodology Tracking
+  assessmentVersion String?  @default("hybrid-v3") @map("assessment_version")
+  confidenceScore   Decimal? @map("confidence_score") @db.Decimal(3, 2)
+  likertScores      Json?    @map("likert_scores")
+  narrativeScores   Json?    @map("narrative_scores")
+  fusionWeights     Json?    @default("{\"likert\": 0.7, \"narrative\": 0.3}") @map("fusion_weights")
+
+  // Derived Work Preferences
+  workStyle          String? @map("work_style")
+  communicationStyle String? @map("communication_style")
+  leadershipStyle    String? @map("leadership_style")
+  motivationType     String? @map("motivation_type")
+  decisionMaking     String? @map("decision_making")
+
+  // Profile Metadata
+  isComplete     Boolean  @default(false) @map("is_complete")
+  profileSummary String?  @map("profile_summary")
+  keyInsights    String[] @map("key_insights")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stories ProfileStory[]
+
+  @@map("personality_profiles")
+}
+
+// Profile stories - GOLD STANDARD: User narratives for RAG-powered resume/cover letter generation
+// Premium feature: Deep story collection for superior content quality
+model ProfileStory {
+  id        String  @id @default(uuid())
+  userId    String  @map("user_id")
+  profileId String? @map("profile_id")
+
+  // Story Content
+  questionType String @map("question_type")
+  questionText String @map("question_text")
+  storyText    String @map("story_text") @db.Text
+
+  // AI Analysis
+  storySummary       String?  @map("story_summary")
+  category           String?
+  themes             String[]
+  skillsDemonstrated String[] @map("skills_demonstrated")
+  personalitySignals Json?    @map("personality_signals")
+
+  // RAG Support (vector will be added via raw SQL, not supported in Prisma schema)
+  // embedding            Vector(768) - handled by pgvector extension
+  relevanceTags String[] @map("relevance_tags")
+
+  // Usage Tracking
+  timesUsedInResumes      Int       @default(0) @map("times_used_in_resumes")
+  timesUsedInCoverLetters Int       @default(0) @map("times_used_in_cover_letters")
+  lastUsedAt              DateTime? @map("last_used_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile PersonalityProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@map("profile_stories")
+}
+
+// Conversation history with AI
+model Conversation {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  sessionId      String   @map("session_id")
+  messages       Json[]
+  existingResume String?  @map("existing_resume") @db.Text
+  gapAnalysis    Json?    @map("gap_analysis")
+  jobDescription String?  @map("job_description") @db.Text
+
+  // JD Session State (replaces in-memory Map - fixes Issue #17)
+  jdAnalysis           Json?     @map("jd_analysis")
+  jdQuestions          Json?     @map("jd_questions")
+  currentQuestionIndex Int       @default(0) @map("current_question_index")
+  hasResume            Boolean   @default(false) @map("has_resume")
+
+  // Session lifecycle
+  status      String    @default("active")
+  completedAt DateTime? @map("completed_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sessionId])
+  @@map("conversations")
+}
+
+// Generated resumes
+model Resume {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  title            String
+  targetCompany    String?   @map("target_company")
+  jobDescription   String?   @map("job_description")
+  resumeMarkdown   String?   @map("resume_markdown")
+  resumeHtml       String?   @map("resume_html")
+  pdfUrl           String?   @map("pdf_url")
+  pdfBucket        String?   @map("pdf_bucket")
+  pdfPath          String?   @map("pdf_path")
+  pdfTemplate      String?   @default("classic") @map("pdf_template")
+  modelUsed        String?   @map("model_used")
+  tokensUsed       Int?      @map("tokens_used")
+  generationTimeMs Int?      @map("generation_time_ms")
+  costUsd          Float?    @map("cost_usd")
+  status           String    @default("draft")
+  version          Int       @default(1)
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  downloadedAt     DateTime? @map("downloaded_at")
+  sharedAt         DateTime? @map("shared_at")
+
+  // Phase 7: Outcome Tracking (Data Moat Foundation)
+  interviewReceived   Boolean?  @map("interview_received")
+  interviewReceivedAt DateTime? @map("interview_received_at")
+  jobOfferReceived    Boolean?  @map("job_offer_received")
+  jobOfferReceivedAt  DateTime? @map("job_offer_received_at")
+  salaryOffered       Decimal?  @map("salary_offered") @db.Decimal(10, 2)
+  outcomeReportedAt   DateTime? @map("outcome_reported_at")
+  outcomeNotes        String?   @map("outcome_notes")
+
+  // Engagement Metrics
+  viewedCount  Int       @default(0) @map("viewed_count")
+  sharedCount  Int       @default(0) @map("shared_count")
+  lastViewedAt DateTime? @map("last_viewed_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialShares SocialShare[]
+
+  @@map("resumes")
+}
+
+// User-uploaded original resumes (before tailoring)
+model UploadedResume {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  filename         String
+  mimeType         String   @map("mime_type")
+  fileSize         Int      @map("file_size")
+  
+  // Extracted content
+  rawText          String   @map("raw_text") @db.Text
+  
+  // Parsed structured data (JSON from AI parsing)
+  parsedData       Json?    @map("parsed_data")
+  
+  // Cloud Storage info (optional - for file storage)
+  storagePath      String?  @map("storage_path")
+  storageBucket    String?  @map("storage_bucket")
+  
+  // Metadata
+  isPrimary        Boolean  @default(false) @map("is_primary")
+  label            String?  // e.g., "Software Engineer Resume", "Marketing Resume"
+  
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("uploaded_resumes")
+}
+
+// Subscription tracking
+model Subscription {
+  id                   String    @id @default(uuid())
+  userId               String    @map("user_id")
+  tier                 String    @default("free")
+  status               String    @default("active")
+  startedAt            DateTime  @default(now()) @map("started_at")
+  endsAt               DateTime? @map("ends_at")
+  stripeCustomerId     String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?   @unique @map("stripe_subscription_id")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+// Referral tracking
+model Referral {
+  id             String   @id @default(uuid())
+  referrerId     String   @map("referrer_id")
+  referredUserId String?  @map("referred_user_id")
+  referralCode   String   @unique @map("referral_code")
+  status         String   @default("pending")
+  rewardGranted  Boolean  @default(false) @map("reward_granted")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  referrer     User  @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser User? @relation("Referred", fields: [referredUserId], references: [id], onDelete: SetNull)
+
+  @@map("referrals")
+}
+
+// Social share tracking (viral gate)
+model SocialShare {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  resumeId    String?  @map("resume_id")
+  platform    String
+  sharedAt    DateTime @default(now()) @map("shared_at")
+  clicked     Int      @default(0)
+  conversions Int      @default(0)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  @@map("social_shares")
+}
+
+// Viral metrics tracking
+model ViralMetric {
+  id         String   @id @default(uuid())
+  metricType String   @map("metric_type")
+  value      Float
+  metadata   Json?
+  recordedAt DateTime @default(now()) @map("recorded_at")
+
+  @@map("viral_metrics")
+}
+
+// Audit log for compliance
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  details    Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+// API usage tracking
+model ApiUsage {
+  id             String   @id @default(uuid())
+  userId         String?  @map("user_id")
+  endpoint       String
+  method         String
+  responseStatus Int      @map("response_status")
+  responseTime   Int      @map("response_time")
+  geminiTokens   Int?     @map("gemini_tokens")
+  timestamp      DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("api_usage")
+}
+
+// Schema version tracking
+model SchemaVersion {
+  version     Int      @id
+  appliedAt   DateTime @default(now()) @map("applied_at")
+  description String?
+
+  @@map("schema_versions")
+}

@@ -1,0 +1,16 @@
+{
+  "name": "cvstomize-extension",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.80"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vite-plugin-static-copy": "^1.0.0"
+  }
+}

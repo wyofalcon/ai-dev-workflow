@@ -1,0 +1,55 @@
+# This file specifies files that are intentionally untracked by gcloud
+# to speed up deployments by excluding unnecessary files
+
+# Node modules (will be installed during build)
+node_modules/
+*/node_modules/
+
+# Test coverage
+coverage/
+*/coverage/
+
+# Build artifacts (frontend will be rebuilt during deployment)
+build/
+dist/
+
+# Environment files (secrets managed via Secret Manager)
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test files
+**/__tests__/
+*.test.js
+*.spec.js
+jest.config.js
+
+# Documentation
+*.md
+!README.md
+
+# Backup files
+*.backup
+*.bak
+*.tar.gz
+
+# Temporary files
+tmp/
+temp/
+*.tmp

@@ -1,0 +1,45 @@
+{
+  "files": {
+    "scripts/audit-file.py": {
+      "last_audit": "2025-12-29T00:32:53.601675",
+      "critical": 0,
+      "warnings": 8,
+      "status": "WARN"
+    },
+    "scripts/audit-logs.py": {
+      "last_audit": "2025-12-29T00:41:23.795867",
+      "critical": 0,
+      "warnings": 0,
+      "status": "PASS"
+    },
+    "api/test_real_pdf.js": {
+      "last_audit": "2025-12-29T00:34:42.412191",
+      "critical": 0,
+      "warnings": 0,
+      "status": "PASS"
+    },
+    "api/services/resumeParser.js": {
+      "last_audit": "2025-12-29T00:35:12.878856",
+      "critical": 0,
+      "warnings": 0,
+      "status": "PASS"
+    },
+    "api/index.js": {
+      "last_audit": "2025-12-29T00:40:20.142499",
+      "critical": 0,
+      "warnings": 1,
+      "status": "WARN"
+    },
+    "src/App.js": {
+      "last_audit": "2025-12-29T00:40:13.407279",
+      "critical": 0,
+      "warnings": 0,
+      "status": "PASS"
+    }
+  },
+  "stats": {
+    "total_audits": 10,
+    "total_issues": 26,
+    "last_run": "2025-12-29T00:41:23.795867"
+  }
+}

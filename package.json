@@ -6,30 +6,42 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@google/generative-ai": "^0.14.1",
+    "@mlc-ai/web-llm": "^0.2.80",
     "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.4",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "axios": "^1.7.2",
+    "@mui/x-date-pickers": "^8.21.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "ajv": "^8.17.1",
+    "ajv-keywords": "^5.1.0",
+    "axios": "^1.13.1",
+    "dayjs": "^1.11.19",
     "eslint": "^8.57.1",
     "eslint-config-react-app": "^7.0.1",
-    "formidable": "^3.5.1",
-    "mammoth": "^1.10.0",
-    "pdf-parse": "^1.1.1",
-    "pdfjs-dist": "^3.11.174",
+    "firebase": "^12.5.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.3",
+    "pdfjs-dist": "^4.10.38",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-dropzone": "^14.3.8",
     "react-markdown": "^9.0.1",
-    "react-router-dom": "^7.9.3",
+    "react-router-dom": "^6.23.1",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^5.1.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "npx craco start --config craco.config.cjs",
+    "build": "npx craco build --config craco.config.cjs",
+    "test": "npx craco test --config craco.config.cjs",
+    "lint": "eslint src",
+    "eject": "react-scripts eject",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:report": "playwright show-report tests/reports/html",
+    "update:skills": "node scripts/update-onet-skills.cjs"
   },
   "eslintConfig": {
     "extends": [
@@ -48,5 +60,16 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@craco/craco": "^7.1.0",
+    "@locator/babel-jsx": "^0.5.1",
+    "@locator/runtime": "^0.5.1",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.10.1",
+    "playwright": "^1.57.0",
+    "prop-types": "^15.8.1",
+    "typescript": "^5.9.3",
+    "webpack": "^5.103.0"
   }
 }

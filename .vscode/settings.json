@@ -1,6 +1,139 @@
 {
-    "geminicodeassist.enableTelemetry": false,
-    "window.autoDetectColorScheme": true,
-    "window.closeWhenEmpty": true,
-    "window.title": ""
+  // Editor settings
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.minimap.enabled": false,
+
+  // File handling
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.git": true,
+    "**/build": true,
+    "**/coverage": true
+  },
+
+  // Terminal
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.scrollback": 10000,
+
+  // Git
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "git.ignoreLimitWarning": true,
+
+  // UI
+  "window.autoDetectColorScheme": true,
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.startupEditor": "readme",
+
+  // Language-specific
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.wordWrap": "on"
+  },
+
+  // Extension settings
+  "errorLens.enabledDiagnosticLevels": ["error", "warning"],
+  "cSpell.words": ["cvstomize", "prisma", "gemini", "vertex", "devcontainer"],
+
+  // GitHub Copilot Settings
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "file": ".github/copilot-instructions.md"
+    }
+  ],
+
+  // Microsoft Edge Tools settings
+  "vscode-edge-devtools.defaultUrl": "http://localhost:3000",
+  "vscode-edge-devtools.autoAttachViaDebuggerForEdge": true,
+  "vscode-edge-devtools.headless": false,
+  "vscode-edge-devtools.webhint": true,
+  "vscode-edge-devtools.mirrorEdits": true,
+  "vscode-edge-devtools.sourceMaps": true,
+
+  // GitHub Pull Requests and Issues
+  "githubIssues.issueBranchTitle": "issue${issueNumber}/${sanitizedIssueTitle}",
+  "githubIssues.useBranchForIssues": "prompt",
+  "githubIssues.queries": [
+    { "label": "My Issues", "query": "is:open assignee:@me" },
+    { "label": "All Open", "query": "is:open" }
+  ],
+  "githubPullRequests.showInSCM": true,
+
+  // Debug settings for Edge
+  "debug.javascript.autoAttachFilter": "smart",
+
+  // Gemini Code Assist MCP Servers
+  "geminicodeassist.mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-fetch"]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-server-git",
+        "--repository",
+        "/home/wyofalcon/cvstomize"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-server-filesystem",
+        "/home/wyofalcon/cvstomize"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "docker": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-v",
+        "/var/run/docker.sock:/var/run/docker.sock",
+        "mcp/docker"
+      ]
+    }
+  }
 }
