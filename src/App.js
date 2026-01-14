@@ -30,6 +30,7 @@ import TermsPage from "./components/TermsPage.js";
 import LocalAISetupModal, { AIStatusBadge } from "./components/LocalAISetupModal.js";
 import LocalAINudge from "./components/LocalAINudge.js";
 import ExtensionPromoModal from "./components/ExtensionPromoModal.js";
+import DevelopmentBanner from "./components/DevelopmentBanner.js";
 import {
   Container,
   Button,
@@ -377,6 +378,7 @@ function App() {
     <Router>
       <AuthProvider>
         <WebLlmProvider>
+          <DevelopmentBanner />
           <div className="App">
             <DebugInspector />
             <Routes>
