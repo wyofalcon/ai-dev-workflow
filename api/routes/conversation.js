@@ -19,9 +19,6 @@ const { v4: uuidv4 } = require("uuid");
 
 const prisma = new PrismaClient();
 
-// Store JD-specific question sessions in memory (will be replaced with Redis in production)
-const jdSessions = new Map();
-
 /**
  * POST /api/conversation/start
  * Start a new conversational profile building session
@@ -76,15 +73,8 @@ router.post("/start", verifyFirebaseToken, async (req, res, next) => {
           );
           jdAnalysis = analysis;
 
-          // Store JD analysis, questions, and existing resume for this session
-          jdSessions.set(sessionId, {
-            analysis: analysis.analysis,
-            questions: analysis.questions,
-            currentQuestionIndex: 0,
-            jobDescription,
-            existingResume: existingResume || null, // Store for resume generation
-            hasResume: !!existingResume,
-          });
+          // JD session data will be stored in database (not in-memory Map)
+          // This ensures persistence across Cloud Run restarts/scaling (Issue #17 fix)
 
           // Use first JD-specific question
           firstQuestion = {
@@ -156,8 +146,8 @@ This should take about ${
 Ready to get started?`;
 
     // Store conversation in database (messages as JSON array)
-    // CRITICAL FIX: Also store existingResume, gapAnalysis, and jobDescription in DB
-    // This prevents data loss when Cloud Run scales/restarts (Bug #1 fix)
+    // Issue #17 fix: JD session state now stored in DB (not in-memory Map)
+    // This ensures persistence across Cloud Run restarts/scaling
     await prisma.conversation.create({
       data: {
         userId: user.id,
@@ -179,7 +169,12 @@ Ready to get started?`;
         existingResume: existingResume || null,
         gapAnalysis: jdAnalysis?.analysis?.resumeGapAnalysis || null,
         jobDescription: jobDescription || null,
-        // status: 'active', // Removed - column doesn't exist yet
+        // JD Session State (Issue #17 fix - replaces in-memory Map)
+        jdAnalysis: jdAnalysis?.analysis || null,
+        jdQuestions: jdAnalysis?.questions || null,
+        currentQuestionIndex: 0,
+        hasResume: !!existingResume,
+        status: "active",
       },
     });
 
@@ -241,39 +236,35 @@ router.post("/message", verifyFirebaseToken, async (req, res, next) => {
 
     const startTime = Date.now();
 
-    // Get conversation for this session
-    // Note: We're using sessionId from jdSessions Map, not from DB
-    // The DB stores messages as JSON array in one row
-    const conversations = await prisma.conversation.findMany({
+    // Get conversation for this session (Issue #17 fix: uses sessionId lookup with index)
+    const conversation = await prisma.conversation.findFirst({
       where: {
         userId: user.id,
+        sessionId: sessionId,
       },
-      orderBy: { createdAt: "desc" },
-      take: 1,
     });
 
-    if (conversations.length === 0) {
+    if (!conversation) {
       return res.status(404).json({
         error: "Session Not Found",
         message: "Conversation session not found",
       });
     }
 
-    const conversation = conversations[0];
     const history = conversation.messages || [];
 
-    // Check if this is a JD-specific session
-    const jdSession = jdSessions.get(sessionId);
-    const isJDSession = !!jdSession;
+    // Check if this is a JD-specific session (Issue #17 fix: read from DB, not in-memory Map)
+    const isJDSession =
+      conversation.jdQuestions && conversation.jdQuestions.length > 0;
 
     let currentQuestion;
     let currentQuestionIndex;
     let totalQuestions;
 
     if (isJDSession) {
-      // Use JD-specific questions
-      currentQuestionIndex = jdSession.currentQuestionIndex;
-      const jdQuestions = jdSession.questions;
+      // Use JD-specific questions from database
+      currentQuestionIndex = conversation.currentQuestionIndex;
+      const jdQuestions = conversation.jdQuestions;
       currentQuestion = jdQuestions[currentQuestionIndex];
       totalQuestions = jdQuestions.length;
     } else {
@@ -304,10 +295,10 @@ router.post("/message", verifyFirebaseToken, async (req, res, next) => {
 
     if (isJDSession) {
       const nextIndex = currentQuestionIndex + 1;
-      jdSession.currentQuestionIndex = nextIndex;
+      const jdQuestions = conversation.jdQuestions;
 
-      if (nextIndex < jdSession.questions.length) {
-        const nextQ = jdSession.questions[nextIndex];
+      if (nextIndex < jdQuestions.length) {
+        const nextQ = jdQuestions[nextIndex];
         nextQuestionData = {
           id: nextQ.id,
           questionText: nextQ.question,
@@ -319,15 +310,13 @@ router.post("/message", verifyFirebaseToken, async (req, res, next) => {
         nextMessageContent = nextQ.question;
       } else {
         // All JD questions complete!
-        nextMessageContent = `Amazing! 🎉 We've completed your profile for the **${jdSession.analysis.jobTitle}** position.
+        const jobTitle = conversation.jdAnalysis?.jobTitle || "this";
+        nextMessageContent = `Amazing! 🎉 We've completed your profile for the **${jobTitle}** position.
 
 I now have a great understanding of how your experience aligns with this role.
 
 Your profile is being saved. Next, you'll be able to generate a tailored resume for this specific job!`;
         nextQuestionData = null;
-
-        // Clean up session
-        jdSessions.delete(sessionId);
       }
     } else {
       const nextQuestion = getNextQuestion(currentQuestionIndex);
@@ -360,14 +349,21 @@ Your profile is being saved. Next, you'll be able to generate tailored resumes f
       });
     }
 
-    // Update conversation with new messages
+    // Update conversation with new messages and JD session state (Issue #17 fix)
+    const updateData = {
+      messages: updatedMessages,
+      status: nextQuestionData ? "active" : "completed",
+      completedAt: nextQuestionData ? null : new Date(),
+    };
+
+    // Update currentQuestionIndex for JD sessions
+    if (isJDSession) {
+      updateData.currentQuestionIndex = currentQuestionIndex + 1;
+    }
+
     await prisma.conversation.update({
       where: { id: conversation.id },
-      data: {
-        messages: updatedMessages,
-        // status: nextQuestionData ? 'active' : 'completed', // Removed - column doesn't exist yet
-        // completedAt: nextQuestionData ? null : new Date(), // Removed - column doesn't exist yet
-      },
+      data: updateData,
     });
 
     const isComplete = !nextQuestionData;
@@ -423,47 +419,43 @@ router.get(
         });
       }
 
-      const history = await prisma.conversation.findMany({
+      // Issue #17 fix: Get conversation with JD session data from DB
+      const conversation = await prisma.conversation.findFirst({
         where: {
           userId: user.id,
           sessionId,
         },
-        orderBy: { messageOrder: "asc" },
-        select: {
-          id: true,
-          messageRole: true,
-          messageContent: true,
-          messageOrder: true,
-          questionId: true,
-          questionCategory: true,
-          createdAt: true,
-        },
       });
 
-      if (history.length === 0) {
+      if (!conversation) {
         return res.status(404).json({
           error: "Session Not Found",
           message: "Conversation session not found",
         });
       }
 
-      // Check if this is a JD-specific session
-      const jdSession = jdSessions.get(sessionId);
-      const isJDSession = !!jdSession;
+      const messages = conversation.messages || [];
+
+      // Check if this is a JD-specific session (Issue #17 fix: read from DB)
+      const isJDSession =
+        conversation.jdQuestions && conversation.jdQuestions.length > 0;
 
       // Find last assistant message to determine current question
-      const lastAssistantMessage = [...history]
+      const lastAssistantMessage = [...messages]
         .reverse()
-        .find((msg) => msg.messageRole === "assistant");
+        .find((msg) => msg.role === "assistant");
 
       let currentQuestion;
       let currentQuestionIndex;
       let totalQuestions;
 
       if (isJDSession) {
-        currentQuestionIndex = jdSession.currentQuestionIndex;
-        const jdQuestions = jdSession.questions;
-        currentQuestion = jdQuestions[currentQuestionIndex];
+        currentQuestionIndex = conversation.currentQuestionIndex;
+        const jdQuestions = conversation.jdQuestions;
+        currentQuestion =
+          currentQuestionIndex < jdQuestions.length
+            ? jdQuestions[currentQuestionIndex]
+            : null;
         totalQuestions = jdQuestions.length;
       } else {
         currentQuestion = lastAssistantMessage?.questionId
@@ -471,7 +463,7 @@ router.get(
           : null;
         currentQuestionIndex = currentQuestion
           ? currentQuestion.order - 1
-          : history.length;
+          : messages.length;
         totalQuestions = getTotalQuestions();
       }
 
@@ -481,7 +473,7 @@ router.get(
 
       res.status(200).json({
         sessionId,
-        messages: history,
+        messages: messages,
         currentQuestion: currentQuestion
           ? {
               id: currentQuestion.id,
@@ -495,6 +487,7 @@ router.get(
           total: totalQuestions,
           percentage: progress,
         },
+        status: conversation.status,
       });
     } catch (error) {
       console.error("❌ Error fetching conversation history:", error);
@@ -531,13 +524,13 @@ router.post("/complete", verifyFirebaseToken, async (req, res, next) => {
       });
     }
 
-    // Get conversation history (NEW SCHEMA: messages as JSONB array)
+    // Get conversation history with JD session data (Issue #17 fix)
     const conversation = await prisma.conversation.findFirst({
       where: {
         userId: user.id,
         sessionId,
       },
-      select: { id: true, messages: true },
+      select: { id: true, messages: true, jdQuestions: true },
     });
 
     if (!conversation) {
@@ -568,16 +561,21 @@ router.post("/complete", verifyFirebaseToken, async (req, res, next) => {
     // Calculate profile completeness based on answered questions
     const userMessages = messages.filter((msg) => msg.role === "user");
 
-    // Check if this was a JD session
-    const jdSession = jdSessions.get(sessionId);
-    const totalQuestions = jdSession
-      ? jdSession.questions.length
+    // Check if this was a JD session (Issue #17 fix: read from DB, not in-memory Map)
+    const isJDSession =
+      conversation.jdQuestions && conversation.jdQuestions.length > 0;
+    const totalQuestions = isJDSession
+      ? conversation.jdQuestions.length
       : getTotalQuestions();
 
-    // Clean up JD session if exists
-    if (jdSession) {
-      jdSessions.delete(sessionId);
-    }
+    // Mark session as completed in database (Issue #17 fix)
+    await prisma.conversation.update({
+      where: { id: conversation.id },
+      data: {
+        status: "completed",
+        completedAt: new Date(),
+      },
+    });
 
     // Update or create user profile (ensure it exists)
     await prisma.userProfile.upsert({
@@ -655,6 +653,4 @@ router.post("/complete", verifyFirebaseToken, async (req, res, next) => {
   }
 });
 
-// Export both router and jdSessions map (for resume.js to access gap analysis)
 module.exports = router;
-module.exports.jdSessions = jdSessions;

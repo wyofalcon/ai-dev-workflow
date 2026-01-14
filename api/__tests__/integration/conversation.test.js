@@ -188,7 +188,12 @@ describe('Conversation Routes', () => {
         { role: 'assistant', content: 'Welcome' },
         { role: 'assistant', content: 'Question 1' },
       ];
-      const mockConversation = { id: 'conv-123', messages: mockHistory };
+      const mockConversation = {
+        id: 'conv-123',
+        messages: mockHistory,
+        jdQuestions: null,
+        currentQuestionIndex: 0,
+      };
       const mockCurrentQuestion = {
         id: 'q1',
         order: 1,
@@ -202,7 +207,7 @@ describe('Conversation Routes', () => {
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.conversation.findMany.mockResolvedValue([mockConversation]);
+      mockPrisma.conversation.findFirst.mockResolvedValue(mockConversation);
       getQuestionById.mockReturnValue(mockCurrentQuestion);
       getNextQuestion.mockReturnValue(mockNextQuestion);
       mockPrisma.conversation.update.mockResolvedValue({});
@@ -274,7 +279,7 @@ describe('Conversation Routes', () => {
     it('should return 404 when session not found', async () => {
       const mockUser = { id: 1 };
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.conversation.findMany.mockResolvedValue([]); // Empty history
+      mockPrisma.conversation.findFirst.mockResolvedValue(null); // No conversation found
 
       const response = await request(app)
         .post('/api/conversation/message')
@@ -291,9 +296,15 @@ describe('Conversation Routes', () => {
 
     it('should mark conversation as complete when no more questions', async () => {
       const mockUser = { id: 1 };
-      const mockHistory = [
-        { messageRole: 'assistant', messageContent: 'Last question', messageOrder: 0 },
+      const mockMessages = [
+        { role: 'assistant', content: 'Last question', timestamp: new Date().toISOString() },
       ];
+      const mockConversation = {
+        id: 'conv-123',
+        messages: mockMessages,
+        jdQuestions: null, // Not a JD session
+        currentQuestionIndex: 0,
+      };
       const mockCurrentQuestion = {
         id: 'q16',
         order: 16,
@@ -301,10 +312,10 @@ describe('Conversation Routes', () => {
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.conversation.findMany.mockResolvedValue(mockHistory);
+      mockPrisma.conversation.findFirst.mockResolvedValue(mockConversation);
       getQuestionById.mockReturnValue(mockCurrentQuestion);
       getNextQuestion.mockReturnValue(null); // No more questions
-      mockPrisma.conversation.create.mockResolvedValue({});
+      mockPrisma.conversation.update.mockResolvedValue({});
 
       const response = await request(app)
         .post('/api/conversation/message')
@@ -325,12 +336,17 @@ describe('Conversation Routes', () => {
       const mockHistory = [
         { role: 'assistant', content: 'Question', timestamp: new Date().toISOString() },
       ];
-      const mockConversation = { id: 'conv-123', messages: mockHistory };
+      const mockConversation = {
+        id: 'conv-123',
+        messages: mockHistory,
+        jdQuestions: null,
+        currentQuestionIndex: 0,
+      };
       const mockCurrentQuestion = { id: 'q1', order: 1, category: 'test' };
       const mockNextQuestion = { id: 'q2', questionText: 'Next', category: 'test', order: 2 };
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.conversation.findMany.mockResolvedValue([mockConversation]);
+      mockPrisma.conversation.findFirst.mockResolvedValue(mockConversation);
       getQuestionById.mockReturnValue(mockCurrentQuestion);
       getNextQuestion.mockReturnValue(mockNextQuestion);
       mockPrisma.conversation.update.mockResolvedValue({});
@@ -356,35 +372,34 @@ describe('Conversation Routes', () => {
     it('should return conversation history successfully', async () => {
       const mockUser = { id: 1 };
       const createdAt = new Date().toISOString();
-      const mockHistory = [
+      const mockMessages = [
         {
-          id: 1,
-          messageRole: 'assistant',
-          messageContent: 'Welcome',
-          messageOrder: 0,
-          questionId: null,
-          questionCategory: null,
-          createdAt: createdAt,
+          role: 'assistant',
+          content: 'Welcome',
+          timestamp: createdAt,
         },
         {
-          id: 2,
-          messageRole: 'assistant',
-          messageContent: 'Question 1',
-          messageOrder: 1,
+          role: 'assistant',
+          content: 'Question 1',
           questionId: 'q1',
           questionCategory: 'achievements',
-          createdAt: createdAt,
+          timestamp: createdAt,
         },
         {
-          id: 3,
-          messageRole: 'user',
-          messageContent: 'My answer',
-          messageOrder: 2,
+          role: 'user',
+          content: 'My answer',
           questionId: 'q1',
           questionCategory: 'achievements',
-          createdAt: createdAt,
+          timestamp: createdAt,
         },
       ];
+      const mockConversation = {
+        id: 'conv-123',
+        messages: mockMessages,
+        jdQuestions: null,
+        currentQuestionIndex: 0,
+        status: 'active',
+      };
       const mockQuestion = {
         id: 'q1',
         questionText: 'Question 1',
@@ -393,7 +408,7 @@ describe('Conversation Routes', () => {
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.conversation.findMany.mockResolvedValue(mockHistory);
+      mockPrisma.conversation.findFirst.mockResolvedValue(mockConversation);
       getQuestionById.mockReturnValue(mockQuestion);
 
       const response = await request(app)
@@ -402,13 +417,14 @@ describe('Conversation Routes', () => {
 
       expect(response.body).toMatchObject({
         sessionId: 'session-123',
-        messages: mockHistory,
+        messages: mockMessages,
         currentQuestion: {
           id: 'q1',
           text: 'Question 1',
           category: 'achievements',
           order: 1,
         },
+        status: 'active',
       });
     });
 
@@ -427,7 +443,7 @@ describe('Conversation Routes', () => {
     it('should return 404 when session not found', async () => {
       const mockUser = { id: 1 };
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.conversation.findMany.mockResolvedValue([]);
+      mockPrisma.conversation.findFirst.mockResolvedValue(null);
 
       const response = await request(app)
         .get('/api/conversation/history/invalid-session')
@@ -440,35 +456,36 @@ describe('Conversation Routes', () => {
 
     it('should find current question from last assistant message', async () => {
       const mockUser = { id: 1 };
-      const mockHistory = [
+      const mockMessages = [
         {
-          id: 1,
-          messageRole: 'assistant',
-          messageContent: 'Question 1',
-          messageOrder: 0,
+          role: 'assistant',
+          content: 'Question 1',
           questionId: 'q1',
           questionCategory: 'test',
-          createdAt: new Date(),
+          timestamp: new Date().toISOString(),
         },
         {
-          id: 2,
-          messageRole: 'user',
-          messageContent: 'Answer 1',
-          messageOrder: 1,
+          role: 'user',
+          content: 'Answer 1',
           questionId: 'q1',
           questionCategory: 'test',
-          createdAt: new Date(),
+          timestamp: new Date().toISOString(),
         },
         {
-          id: 3,
-          messageRole: 'assistant',
-          messageContent: 'Question 2',
-          messageOrder: 2,
+          role: 'assistant',
+          content: 'Question 2',
           questionId: 'q2',
           questionCategory: 'test',
-          createdAt: new Date(),
+          timestamp: new Date().toISOString(),
         },
       ];
+      const mockConversation = {
+        id: 'conv-123',
+        messages: mockMessages,
+        jdQuestions: null,
+        currentQuestionIndex: 0,
+        status: 'active',
+      };
       const mockQuestion = {
         id: 'q2',
         questionText: 'Question 2',
@@ -477,7 +494,7 @@ describe('Conversation Routes', () => {
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.conversation.findMany.mockResolvedValue(mockHistory);
+      mockPrisma.conversation.findFirst.mockResolvedValue(mockConversation);
       getQuestionById.mockReturnValue(mockQuestion);
 
       const response = await request(app)
@@ -679,7 +696,7 @@ describe('Conversation Routes', () => {
     it('should handle errors in message processing', async () => {
       const mockUser = { id: 1 };
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.conversation.findMany.mockRejectedValue(new Error('Query failed'));
+      mockPrisma.conversation.findFirst.mockRejectedValue(new Error('Query failed'));
 
       const response = await request(app)
         .post('/api/conversation/message')
