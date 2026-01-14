@@ -7,13 +7,9 @@
 - **Date:** January 14, 2026
 - **Issues Tested:** #11 (Quick Tailor Path), #17 (Session Persistence)
 
-## IMPORTANT: Deployment Status
-- **Backend (Issue #17):** ✅ Database migration applied to production
-- **Frontend (Issue #11):** ⚠️ Code committed to `TimeMachine1` branch - NEEDS DEPLOYMENT
-
-To deploy frontend changes, either:
-1. Merge `TimeMachine1` to `main` and let CI/CD deploy, OR
-2. Manually trigger Cloud Build: `gcloud builds submit --config=ci/cloudbuild.frontend.yaml`
+## Deployment Status
+- **Backend (Issue #17):** ✅ Deployed to production
+- **Frontend (Issue #11):** ✅ Deployed to production
 
 ---
 

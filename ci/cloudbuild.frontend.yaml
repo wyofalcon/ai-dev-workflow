@@ -7,7 +7,28 @@ steps:
   - '--build-arg'
   - 'REACT_APP_API_URL=https://cvstomize-api-351889420459.us-central1.run.app'
   - '-f'
-  - 'Dockerfile.frontend'
+  - 'Dockerfile'
   - '.'
+
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'push'
+  - 'gcr.io/cvstomize/cvstomize-frontend'
+
+- name: 'gcr.io/cloud-builders/gcloud'
+  args:
+  - 'run'
+  - 'deploy'
+  - 'cvstomize-frontend'
+  - '--image'
+  - 'gcr.io/cvstomize/cvstomize-frontend'
+  - '--region'
+  - 'us-central1'
+  - '--platform'
+  - 'managed'
+  - '--allow-unauthenticated'
+  - '--port'
+  - '8080'
+
 images:
 - 'gcr.io/cvstomize/cvstomize-frontend'
