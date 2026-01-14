@@ -9,6 +9,12 @@
  * 5. Usage tracking
  */
 
+// Track mock story state for usage count tests
+const mockStoryState = {
+  'mock-devops-id': { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 },
+  'mock-frontend-id': { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 },
+};
+
 const mockExecuteRawUnsafe = jest.fn().mockResolvedValue(1);
 const mockQueryRawUnsafe = jest.fn();
 const mockUserUpsert = jest.fn().mockResolvedValue({ id: 'user-123' });
@@ -174,6 +180,12 @@ describe('RAG Story Retrieval - Integration Tests', () => {
   let testProfile;
   let devOpsStoryId;
   let frontendStoryId;
+
+  beforeEach(() => {
+    // Reset mock story state between tests
+    mockStoryState['mock-devops-id'] = { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 };
+    mockStoryState['mock-frontend-id'] = { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 };
+  });
 
   beforeAll(async () => {
     // Create test user
@@ -534,9 +546,7 @@ describe('RAG Story Retrieval - Integration Tests', () => {
       expect(stats.mostUsed[0].id).toBe('s1');
       expect(stats.underutilized).toHaveLength(1);
       expect(stats.underutilized[0].id).toBe('s2');
-
-      // Restore
-      prisma.profileStory.findMany = originalFindMany;
+      // mockResolvedValueOnce auto-restores after single use, no manual restore needed
     });
 
     it('should handle errors in analytics gracefully', async () => {
