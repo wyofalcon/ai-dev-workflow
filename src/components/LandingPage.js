@@ -84,19 +84,24 @@ function LandingPage() {
       {/* Hero Section */}
       <Container maxWidth="lg" sx={{ pt: 6, pb: 4, textAlign: "center", flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <Typography
+          variant="overline"
+          sx={{ color: "#fdbb2d", fontWeight: "bold", letterSpacing: 2, mb: 1 }}
+        >
+          The AI-Led Resume Builder for the Complete You
+        </Typography>
+        <Typography
           variant="h2"
           component="h1"
           sx={{
             fontWeight: 800,
             mb: 2,
-            background: "linear-gradient(45deg, #fff 30%, #fdbb2d 90%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            fontSize: { xs: "2.5rem", md: "3.5rem" },
+            color: "#fff",
+            fontSize: { xs: "2.5rem", md: "4rem" },
+            lineHeight: 1.1
           }}
         >
-          The AI-Led Resume Builder <br />
-          for the Complete You
+          You're More Capable than You Know. <br />
+          <span style={{ color: "#fdbb2d" }}>We'll Prove It.</span>
         </Typography>
         <Typography
           variant="h6"
