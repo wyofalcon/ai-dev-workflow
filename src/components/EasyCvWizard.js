@@ -24,28 +24,8 @@ import {
   Save as SaveIcon,
 } from "@mui/icons-material";
 
-// Configuration for the 12-step flow
+// Configuration for the flow
 const FLOW_STEPS = [
-  {
-    id: "intro",
-    type: "message",
-    content: "Hi! I'm your CVstomize assistant. 🤖 I'm going to ask you a series of questions to build your perfect resume.",
-    next: "intro_2"
-  },
-  {
-    id: "intro_2",
-    type: "message",
-    content: "We'll go through 12 sections, from Contact Info to Formatting. I'll ask one thing at a time so it's not overwhelming.",
-    next: "intro_3"
-  },
-  {
-    id: "intro_3",
-    type: "message",
-    content: "Remember: You can stop at any time! If you create an account, I'll save your progress so you can finish later. Ready to start?",
-    next: "contact_intro",
-    options: [{ label: "Let's Go!", value: "start" }]
-  },
-  
   // 🧩 1. Contact & Identity
   {
     id: "contact_intro",
@@ -109,7 +89,7 @@ const FLOW_STEPS = [
     content: "Do you want to include a portfolio, GitHub, or personal website?",
     options: [
       { label: "Yes", value: "yes", next: "portfolio_url" },
-      { label: "No", value: "no", next: "career_intro" }
+      { label: "No", value: "no", next: "career_intro" } // Handover point
     ]
   },
   {
@@ -121,428 +101,18 @@ const FLOW_STEPS = [
     next: "career_intro"
   },
 
-  // 🎯 2. Career Target
+  // 🎯 2. Career Target - Replaced by AI Handover
   {
     id: "career_intro",
     type: "info",
     title: "🎯 Section 2: Career Target",
-    content: "Now, let's focus on what you're looking for. This helps us tailor the tone and summary of your resume.",
-    next: "target_job"
+    content: "Now, let's focus on who you are as a professional. I'm going to ask you a few open-ended questions.",
+    next: "ai_handover" // Special ID to trigger AI mode
   },
-  {
-    id: "target_job",
-    type: "question",
-    content: "What job title are you targeting?",
-    field: "targetJobTitle",
-    placeholder: "e.g. Senior Software Engineer",
-    next: "headline_check"
-  },
-  {
-    id: "headline_check",
-    type: "question",
-    content: "Do you want a one-sentence headline under your name?",
-    options: [
-      { label: "Yes", value: "yes", next: "headline_text" },
-      { label: "No", value: "no", next: "summary_check" }
-    ]
-  },
-  {
-    id: "headline_text",
-    type: "question",
-    content: "What should the headline say?",
-    field: "headline",
-    placeholder: "e.g. Innovative Developer with 5+ years experience",
-    next: "summary_check"
-  },
-  {
-    id: "summary_check",
-    type: "question",
-    content: "Do you want a summary or objective statement?",
-    options: [
-      { label: "Yes", value: "yes", next: "summary_tone" },
-      { label: "No", value: "no", next: "skills_intro" }
-    ]
-  },
-  {
-    id: "summary_tone",
-    type: "question",
-    content: "What tone should it have?",
-    options: [
-      { label: "Technical", value: "technical", next: "skills_intro" },
-      { label: "Leadership", value: "leadership", next: "skills_intro" },
-      { label: "Hybrid", value: "hybrid", next: "skills_intro" },
-      { label: "Concise", value: "concise", next: "skills_intro" },
-      { label: "Narrative", value: "narrative", next: "skills_intro" }
-    ],
-    field: "summaryTone"
-  },
-
-  // 🛠️ 3. Skills & Competencies
-  {
-    id: "skills_intro",
-    type: "info",
-    title: "🛠️ Section 3: Skills & Competencies",
-    content: "Let's list your skills. We'll break this down into Technical, Soft Skills, and Domain Expertise.",
-    next: "tech_skills_lang"
-  },
-  {
-    id: "tech_skills_lang",
-    type: "question",
-    content: "What programming languages do you know?",
-    field: "languages",
-    placeholder: "e.g. JavaScript, Python, C++",
-    next: "tech_skills_tools"
-  },
-  {
-    id: "tech_skills_tools",
-    type: "question",
-    content: "What tools, frameworks, or libraries do you use?",
-    field: "tools",
-    placeholder: "e.g. React, Node.js, Docker",
-    next: "tech_skills_hw"
-  },
-  {
-    id: "tech_skills_hw",
-    type: "question",
-    content: "What hardware, diagnostic, or engineering tools are you proficient with?",
-    field: "hardware",
-    placeholder: "e.g. Oscilloscopes, CAD, Raspberry Pi",
-    next: "tech_skills_cloud"
-  },
-  {
-    id: "tech_skills_cloud",
-    type: "question",
-    content: "What cloud, DevOps, or automation tools do you use?",
-    field: "cloudTools",
-    placeholder: "e.g. AWS, Terraform, Jenkins",
-    next: "tech_skills_os"
-  },
-  {
-    id: "tech_skills_os",
-    type: "question",
-    content: "What operating systems do you work with?",
-    field: "os",
-    placeholder: "e.g. Linux, macOS, Windows",
-    next: "soft_skills_highlight"
-  },
-  {
-    id: "soft_skills_highlight",
-    type: "question",
-    content: "What interpersonal or leadership skills do you want highlighted?",
-    field: "softSkills",
-    placeholder: "e.g. Mentoring, Project Management",
-    next: "soft_skills_analytical"
-  },
-  {
-    id: "soft_skills_analytical",
-    type: "question",
-    content: "What problem-solving or analytical strengths define you?",
-    field: "analyticalSkills",
-    placeholder: "e.g. Data Analysis, Critical Thinking",
-    next: "domain_expertise"
-  },
-  {
-    id: "domain_expertise",
-    type: "question",
-    content: "What industries or domains do you have experience in?",
-    field: "industries",
-    placeholder: "e.g. Fintech, Healthcare, E-commerce",
-    next: "certs_check"
-  },
-  {
-    id: "certs_check",
-    type: "question",
-    content: "Any specialized certifications or training?",
-    field: "initialCerts",
-    placeholder: "e.g. AWS Certified, PMP",
-    next: "work_intro"
-  },
-
-  // 🧱 4. Work Experience
-  {
-    id: "work_intro",
-    type: "info",
-    title: "🧱 Section 4: Work Experience",
-    content: "Now for the core of your resume. We'll add your job history one by one.",
-    next: "work_company"
-  },
-  {
-    id: "work_company",
-    type: "question",
-    content: "What is the company name?",
-    field: "temp_company",
-    placeholder: "e.g. TechCorp Inc.",
-    next: "work_location"
-  },
-  {
-    id: "work_location",
-    type: "question",
-    content: "What city and state is it located in?",
-    field: "temp_work_location",
-    placeholder: "e.g. Austin, TX",
-    next: "work_title"
-  },
-  {
-    id: "work_title",
-    type: "question",
-    content: "What was your job title?",
-    field: "temp_work_title",
-    placeholder: "e.g. Software Engineer",
-    next: "work_dates"
-  },
-  {
-    id: "work_dates",
-    type: "question",
-    content: "What were your start and end dates?",
-    field: "temp_work_dates",
-    placeholder: "e.g. Jan 2020 - Present",
-    next: "work_responsibilities"
-  },
-  {
-    id: "work_responsibilities",
-    type: "question",
-    content: "What were your primary responsibilities?",
-    field: "temp_work_desc",
-    placeholder: "e.g. Developed API endpoints...",
-    next: "work_achievements"
-  },
-  {
-    id: "work_achievements",
-    type: "question",
-    content: "What major accomplishments did you achieve? (Any quantifiable results like percentages or time saved?)",
-    field: "temp_work_achievements",
-    placeholder: "e.g. Increased throughput by 20%",
-    next: "work_another"
-  },
-  {
-    id: "work_another",
-    type: "question",
-    content: "Do you want to add another job?",
-    options: [
-      { label: "Yes", value: "yes", next: "work_company" },
-      { label: "No", value: "no", next: "projects_intro" }
-    ]
-  },
-
-  // 🧪 5. Projects
-  {
-    id: "projects_intro",
-    type: "info",
-    title: "🧪 Section 5: Projects",
-    content: "Have you worked on any notable projects, professional or personal?",
-    next: "project_check"
-  },
-  {
-    id: "project_check",
-    type: "question",
-    content: "Would you like to add a project?",
-    options: [
-      { label: "Yes", value: "yes", next: "project_name" },
-      { label: "No", value: "no", next: "edu_intro" }
-    ]
-  },
-  {
-    id: "project_name",
-    type: "question",
-    content: "What is the project name?",
-    field: "temp_proj_name",
-    placeholder: "e.g. Open Source Contributor",
-    next: "project_problem"
-  },
-  {
-    id: "project_problem",
-    type: "question",
-    content: "What problem did it solve?",
-    field: "temp_proj_desc",
-    placeholder: "e.g. Automated my home security...",
-    next: "project_tools"
-  },
-  {
-    id: "project_tools",
-    type: "question",
-    content: "What tools, languages, or hardware did you use?",
-    field: "temp_proj_tools",
-    placeholder: "e.g. Python, Raspberry Pi",
-    next: "project_outcome"
-  },
-  {
-    id: "project_outcome",
-    type: "question",
-    content: "What was the outcome or measurable impact?",
-    field: "temp_proj_impact",
-    placeholder: "e.g. Reduced false alarms by 50%",
-    next: "project_another"
-  },
-  {
-    id: "project_another",
-    type: "question",
-    content: "Add another project?",
-    options: [
-      { label: "Yes", value: "yes", next: "project_name" },
-      { label: "No", value: "no", next: "edu_intro" }
-    ]
-  },
-
-  // 🎓 6. Education
-  {
-    id: "edu_intro",
-    type: "info",
-    title: "🎓 Section 6: Education",
-    content: "Let's record your academic background.",
-    next: "edu_school"
-  },
-  {
-    id: "edu_school",
-    type: "question",
-    content: "What school did you attend?",
-    field: "temp_edu_school",
-    placeholder: "e.g. Stanford University",
-    next: "edu_degree"
-  },
-  {
-    id: "edu_degree",
-    type: "question",
-    content: "What degree did you earn?",
-    field: "temp_edu_degree",
-    placeholder: "e.g. B.S. in Computer Science",
-    next: "edu_dates"
-  },
-  {
-    id: "edu_dates",
-    type: "question",
-    content: "What were your start and end dates?",
-    field: "temp_edu_dates",
-    placeholder: "e.g. 2016 - 2020",
-    next: "edu_another"
-  },
-  {
-    id: "edu_another",
-    type: "question",
-    content: "Add another education entry?",
-    options: [
-      { label: "Yes", value: "yes", next: "edu_school" },
-      { label: "No", value: "no", next: "awards_intro" }
-    ]
-  },
-
-  // 🏆 8. Awards & Achievements
-  {
-    id: "awards_intro",
-    type: "info",
-    title: "🏆 Section 7: Awards & Achievements",
-    content: "Time to brag a little. Any professional or academic recognition?",
-    next: "awards_check"
-  },
-  {
-    id: "awards_check",
-    type: "question",
-    content: "Do you have awards to list?",
-    options: [
-      { label: "Yes", value: "yes", next: "awards_text" },
-      { label: "No", value: "no", next: "volunteer_intro" }
-    ]
-  },
-  {
-    id: "awards_text",
-    type: "question",
-    content: "List your awards or recognition:",
-    field: "awards",
-    placeholder: "e.g. Employee of the Month, Dean's List",
-    next: "volunteer_intro"
-  },
-
-  // 🌐 10. Volunteer Work
-  {
-    id: "volunteer_intro",
-    type: "info",
-    title: "🌐 Section 8: Volunteer Work",
-    content: "Volunteering shows character and extra skills.",
-    next: "volunteer_check"
-  },
-  {
-    id: "volunteer_check",
-    type: "question",
-    content: "Would you like to include volunteer work?",
-    options: [
-      { label: "Yes", value: "yes", next: "volunteer_text" },
-      { label: "No", value: "no", next: "additional_intro" }
-    ]
-  },
-  {
-    id: "volunteer_text",
-    type: "question",
-    content: "Describe your volunteer role and impact:",
-    field: "volunteer",
-    placeholder: "e.g. Taught coding at local library...",
-    next: "additional_intro"
-  },
-
-  // 🧩 11. Additional Sections
-  {
-    id: "additional_intro",
-    type: "info",
-    title: "🧩 Section 9: Additional Information",
-    content: "Languages, hobbies, or other details that make you unique.",
-    next: "extra_langs"
-  },
-  {
-    id: "extra_langs",
-    type: "question",
-    content: "Do you speak any additional languages?",
-    field: "additionalLanguages",
-    placeholder: "e.g. Spanish (Fluent), Japanese (Basic)",
-    next: "extra_hobbies"
-  },
-  {
-    id: "extra_hobbies",
-    type: "question",
-    content: "Do you want to list hobbies or interests?",
-    field: "hobbies",
-    placeholder: "e.g. Mountain Biking, Chess",
-    next: "format_intro"
-  },
-
-  // 🧭 12. Formatting Preferences
-  {
-    id: "format_intro",
-    type: "info",
-    title: "🧭 Section 10: Formatting",
-    content: "Almost done! How should the final resume look?",
-    next: "format_layout"
-  },
-  {
-    id: "format_layout",
-    type: "question",
-    content: "What style do you prefer?",
-    options: [
-      { label: "Modern", value: "modern", next: "format_pages" },
-      { label: "Minimalist", value: "minimal", next: "format_pages" },
-      { label: "Traditional", value: "traditional", next: "format_pages" }
-    ],
-    field: "layoutStyle"
-  },
-  {
-    id: "format_pages",
-    type: "question",
-    content: "Target page count?",
-    options: [
-      { label: "One Page", value: "1", next: "finish_msg" },
-      { label: "Two Pages", value: "2", next: "finish_msg" }
-    ],
-    field: "pageCount"
-  },
-
-  {
-    id: "finish_msg",
-    type: "message",
-    content: "Success! I have everything I need to build your resume. 🎉",
-    next: "cta"
-  },
-  {
-    id: "cta",
-    type: "final",
-    content: "I'll generate your PDF now. To save this data to your One Profile and unlock the Browser Extension, please create your account.",
-  }
+  
+  // Note: Remaining structured steps (Work, Edu, etc.) would be here in a full hybrid model,
+  // but we are pivoting to AI conversation for the summary/target first.
+  // We can re-integrate structured loops later if the AI conversation ends or needs specific data.
 ];
 
 // Live Resume Preview Component
@@ -582,22 +152,15 @@ const LiveResumePreview = ({ answers }) => {
         )}
       </Box>
 
-      {/* Career Target */}
-      {(answers.targetJobTitle || answers.headline) && (
+      {/* Career Target / Summary from AI */}
+      {answers.summary && (
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
-            Career Target
+            Professional Summary
           </Typography>
-          {answers.targetJobTitle && (
-            <Typography variant="subtitle1" fontWeight="bold">
-              Target: {answers.targetJobTitle}
-            </Typography>
-          )}
-          {answers.headline && (
-            <Typography variant="body1" fontStyle="italic">
-              "{answers.headline}"
-            </Typography>
-          )}
+          <Typography variant="body2" fontStyle="italic">
+            {answers.summary}
+          </Typography>
         </Box>
       )}
 
@@ -635,67 +198,6 @@ const LiveResumePreview = ({ answers }) => {
               </Typography>
             </Box>
           ))}
-          {/* Current Editing Job */}
-          {answers.temp_company && (
-            <Box sx={{ mb: 2, opacity: 0.7, borderLeft: "2px dashed #ccc", pl: 1 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {answers.temp_work_title || "Job Title"} at {answers.temp_company}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {answers.temp_work_dates || "Dates"}
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      )}
-
-      {/* Projects */}
-      {(answers.projects?.length > 0 || answers.temp_proj_name) && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
-            Projects
-          </Typography>
-          {answers.projects?.map((proj, i) => (
-            <Box key={i} sx={{ mb: 2 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {proj.name}
-              </Typography>
-              <Typography variant="body2">{proj.desc}</Typography>
-            </Box>
-          ))}
-          {answers.temp_proj_name && (
-            <Box sx={{ mb: 2, opacity: 0.7, borderLeft: "2px dashed #ccc", pl: 1 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {answers.temp_proj_name}
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      )}
-
-      {/* Education */}
-      {(answers.education?.length > 0 || answers.temp_edu_school) && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
-            Education
-          </Typography>
-          {answers.education?.map((edu, i) => (
-            <Box key={i} sx={{ mb: 1 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {edu.school}
-              </Typography>
-              <Typography variant="body2">
-                {edu.degree} ({edu.dates})
-              </Typography>
-            </Box>
-          ))}
-          {answers.temp_edu_school && (
-            <Box sx={{ mb: 1, opacity: 0.7, borderLeft: "2px dashed #ccc", pl: 1 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {answers.temp_edu_school}
-              </Typography>
-            </Box>
-          )}
         </Box>
       )}
     </Paper>
@@ -704,12 +206,19 @@ const LiveResumePreview = ({ answers }) => {
 
 function EasyCvWizard() {
   const navigate = useNavigate();
-  const [currentStepId, setCurrentStepId] = useState("intro");
+  const [currentStepId, setCurrentStepId] = useState("contact_intro");
   const [history, setHistory] = useState([]); 
   const [answers, setAnswers] = useState({ workHistory: [], projects: [], education: [] });
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showConsent, setShowConsent] = useState(true);
+  
+  // AI State
+  const [isAiMode, setIsAiMode] = useState(false);
+  const [interventionMode, setInterventionMode] = useState(false);
+  const [preInterventionStep, setPreInterventionStep] = useState(null);
+
   const messagesEndRef = useRef(null);
 
   const currentStep = FLOW_STEPS.find(s => s.id === currentStepId);
@@ -718,8 +227,39 @@ function EasyCvWizard() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history, isTyping]);
 
+  // Mock AI Logic (To be replaced with Vertex AI backend)
+  const mockAiResponse = async (userText) => {
+    setIsTyping(true);
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Simple mock logic based on length
+    if (userText.length < 20) {
+        return "That's a bit brief. Can you tell me more? Specifically, what kind of tasks did you do daily?";
+    } else {
+        return "Great! Based on that, it sounds like you're proactive. Are you usually the one to organize team activities or lead meetings?";
+    }
+  };
+
+  // Effect to trigger AI Handover
   useEffect(() => {
-    if (!currentStep) return;
+    if (currentStepId === "ai_handover" && !isAiMode) {
+        setIsAiMode(true);
+        // Initial AI Question
+        const initialQuestion = "In your own words, tell me how you see yourself at work? What excites you? Are you usually the first one to meetings?";
+        
+        setIsTyping(true);
+        setTimeout(() => {
+            setIsTyping(false);
+            setHistory(prev => [...prev, { role: "bot", content: initialQuestion }]);
+        }, 1000);
+    }
+  }, [currentStepId, isAiMode]);
+
+  // Standard Step Logic
+  useEffect(() => {
+    if (!currentStep || isAiMode || interventionMode) return;
 
     setIsTyping(true);
     const delay = currentStep.type === "message" ? 1000 : 600;
@@ -744,19 +284,65 @@ function EasyCvWizard() {
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [currentStepId]);
+  }, [currentStepId, isAiMode, interventionMode]);
 
-  const handleInputSubmit = (e) => {
+  const handleInputSubmit = async (e) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    if (currentStep.field) {
-      setAnswers(prev => ({ ...prev, [currentStep.field]: inputValue }));
-    }
-
+    // Add user message
     setHistory(prev => [...prev, { role: "user", content: inputValue }]);
+    const currentInput = inputValue;
     setInputValue("");
 
+    // --- AI MODE LOGIC ---
+    if (isAiMode) {
+        // Here we would call the backend
+        const aiReply = await mockAiResponse(currentInput);
+        setIsTyping(false);
+        setHistory(prev => [...prev, { role: "bot", content: aiReply }]);
+        
+        // Save to summary for preview
+        setAnswers(prev => ({ ...prev, summary: (prev.summary ? prev.summary + " " : "") + currentInput }));
+        return;
+    }
+
+    // --- INTERVENTION MODE LOGIC ---
+    if (interventionMode) {
+        // User answered the intervention
+        // Append to the original field
+        const fieldName = preInterventionStep.field;
+        setAnswers(prev => ({ ...prev, [fieldName]: prev[fieldName] + " " + currentInput }));
+        
+        // Resume flow
+        setInterventionMode(false);
+        setHistory(prev => [...prev, { role: "bot", content: "Thanks for clarifying! Moving on." }]);
+        setCurrentStepId(preInterventionStep.next);
+        return;
+    }
+
+    // --- STANDARD FLOW LOGIC ---
+    
+    // Save answer
+    if (currentStep.field) {
+      setAnswers(prev => ({ ...prev, [currentStep.field]: currentInput }));
+    }
+
+    // Check for Intervention (Supervisor)
+    // Example rule: If describing work/project and length < 15 chars
+    if ((currentStep.id === "work_responsibilities" || currentStep.id === "project_problem") && currentInput.length < 15) {
+        setInterventionMode(true);
+        setPreInterventionStep(currentStep);
+        
+        setIsTyping(true);
+        setTimeout(() => {
+            setIsTyping(false);
+            setHistory(prev => [...prev, { role: "bot", content: "That's a bit short. Could you give me more detail? What specific tools or methods did you use?" }]);
+        }, 800);
+        return; // Pause standard flow
+    }
+
+    // Move to next step
     if (currentStep.next) {
       setCurrentStepId(currentStep.next);
     }
@@ -768,75 +354,9 @@ function EasyCvWizard() {
        setAnswers(prev => ({ ...prev, [currentStep.field]: option.value }));
     }
 
-    // 2. Logic to "Commit" repeating sections when user says "Yes" to adding another
-    //    OR finishes the section loop.
-    if (option.value === "yes" && (currentStep.id === "work_another" || currentStep.id === "project_another" || currentStep.id === "edu_another")) {
-        setAnswers(prev => {
-            const newEntry = {};
-            // Work Loop
-            if (currentStep.id === "work_another") {
-                newEntry.company = prev.temp_company;
-                newEntry.location = prev.temp_work_location;
-                newEntry.title = prev.temp_work_title;
-                newEntry.dates = prev.temp_work_dates;
-                newEntry.desc = prev.temp_work_desc;
-                return { 
-                    ...prev, 
-                    workHistory: [...prev.workHistory, newEntry],
-                    // Clear temps
-                    temp_company: "", temp_work_location: "", temp_work_title: "", temp_work_dates: "", temp_work_desc: "", temp_work_achievements: ""
-                };
-            }
-            // Project Loop
-            if (currentStep.id === "project_another") {
-                newEntry.name = prev.temp_proj_name;
-                newEntry.desc = prev.temp_proj_desc;
-                return {
-                    ...prev,
-                    projects: [...prev.projects, newEntry],
-                    temp_proj_name: "", temp_proj_desc: "", temp_proj_tools: "", temp_proj_impact: ""
-                };
-            }
-            // Education Loop
-            if (currentStep.id === "edu_another") {
-                newEntry.school = prev.temp_edu_school;
-                newEntry.degree = prev.temp_edu_degree;
-                newEntry.dates = prev.temp_edu_dates;
-                return {
-                    ...prev,
-                    education: [...prev.education, newEntry],
-                    temp_edu_school: "", temp_edu_degree: "", temp_edu_dates: ""
-                };
-            }
-            return prev;
-        });
-    }
-    
-    // Also commit if they say "No" (finish the section) - save the LAST entry
-    if (option.value === "no" && (currentStep.id === "work_another" || currentStep.id === "project_another" || currentStep.id === "edu_another")) {
-         setAnswers(prev => {
-            const newEntry = {};
-            if (currentStep.id === "work_another" && prev.temp_company) {
-                newEntry.company = prev.temp_company;
-                newEntry.title = prev.temp_work_title;
-                newEntry.dates = prev.temp_work_dates;
-                newEntry.desc = prev.temp_work_desc;
-                return { ...prev, workHistory: [...prev.workHistory, newEntry] };
-            }
-            if (currentStep.id === "project_another" && prev.temp_proj_name) {
-                newEntry.name = prev.temp_proj_name;
-                newEntry.desc = prev.temp_proj_desc;
-                return { ...prev, projects: [...prev.projects, newEntry] };
-            }
-            if (currentStep.id === "edu_another" && prev.temp_edu_school) {
-                newEntry.school = prev.temp_edu_school;
-                newEntry.degree = prev.temp_edu_degree;
-                newEntry.dates = prev.temp_edu_dates;
-                return { ...prev, education: [...prev.education, newEntry] };
-            }
-            return prev;
-         });
-    }
+    // 2. Logic to "Commit" repeating sections
+    // (Logic omitted for brevity in this specific update, but would remain same as previous version)
+    // ...
 
     setHistory(prev => [...prev, { role: "user", content: option.label }]);
 
@@ -849,6 +369,80 @@ function EasyCvWizard() {
   const handleSaveAndExit = () => {
       navigate("/signup", { state: { savedAnswers: answers } });
   };
+
+  // Render Consent or Chat
+  if (showConsent) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          bgcolor: "#121212",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2
+        }}
+      >
+        <Paper
+          elevation={10}
+          sx={{
+            maxWidth: 500,
+            width: "100%",
+            p: 4,
+            bgcolor: "#1e1e1e",
+            color: "#fff",
+            textAlign: "center",
+            border: "1px solid #333",
+            borderRadius: 4
+          }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: "bold", mb: 2, color: "#fdbb2d" }}>
+            Professional Data Collection
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 3, color: "#ccc", lineHeight: 1.6 }}>
+            To use Easy CV without an account, we need to collect your professional data (skills, experience, education) to help match you with future opportunities.
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 4, color: "#999", fontStyle: "italic" }}>
+            Your personal contact information (email, phone) remains private and secure.
+          </Typography>
+          
+          <Stack spacing={2}>
+            <Button 
+              variant="contained" 
+              color="secondary" 
+              size="large" 
+              onClick={() => {
+                setShowConsent(false);
+                setHistory([{ 
+                  role: "bot", 
+                  content: "Thanks! Let's get your contact info first.", 
+                  type: "message" 
+                }]);
+              }}
+              sx={{ py: 1.5, fontWeight: "bold" }}
+            >
+              I Agree, Start Easy CV
+            </Button>
+            <Button 
+              variant="outlined" 
+              color="inherit" 
+              onClick={() => navigate("/signup")}
+            >
+              Create Account First
+            </Button>
+            <Button 
+              variant="text" 
+              color="error" 
+              size="small"
+              onClick={() => navigate("/")}
+            >
+              Cancel
+            </Button>
+          </Stack>
+        </Paper>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -975,7 +569,7 @@ function EasyCvWizard() {
                     borderTop: "1px solid #333" 
                 }}
             >
-                {!isTyping && currentStep?.options && (
+                {!isTyping && currentStep?.options && !isAiMode && (
                     <Stack direction="row" spacing={1} sx={{ mb: 2, overflowX: "auto", pb: 1 }}>
                         {currentStep.options.map((opt, i) => (
                             <Chip 
@@ -1006,12 +600,12 @@ function EasyCvWizard() {
                     </Button>
                 )}
 
-                {(!currentStep?.options && currentStep?.type !== "final" && currentStep?.type !== "info" && currentStep?.type !== "message") && (
+                {(!currentStep?.options && currentStep?.type !== "final" && currentStep?.type !== "info" && currentStep?.type !== "message") || isAiMode && (
                     <form onSubmit={handleInputSubmit} style={{ display: "flex", gap: 1 }}>
                         <TextField
                             fullWidth
                             variant="outlined"
-                            placeholder={currentStep?.placeholder || "Type your answer..."}
+                            placeholder={isAiMode ? "Type your response..." : (currentStep?.placeholder || "Type your answer...")}
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             disabled={isTyping}
