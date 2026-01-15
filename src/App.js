@@ -23,6 +23,7 @@ import SignupPage from "./components/SignupPage.js";
 import ResetPasswordPage from "./components/ResetPasswordPage.js";
 import OnboardingPage from "./components/OnboardingPage.js";
 import GoldStandardWizard from "./components/GoldStandardWizard.js";
+import EasyCvWizard from "./components/EasyCvWizard.js";
 import LandingPage from "./components/LandingPage.js";
 import ConversationalOnboarding from "./components/ConversationalOnboarding.js";
 import DemoExperience from "./components/DemoExperience.js";
@@ -376,6 +377,7 @@ function App() {
               {/* Public Landing Page - No login required */}
               <Route path="/" element={<LandingPageRoute />} />
             <Route path="/welcome" element={<LandingPage />} />
+            <Route path="/easy-cv" element={<EasyCvWizard />} />
             <Route path="/demo" element={<DemoExperience />} />
             <Route path="/terms" element={<TermsPage />} />
 

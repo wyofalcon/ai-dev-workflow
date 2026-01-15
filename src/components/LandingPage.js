@@ -112,26 +112,50 @@ function LandingPage() {
           and personal story to build a profile that truly represents you.
         </Typography>
         <Stack
-          direction="row"
-          spacing={2}
+          direction={{ xs: "column", sm: "row" }}
+          spacing={3}
           justifyContent="center"
+          alignItems="center"
           sx={{ mb: 8 }}
         >
+          <Box sx={{ textAlign: 'center' }}>
+            <Button
+              variant="contained"
+              color="secondary"
+              size="large"
+              onClick={() => navigate("/easy-cv")}
+              startIcon={<SparkleIcon />}
+              sx={{
+                fontSize: "1.2rem",
+                px: 5,
+                py: 1.5,
+                borderRadius: "50px",
+                boxShadow: "0 4px 20px 0 rgba(253, 187, 45, 0.4)",
+                minWidth: "220px"
+              }}
+            >
+              Easy CV
+            </Button>
+            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'rgba(255,255,255,0.6)' }}>
+              Start AI Interview • No Login Required
+            </Typography>
+          </Box>
+
           <Button
-            variant="contained"
-            color="secondary"
+            variant="outlined"
+            color="inherit"
             size="large"
             onClick={() => navigate("/signup")}
-            endIcon={<ArrowIcon />}
             sx={{
               fontSize: "1.1rem",
               px: 5,
-              py: 1.2,
+              py: 1.5,
               borderRadius: "50px",
-              boxShadow: "0 4px 20px 0 rgba(253, 187, 45, 0.4)",
+              borderColor: "rgba(255,255,255,0.3)",
+              minWidth: "220px"
             }}
           >
-            Build Your Profile
+            Create Full Profile
           </Button>
         </Stack>
 
@@ -153,12 +177,12 @@ function LandingPage() {
             >
               <PersonIcon sx={{ fontSize: 40, color: "#fdbb2d", mb: 2 }} />
               <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1, color: "#fff" }}>
-                The Complete Picture
+                Master Profile
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                We go beyond job titles. Our AI captures your professional achievements 
-                and the personal stories you want to share, weaving them into a narrative 
-                that stands out.
+                Your Profile is your Master Resume. Build it once with our AI 
+                questions, and use it as the single source of truth for every application. 
+                Continuously add skills as you learn them.
               </Typography>
             </Paper>
           </Grid>
@@ -179,11 +203,11 @@ function LandingPage() {
             >
               <ExtensionIcon sx={{ fontSize: 40, color: "#fdbb2d", mb: 2 }} />
               <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1, color: "#fff" }}>
-                Tailor in Seconds
+                Quick Tailor
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                Found a job you like? Our browser extension reads the job description 
-                in your active tab and instantly adapts your profile to match it.
+                Unlock the power of your Master Profile. Use our browser extension 
+                to instantly tailor your resume to any job posting tab you have open.
               </Typography>
             </Paper>
           </Grid>
@@ -207,8 +231,8 @@ function LandingPage() {
                 One-Click Portfolio
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                Don't just send a PDF. Automatically generate a personal portfolio website 
-                showcasing your unique value proposition.
+                Turn your Master Profile into a stunning personal website with one click. 
+                Share your link, not just a file.
               </Typography>
             </Paper>
           </Grid>
