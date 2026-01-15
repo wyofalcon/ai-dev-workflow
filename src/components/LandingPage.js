@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -8,8 +8,8 @@ import {
   Grid,
   Paper,
   Stack,
-  Card,
-  CardContent,
+  IconButton,
+  Popover,
 } from "@mui/material";
 import {
   AutoAwesome as SparkleIcon,
@@ -19,11 +19,23 @@ import {
   ArrowForward as ArrowIcon,
   Bolt as FastIcon,
   Person as PersonIcon,
+  InfoOutlined as InfoIcon,
 } from "@mui/icons-material";
 import logo from "./logo.svg";
 
 function LandingPage() {
   const navigate = useNavigate();
+  const [infoAnchorEl, setInfoAnchorEl] = useState(null);
+
+  const handleInfoOpen = (event) => {
+    setInfoAnchorEl(event.currentTarget);
+  };
+
+  const handleInfoClose = () => {
+    setInfoAnchorEl(null);
+  };
+
+  const isInfoOpen = Boolean(infoAnchorEl);
 
   return (
     <Box
@@ -118,7 +130,7 @@ function LandingPage() {
           alignItems="center"
           sx={{ mb: 8 }}
         >
-          <Box sx={{ textAlign: 'center' }}>
+          <Box sx={{ position: 'relative' }}>
             <Button
               variant="contained"
               color="secondary"
@@ -136,9 +148,54 @@ function LandingPage() {
             >
               Easy CV
             </Button>
-            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'rgba(255,255,255,0.6)' }}>
-              Start AI Interview • No Login Required
-            </Typography>
+            <IconButton 
+              size="small" 
+              onClick={handleInfoOpen}
+              sx={{ 
+                position: 'absolute', 
+                right: -40, 
+                top: '50%', 
+                transform: 'translateY(-50%)',
+                color: 'rgba(255,255,255,0.5)',
+                '&:hover': { color: '#fdbb2d' }
+              }}
+            >
+              <InfoIcon />
+            </IconButton>
+            
+            <Popover
+              open={isInfoOpen}
+              anchorEl={infoAnchorEl}
+              onClose={handleInfoClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'center',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'center',
+              }}
+              PaperProps={{
+                sx: {
+                  p: 3,
+                  maxWidth: 350,
+                  bgcolor: '#1e1e1e',
+                  color: '#fff',
+                  border: '1px solid #333',
+                  mt: 1
+                }
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: '#fdbb2d' }}>
+                How Easy CV Works
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 2, lineHeight: 1.6 }}>
+                Easy CV clearly walks you through building a basic resume, which is the start of building a full profile on CVstomize.
+              </Typography>
+              <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
+                Otherwise, you can upload your own resume after signing up and it will be smart-parsed to your One Profile.
+              </Typography>
+            </Popover>
           </Box>
 
           <Button
