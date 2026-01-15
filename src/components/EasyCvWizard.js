@@ -107,7 +107,13 @@ const FLOW_STEPS = [
     type: "info",
     title: "🎯 Section 2: Career Target",
     content: "Now, let's focus on who you are as a professional. I'm going to ask you a few open-ended questions.",
-    next: "ai_handover" // Special ID to trigger AI mode
+    next: "career_reminder"
+  },
+  {
+    id: "career_reminder",
+    type: "message",
+    content: "Building a great summary can take a bit of effort, but it's worth it! If you need a break, you can save your progress and continue later by creating a profile.",
+    next: "ai_handover"
   },
   
   // Note: Remaining structured steps (Work, Edu, etc.) would be here in a full hybrid model,
@@ -400,10 +406,17 @@ function EasyCvWizard() {
             Professional Data Collection
           </Typography>
           <Typography variant="body1" sx={{ mb: 3, color: "#ccc", lineHeight: 1.6 }}>
-            To use Easy CV without an account, we need to collect your professional data (skills, experience, education) to help match you with future opportunities.
+            To use Easy CV without an account, we need to collect your professional data (skills, experience, education).
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2, color: "#fdbb2d", fontWeight: "bold" }}>
+            ⚠️ Note: This process may take a while as we build a complete picture of your background.
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 3, color: "#ccc", lineHeight: 1.6 }}>
+            You can <strong>save your progress</strong> and continue later by creating a CVstom Profile. 
+            Or, if you already have a resume, you can <strong>upload it directly</strong> to your profile to save time!
           </Typography>
           <Typography variant="body2" sx={{ mb: 4, color: "#999", fontStyle: "italic" }}>
-            Your personal contact information (email, phone) remains private and secure.
+            Your personal contact information remains private and secure.
           </Typography>
           
           <Stack spacing={2}>
@@ -415,7 +428,7 @@ function EasyCvWizard() {
                 setShowConsent(false);
                 setHistory([{ 
                   role: "bot", 
-                  content: "Thanks! Let's get your contact info first.", 
+                  content: "Thanks! Let's get your contact info first. Remember, you can save and stop at any time by clicking 'Save' at the top.", 
                   type: "message" 
                 }]);
               }}
@@ -428,7 +441,7 @@ function EasyCvWizard() {
               color="inherit" 
               onClick={() => navigate("/signup")}
             >
-              Create Account First
+              Create Profile / Upload Resume
             </Button>
             <Button 
               variant="text" 
