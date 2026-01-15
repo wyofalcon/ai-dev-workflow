@@ -180,9 +180,9 @@ function LandingPage() {
                 One Profile
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                A single source of truth to ensure you always have your best resume 
-                ready to go. Even with your dream job, things happen. Always be ready. 
-                Continuously add skills as you learn them.
+                Your career belongs to you. Build one master profile that acts as your 
+                single source of truth. When opportunities arise (or things change), 
+                you're ready instantly.
               </Typography>
             </Paper>
           </Grid>
