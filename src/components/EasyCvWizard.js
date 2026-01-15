@@ -545,11 +545,168 @@ const FLOW_STEPS = [
   }
 ];
 
+// Live Resume Preview Component
+const LiveResumePreview = ({ answers }) => {
+  return (
+    <Paper
+      elevation={4}
+      sx={{
+        height: "100%",
+        maxHeight: "80vh",
+        overflowY: "auto",
+        p: 4,
+        bgcolor: "#fff",
+        color: "#333",
+        borderRadius: 2,
+        fontFamily: "'Roboto', sans-serif",
+      }}
+    >
+      <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 2, textAlign: 'center' }}>
+        Live Preview
+      </Typography>
+
+      {/* Header */}
+      <Box sx={{ mb: 3, textAlign: "center", borderBottom: "2px solid #333", pb: 2 }}>
+        <Typography variant="h4" sx={{ fontWeight: "bold", textTransform: "uppercase" }}>
+          {answers.fullName || "Your Name"}
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 1 }}>
+          {[answers.location, answers.phone, answers.email, answers.website]
+            .filter(Boolean)
+            .join(" | ")}
+        </Typography>
+        {answers.linkedin && (
+          <Typography variant="body2" color="primary">
+            {answers.linkedin}
+          </Typography>
+        )}
+      </Box>
+
+      {/* Career Target */}
+      {(answers.targetJobTitle || answers.headline) && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
+            Career Target
+          </Typography>
+          {answers.targetJobTitle && (
+            <Typography variant="subtitle1" fontWeight="bold">
+              Target: {answers.targetJobTitle}
+            </Typography>
+          )}
+          {answers.headline && (
+            <Typography variant="body1" fontStyle="italic">
+              "{answers.headline}"
+            </Typography>
+          )}
+        </Box>
+      )}
+
+      {/* Skills */}
+      {(answers.languages || answers.tools || answers.softSkills) && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
+            Skills
+          </Typography>
+          <Typography variant="body2">
+            {[answers.languages, answers.tools, answers.cloudTools, answers.softSkills]
+              .filter(Boolean)
+              .join(", ")}
+          </Typography>
+        </Box>
+      )}
+
+      {/* Work Experience */}
+      {(answers.workHistory?.length > 0 || answers.temp_company) && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
+            Experience
+          </Typography>
+          {/* Confirmed Jobs */}
+          {answers.workHistory?.map((job, i) => (
+            <Box key={i} sx={{ mb: 2 }}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {job.title} at {job.company}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {job.dates} | {job.location}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {job.desc}
+              </Typography>
+            </Box>
+          ))}
+          {/* Current Editing Job */}
+          {answers.temp_company && (
+            <Box sx={{ mb: 2, opacity: 0.7, borderLeft: "2px dashed #ccc", pl: 1 }}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {answers.temp_work_title || "Job Title"} at {answers.temp_company}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {answers.temp_work_dates || "Dates"}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Projects */}
+      {(answers.projects?.length > 0 || answers.temp_proj_name) && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
+            Projects
+          </Typography>
+          {answers.projects?.map((proj, i) => (
+            <Box key={i} sx={{ mb: 2 }}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {proj.name}
+              </Typography>
+              <Typography variant="body2">{proj.desc}</Typography>
+            </Box>
+          ))}
+          {answers.temp_proj_name && (
+            <Box sx={{ mb: 2, opacity: 0.7, borderLeft: "2px dashed #ccc", pl: 1 }}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {answers.temp_proj_name}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Education */}
+      {(answers.education?.length > 0 || answers.temp_edu_school) && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
+            Education
+          </Typography>
+          {answers.education?.map((edu, i) => (
+            <Box key={i} sx={{ mb: 1 }}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {edu.school}
+              </Typography>
+              <Typography variant="body2">
+                {edu.degree} ({edu.dates})
+              </Typography>
+            </Box>
+          ))}
+          {answers.temp_edu_school && (
+            <Box sx={{ mb: 1, opacity: 0.7, borderLeft: "2px dashed #ccc", pl: 1 }}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {answers.temp_edu_school}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+    </Paper>
+  );
+};
+
 function EasyCvWizard() {
   const navigate = useNavigate();
   const [currentStepId, setCurrentStepId] = useState("intro");
   const [history, setHistory] = useState([]); 
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers] = useState({ workHistory: [], projects: [], education: [] });
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -594,17 +751,7 @@ function EasyCvWizard() {
     if (!inputValue.trim()) return;
 
     if (currentStep.field) {
-      setAnswers(prev => {
-        const newAnswers = { ...prev, [currentStep.field]: inputValue };
-        
-        // Handle list accumulation for Work/Edu/Projects (simple version)
-        if (currentStep.field.startsWith('temp_')) {
-            // In a real app, we'd push to an array here
-            // For now we just save the latest for the demo
-        }
-        
-        return newAnswers;
-      });
+      setAnswers(prev => ({ ...prev, [currentStep.field]: inputValue }));
     }
 
     setHistory(prev => [...prev, { role: "user", content: inputValue }]);
@@ -616,8 +763,79 @@ function EasyCvWizard() {
   };
 
   const handleOptionClick = (option) => {
+    // 1. Save specific field answer if present
     if (currentStep.field) {
        setAnswers(prev => ({ ...prev, [currentStep.field]: option.value }));
+    }
+
+    // 2. Logic to "Commit" repeating sections when user says "Yes" to adding another
+    //    OR finishes the section loop.
+    if (option.value === "yes" && (currentStep.id === "work_another" || currentStep.id === "project_another" || currentStep.id === "edu_another")) {
+        setAnswers(prev => {
+            const newEntry = {};
+            // Work Loop
+            if (currentStep.id === "work_another") {
+                newEntry.company = prev.temp_company;
+                newEntry.location = prev.temp_work_location;
+                newEntry.title = prev.temp_work_title;
+                newEntry.dates = prev.temp_work_dates;
+                newEntry.desc = prev.temp_work_desc;
+                return { 
+                    ...prev, 
+                    workHistory: [...prev.workHistory, newEntry],
+                    // Clear temps
+                    temp_company: "", temp_work_location: "", temp_work_title: "", temp_work_dates: "", temp_work_desc: "", temp_work_achievements: ""
+                };
+            }
+            // Project Loop
+            if (currentStep.id === "project_another") {
+                newEntry.name = prev.temp_proj_name;
+                newEntry.desc = prev.temp_proj_desc;
+                return {
+                    ...prev,
+                    projects: [...prev.projects, newEntry],
+                    temp_proj_name: "", temp_proj_desc: "", temp_proj_tools: "", temp_proj_impact: ""
+                };
+            }
+            // Education Loop
+            if (currentStep.id === "edu_another") {
+                newEntry.school = prev.temp_edu_school;
+                newEntry.degree = prev.temp_edu_degree;
+                newEntry.dates = prev.temp_edu_dates;
+                return {
+                    ...prev,
+                    education: [...prev.education, newEntry],
+                    temp_edu_school: "", temp_edu_degree: "", temp_edu_dates: ""
+                };
+            }
+            return prev;
+        });
+    }
+    
+    // Also commit if they say "No" (finish the section) - save the LAST entry
+    if (option.value === "no" && (currentStep.id === "work_another" || currentStep.id === "project_another" || currentStep.id === "edu_another")) {
+         setAnswers(prev => {
+            const newEntry = {};
+            if (currentStep.id === "work_another" && prev.temp_company) {
+                newEntry.company = prev.temp_company;
+                newEntry.title = prev.temp_work_title;
+                newEntry.dates = prev.temp_work_dates;
+                newEntry.desc = prev.temp_work_desc;
+                return { ...prev, workHistory: [...prev.workHistory, newEntry] };
+            }
+            if (currentStep.id === "project_another" && prev.temp_proj_name) {
+                newEntry.name = prev.temp_proj_name;
+                newEntry.desc = prev.temp_proj_desc;
+                return { ...prev, projects: [...prev.projects, newEntry] };
+            }
+            if (currentStep.id === "edu_another" && prev.temp_edu_school) {
+                newEntry.school = prev.temp_edu_school;
+                newEntry.degree = prev.temp_edu_degree;
+                newEntry.dates = prev.temp_edu_dates;
+                return { ...prev, education: [...prev.education, newEntry] };
+            }
+            return prev;
+         });
     }
 
     setHistory(prev => [...prev, { role: "user", content: option.label }]);
@@ -640,10 +858,10 @@ function EasyCvWizard() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        pt: 2
       }}
     >
-      <Box sx={{ width: "100%", maxWidth: 600, px: 2, mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      {/* Top Bar */}
+      <Box sx={{ width: "100%", px: 2, py: 1, bgcolor: "#1e1e1e", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #333" }}>
         <IconButton onClick={() => navigate("/")} sx={{ color: "rgba(255,255,255,0.5)" }}>
             <CloseIcon />
         </IconButton>
@@ -657,159 +875,176 @@ function EasyCvWizard() {
             color="secondary"
             onClick={() => setShowSaveDialog(true)}
         >
-            Save
+            Save Progress
         </Button>
       </Box>
 
-      <Paper
-        elevation={0}
-        sx={{
-            flexGrow: 1,
-            width: "100%",
-            maxWidth: 600,
-            bgcolor: "transparent",
-            overflowY: "auto",
-            px: 2,
-            pb: 12,
-            display: "flex",
-            flexDirection: "column",
-            gap: 2
-        }}
-      >
-        {history.map((msg, index) => (
-            <Box
-                key={index}
+      {/* Main Content: Split Layout */}
+      <Box sx={{ display: "flex", width: "100%", maxWidth: "1400px", flexGrow: 1, overflow: "hidden" }}>
+        
+        {/* Left: Chat Interface */}
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", borderRight: "1px solid #333" }}>
+            <Paper
+                elevation={0}
                 sx={{
-                    alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                    maxWidth: "85%",
-                    width: msg.type === "info" ? "100%" : "auto"
+                    flexGrow: 1,
+                    bgcolor: "transparent",
+                    overflowY: "auto",
+                    px: 3,
+                    pb: 12,
+                    pt: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2
                 }}
             >
-                {msg.type === "info" && (
-                    <Fade in={true}>
-                        <Paper sx={{ p: 2, mb: 1, bgcolor: "rgba(253, 187, 45, 0.1)", border: "1px solid #fdbb2d", borderRadius: 2 }}>
-                            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold", color: "#fdbb2d" }}>
-                                {msg.title}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: "#ddd" }}>
-                                {msg.content}
-                            </Typography>
-                        </Paper>
-                    </Fade>
-                )}
+                {history.map((msg, index) => (
+                    <Box
+                        key={index}
+                        sx={{
+                            alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                            maxWidth: "85%",
+                            width: msg.type === "info" ? "100%" : "auto"
+                        }}
+                    >
+                        {msg.type === "info" && (
+                            <Fade in={true}>
+                                <Paper sx={{ p: 2, mb: 1, bgcolor: "rgba(253, 187, 45, 0.1)", border: "1px solid #fdbb2d", borderRadius: 2 }}>
+                                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold", color: "#fdbb2d" }}>
+                                        {msg.title}
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: "#ddd" }}>
+                                        {msg.content}
+                                    </Typography>
+                                </Paper>
+                            </Fade>
+                        )}
 
-                {msg.type !== "info" && (
-                     <Fade in={true}>
-                        <Box sx={{ display: "flex", gap: 1, flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
-                            {msg.role === "bot" && (
-                                <Avatar sx={{ width: 32, height: 32, bgcolor: "#fdbb2d" }}>
-                                    <AiIcon sx={{ fontSize: 20, color: "#000" }} />
-                                </Avatar>
-                            )}
-                            <Paper
-                                sx={{
-                                    p: 2,
-                                    borderRadius: 3,
-                                    bgcolor: msg.role === "user" ? "#fdbb2d" : "#252525",
-                                    color: msg.role === "user" ? "#000" : "#fff",
-                                    borderTopLeftRadius: msg.role === "bot" ? 4 : 24,
-                                    borderTopRightRadius: msg.role === "user" ? 4 : 24,
-                                }}
-                            >
-                                <Typography variant="body1">{msg.content}</Typography>
-                            </Paper>
-                        </Box>
-                     </Fade>
-                )}
-            </Box>
-        ))}
-
-        {isTyping && (
-             <Box sx={{ alignSelf: "flex-start", display: "flex", gap: 1 }}>
-                <Avatar sx={{ width: 32, height: 32, bgcolor: "#fdbb2d" }}>
-                    <AiIcon sx={{ fontSize: 20, color: "#000" }} />
-                </Avatar>
-                <Paper sx={{ p: 2, borderRadius: 3, bgcolor: "#252525", borderTopLeftRadius: 4 }}>
-                    <Box sx={{ display: "flex", gap: 0.5 }}>
-                        <Box sx={{ width: 8, height: 8, bgcolor: "#666", borderRadius: "50%", animation: "pulse 1s infinite" }} />
-                        <Box sx={{ width: 8, height: 8, bgcolor: "#666", borderRadius: "50%", animation: "pulse 1s infinite 0.2s" }} />
-                        <Box sx={{ width: 8, height: 8, bgcolor: "#666", borderRadius: "50%", animation: "pulse 1s infinite 0.4s" }} />
+                        {msg.type !== "info" && (
+                            <Fade in={true}>
+                                <Box sx={{ display: "flex", gap: 1, flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
+                                    {msg.role === "bot" && (
+                                        <Avatar sx={{ width: 32, height: 32, bgcolor: "#fdbb2d" }}>
+                                            <AiIcon sx={{ fontSize: 20, color: "#000" }} />
+                                        </Avatar>
+                                    )}
+                                    <Paper
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: 3,
+                                            bgcolor: msg.role === "user" ? "#fdbb2d" : "#252525",
+                                            color: msg.role === "user" ? "#000" : "#fff",
+                                            borderTopLeftRadius: msg.role === "bot" ? 4 : 24,
+                                            borderTopRightRadius: msg.role === "user" ? 4 : 24,
+                                        }}
+                                    >
+                                        <Typography variant="body1">{msg.content}</Typography>
+                                    </Paper>
+                                </Box>
+                            </Fade>
+                        )}
                     </Box>
-                </Paper>
-            </Box>
-        )}
-        
-        <div ref={messagesEndRef} />
-      </Paper>
-
-      <Box 
-        sx={{ 
-            position: "fixed", 
-            bottom: 0, 
-            width: "100%", 
-            maxWidth: 600, 
-            p: 2, 
-            bgcolor: "#121212",
-            borderTop: "1px solid #333" 
-        }}
-      >
-        {!isTyping && currentStep?.options && (
-            <Stack direction="row" spacing={1} sx={{ mb: 2, overflowX: "auto", pb: 1 }}>
-                {currentStep.options.map((opt, i) => (
-                    <Chip 
-                        key={i} 
-                        label={opt.label} 
-                        onClick={() => handleOptionClick(opt)}
-                        sx={{ 
-                            bgcolor: "#fdbb2d", 
-                            color: "#000", 
-                            fontWeight: "bold",
-                            "&:hover": { bgcolor: "#fff" }
-                        }} 
-                        clickable
-                    />
                 ))}
-            </Stack>
-        )}
 
-        {currentStep?.type === "final" && (
-             <Button 
-                fullWidth 
-                variant="contained" 
-                color="secondary" 
-                size="large"
-                onClick={handleSaveAndExit}
+                {isTyping && (
+                    <Box sx={{ alignSelf: "flex-start", display: "flex", gap: 1 }}>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: "#fdbb2d" }}>
+                            <AiIcon sx={{ fontSize: 20, color: "#000" }} />
+                        </Avatar>
+                        <Paper sx={{ p: 2, borderRadius: 3, bgcolor: "#252525", borderTopLeftRadius: 4 }}>
+                            <Box sx={{ display: "flex", gap: 0.5 }}>
+                                <Box sx={{ width: 8, height: 8, bgcolor: "#666", borderRadius: "50%", animation: "pulse 1s infinite" }} />
+                                <Box sx={{ width: 8, height: 8, bgcolor: "#666", borderRadius: "50%", animation: "pulse 1s infinite 0.2s" }} />
+                                <Box sx={{ width: 8, height: 8, bgcolor: "#666", borderRadius: "50%", animation: "pulse 1s infinite 0.4s" }} />
+                            </Box>
+                        </Paper>
+                    </Box>
+                )}
+                
+                <div ref={messagesEndRef} />
+            </Paper>
+
+            <Box 
+                sx={{ 
+                    position: "absolute", 
+                    bottom: 0, 
+                    left: 0,
+                    right: 0, 
+                    p: 2, 
+                    bgcolor: "#121212",
+                    borderTop: "1px solid #333" 
+                }}
             >
-                Generate & Create One Profile
-             </Button>
-        )}
+                {!isTyping && currentStep?.options && (
+                    <Stack direction="row" spacing={1} sx={{ mb: 2, overflowX: "auto", pb: 1 }}>
+                        {currentStep.options.map((opt, i) => (
+                            <Chip 
+                                key={i} 
+                                label={opt.label} 
+                                onClick={() => handleOptionClick(opt)}
+                                sx={{ 
+                                    bgcolor: "#fdbb2d", 
+                                    color: "#000", 
+                                    fontWeight: "bold",
+                                    "&:hover": { bgcolor: "#fff" }
+                                }} 
+                                clickable
+                            />
+                        ))}
+                    </Stack>
+                )}
 
-        {(!currentStep?.options && currentStep?.type !== "final" && currentStep?.type !== "info" && currentStep?.type !== "message") && (
-            <form onSubmit={handleInputSubmit} style={{ display: "flex", gap: 1 }}>
-                <TextField
-                    fullWidth
-                    variant="outlined"
-                    placeholder={currentStep?.placeholder || "Type your answer..."}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    disabled={isTyping}
-                    autoFocus
-                    sx={{
-                        bgcolor: "#1e1e1e",
-                        borderRadius: 1,
-                        "& .MuiOutlinedInput-root": { color: "#fff" }
-                    }}
-                />
-                <IconButton 
-                    type="submit" 
-                    color="secondary" 
-                    disabled={!inputValue.trim() || isTyping}
-                    sx={{ bgcolor: "rgba(253, 187, 45, 0.1)" }}
-                >
-                    <SendIcon />
-                </IconButton>
-            </form>
-        )}
+                {currentStep?.type === "final" && (
+                    <Button 
+                        fullWidth 
+                        variant="contained" 
+                        color="secondary" 
+                        size="large"
+                        onClick={handleSaveAndExit}
+                    >
+                        Generate & Create One Profile
+                    </Button>
+                )}
+
+                {(!currentStep?.options && currentStep?.type !== "final" && currentStep?.type !== "info" && currentStep?.type !== "message") && (
+                    <form onSubmit={handleInputSubmit} style={{ display: "flex", gap: 1 }}>
+                        <TextField
+                            fullWidth
+                            variant="outlined"
+                            placeholder={currentStep?.placeholder || "Type your answer..."}
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            disabled={isTyping}
+                            autoFocus
+                            sx={{
+                                bgcolor: "#1e1e1e",
+                                borderRadius: 1,
+                                "& .MuiOutlinedInput-root": { color: "#fff" }
+                            }}
+                        />
+                        <IconButton 
+                            type="submit" 
+                            color="secondary" 
+                            disabled={!inputValue.trim() || isTyping}
+                            sx={{ bgcolor: "rgba(253, 187, 45, 0.1)" }}
+                        >
+                            <SendIcon />
+                        </IconButton>
+                    </form>
+                )}
+            </Box>
+        </Box>
+
+        {/* Right: Live Preview (Hidden on mobile) */}
+        <Box sx={{ 
+            width: "400px", 
+            p: 2, 
+            display: { xs: "none", md: "block" },
+            bgcolor: "#f5f5f5" // Light background for document feel
+        }}>
+            <LiveResumePreview answers={answers} />
+        </Box>
+
       </Box>
 
       <Dialog open={showSaveDialog} onClose={() => setShowSaveDialog(false)}>
