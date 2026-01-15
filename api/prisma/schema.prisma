@@ -38,6 +38,7 @@ model User {
   conversations      Conversation[]
   resumes            Resume[]
   uploadedResumes    UploadedResume[]
+  portfolio          Portfolio?
   subscriptions      Subscription[]
   referrals          Referral[]          @relation("Referrer")
   referredBy         Referral[]          @relation("Referred")
@@ -388,4 +389,21 @@ model SchemaVersion {
   description String?
 
   @@map("schema_versions")
+}
+
+// User Portfolio (GitHub Pages)
+model Portfolio {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  githubRepo      String   @map("github_repo")
+  githubUrl       String   @map("github_url")
+  templateType    String   @default("modern") @map("template_type")
+  themeColor      String   @default("blue") @map("theme_color")
+  lastGeneratedAt DateTime @default(now()) @map("last_generated_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("portfolios")
 }

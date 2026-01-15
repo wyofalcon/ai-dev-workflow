@@ -1,3 +1,4 @@
+// [FEAT-LOCALAI-001] Local AI Setup Modal
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -368,52 +369,26 @@ export function AIStatusBadge({ onClick }) {
         size="small" 
         variant="outlined"
         color="warning"
-        onClick={onClick}
         sx={{ 
           mr: 2, 
-          cursor: 'pointer',
           display: { xs: 'none', md: 'flex' }
         }}
       />
     );
   }
 
-  if (isReady && aiMode !== "server") {
-    return (
-      <Chip 
-        icon={<ChipIcon />} 
-        label="Local AI ⚡" 
-        size="small" 
-        variant="outlined"
-        color="success"
-        onClick={onClick}
-        sx={{ 
-          mr: 2, 
-          cursor: 'pointer',
-          display: { xs: 'none', md: 'flex' }
-        }}
-      />
-    );
-  }
-
-  // Server AI or not configured - make it inviting to click
+  // Always show Cloud AI since Local AI is paused
   return (
     <Chip 
       icon={<CloudIcon />} 
-      label="Enable Local AI" 
+      label="Cloud AI" 
       size="small" 
       variant="outlined"
       color="primary"
-      onClick={onClick}
       sx={{ 
         mr: 2, 
-        cursor: 'pointer',
         display: { xs: 'none', md: 'flex' },
-        '&:hover': {
-          bgcolor: 'primary.main',
-          color: 'white',
-          '& .MuiChip-icon': { color: 'white' }
-        }
+        borderColor: 'rgba(25, 118, 210, 0.5)'
       }}
     />
   );

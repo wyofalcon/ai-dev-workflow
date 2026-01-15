@@ -17,6 +17,7 @@ const mockStoryState = {
 
 const mockExecuteRawUnsafe = jest.fn().mockResolvedValue(1);
 const mockQueryRawUnsafe = jest.fn();
+const mockStoryState = {}; // Defined here
 const mockUserUpsert = jest.fn().mockResolvedValue({ id: 'user-123' });
 const mockUserCreate = jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: data.firebaseUid === 'no-embedding-user' ? 'user-no-embeddings' : 'user-123', ...data }));
 const mockUserDelete = jest.fn().mockResolvedValue({});
@@ -246,6 +247,9 @@ describe('RAG Story Retrieval - Integration Tests', () => {
     );
 
     devOpsStoryId = devOpsResult[0]?.id;
+    if (devOpsStoryId) {
+        mockStoryState[devOpsStoryId] = { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 };
+    }
 
     // Create frontend story with embedding
     const frontendStory = {
@@ -278,6 +282,9 @@ describe('RAG Story Retrieval - Integration Tests', () => {
     );
 
     frontendStoryId = frontendResult[0]?.id;
+    if (frontendStoryId) {
+        mockStoryState[frontendStoryId] = { timesUsedInResumes: 0, timesUsedInCoverLetters: 0 };
+    }
   });
 
   afterAll(async () => {
@@ -546,7 +553,12 @@ describe('RAG Story Retrieval - Integration Tests', () => {
       expect(stats.mostUsed[0].id).toBe('s1');
       expect(stats.underutilized).toHaveLength(1);
       expect(stats.underutilized[0].id).toBe('s2');
+<<<<<<< HEAD
       // mockResolvedValueOnce auto-restores after single use, no manual restore needed
+=======
+
+      // No restoration needed for mockProfileStoryFindMany as it's a jest.fn()
+>>>>>>> TimeMachine1
     });
 
     it('should handle errors in analytics gracefully', async () => {

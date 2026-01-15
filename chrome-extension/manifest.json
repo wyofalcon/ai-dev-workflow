@@ -2,21 +2,22 @@
   "manifest_version": 3,
   "name": "CVstomize - Quick Tailor",
   "version": "1.0",
-  "description": "Tailor your resume to any job posting instantly using local AI.",
+  "description": "Tailor your resume to any job posting instantly using AI.",
   "permissions": [
     "activeTab",
     "scripting",
     "storage",
-    "offscreen",
     "cookies"
   ],
   "host_permissions": [
     "http://localhost:3000/*",
+    "http://localhost:3001/*",
     "https://cvstomize-frontend-351889420459.us-central1.run.app/*",
+    "https://cvstomize-api-351889420459.us-central1.run.app/*",
     "https://cvstomize.com/*"
   ],
   "action": {
-    "default_popup": "src/popup/index.html",
+    "default_popup": "popup/index.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -24,7 +25,8 @@
     }
   },
   "background": {
-    "service_worker": "src/background/background.js"
+    "service_worker": "src/background/background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
@@ -36,11 +38,5 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["src/offscreen/offscreen.html"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  }
 }

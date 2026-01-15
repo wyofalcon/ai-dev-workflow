@@ -123,13 +123,13 @@ function MainLayout({ children }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [showLocalAIModal, setShowLocalAIModal] = useState(false);
 
-  // Show local AI setup prompt on first visit (after a brief delay for UX)
-  React.useEffect(() => {
-    if (shouldShowLocalAISetup) {
-      const timer = setTimeout(() => setShowLocalAIModal(true), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [shouldShowLocalAISetup]);
+  // POST-MVP: Auto-show Local AI Setup
+  // React.useEffect(() => {
+  //   if (shouldShowLocalAISetup) {
+  //     const timer = setTimeout(() => setShowLocalAIModal(true), 2000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [shouldShowLocalAISetup]);
 
   const handleStart = () => {
     setIsProcessStarted(true);
@@ -250,15 +250,6 @@ function MainLayout({ children }) {
             <>
               {/* AI Status Indicator */}
               <AIStatusBadge onClick={() => setShowLocalAIModal(true)} />
-
-              {/* User Info */}
-              <Typography
-                variant="body2"
-                sx={{ mr: 2, display: { xs: "none", sm: "block" } }}
-              >
-                {userProfile?.resumesGenerated || 0} /{" "}
-                {userProfile?.resumesLimit || 1} resumes
-              </Typography>
 
               <Button
                 color="primary"

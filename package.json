@@ -5,7 +5,6 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@mlc-ai/web-llm": "^0.2.80",
     "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.4",
     "@mui/x-date-pickers": "^8.21.0",
@@ -31,7 +30,7 @@
   },
   "scripts": {
     "start": "npx craco start --config craco.config.cjs",
-    "build": "npx craco build --config craco.config.cjs",
+    "build": "FAST_REFRESH=false npx craco build --config craco.config.cjs",
     "test": "npx craco test --config craco.config.cjs",
     "lint": "eslint src",
     "eject": "react-scripts eject",

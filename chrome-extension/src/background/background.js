@@ -1,48 +1,68 @@
+// [FEAT-EXT-001] Chrome Extension Background Script
 import { getAuthToken } from './auth.js';
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.action === 'start_tailoring') {
-    await setupOffscreenDocument('src/offscreen/offscreen.html');
     
-    // Get Auth Token
-    const token = await getAuthToken();
-    if (!token) {
+    // Get Auth Token & API URL
+    const authData = await getAuthToken();
+    
+    if (!authData || !authData.token) {
         console.warn("No auth token found. User might not be logged in to CVstomize.");
-        // Proceed anyway, but maybe warn? Or let offscreen handle it?
+        chrome.runtime.sendMessage({ 
+            action: 'ai_error', 
+            error: "Please log in to CVstomize in another tab first."
+        });
+        return;
     }
 
-    // Forward to offscreen
-    chrome.runtime.sendMessage({
-      action: 'run_inference',
-      data: message.jobText,
-      token: token
-    });
+    const { token, apiUrl } = authData;
+
+    try {
+        // 1. Report progress
+        chrome.runtime.sendMessage({ 
+            action: 'ai_progress', 
+            progress: 0.2, 
+            text: 'Analyzing Job Description with Vertex AI...' 
+        });
+
+        // 2. Call Backend API
+        const response = await fetch(`${apiUrl}/ai/extension/tailor`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                jobDescription: message.jobText
+            })
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`API Error: ${response.status} ${errText}`);
+        }
+
+        const data = await response.json();
+
+        // 3. Send Results
+        chrome.runtime.sendMessage({ 
+            action: 'ai_complete', 
+            result: data.result 
+        });
+
+    } catch (error) {
+        console.error("AI API Error:", error);
+        chrome.runtime.sendMessage({ 
+            action: 'ai_error', // Changed from ai_progress with error text to distinct error action
+            error: error.message 
+        });
+        // Also send progress reset just in case
+        chrome.runtime.sendMessage({ 
+            action: 'ai_progress', 
+            progress: 0, 
+            text: `Error: ${error.message}` 
+        });
+    }
   }
 });
-
-async function setupOffscreenDocument(path) {
-  // Check if offscreen document exists
-  const existingContexts = await chrome.runtime.getContexts({
-    contextTypes: ['OFFSCREEN_DOCUMENT'],
-    documentUrls: [path]
-  });
-
-  if (existingContexts.length > 0) {
-    return;
-  }
-
-  // Create offscreen document
-  if (creating) {
-    await creating;
-  } else {
-    creating = chrome.offscreen.createDocument({
-      url: path,
-      reasons: ['WORKERS'], // 'WORKERS' is valid reason for WebLLM? checking docs... usually 'DOM_PARSING' or 'BLOBS'
-      justification: 'Running WebLLM for local AI inference'
-    });
-    await creating;
-    creating = null;
-  }
-}
-
-let creating; // Promise keeper

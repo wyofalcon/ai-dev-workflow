@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tailorBtn = document.getElementById('tailor-btn');
   const statusDiv = document.getElementById('status');
   const progressSpan = document.getElementById('progress');
+  
+  let fullJobText = '';
 
   // Get current tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -12,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const response = await chrome.tabs.sendMessage(tab.id, { action: 'extract_text' });
     if (response && response.text) {
+      fullJobText = response.text;
       jobPreview.textContent = response.text.substring(0, 300) + '...';
     } else {
       jobPreview.textContent = 'Could not extract text. Please ensure you are on a job page.';
@@ -24,13 +27,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   tailorBtn.addEventListener('click', async () => {
+    if (!fullJobText) return;
+    
     statusDiv.classList.remove('hidden');
     tailorBtn.disabled = true;
     
-    // Trigger AI in offscreen via background
+    // Trigger AI via background
     chrome.runtime.sendMessage({ 
       action: 'start_tailoring',
-      jobText: jobPreview.textContent // In reality, send full text
+      jobText: fullJobText
     });
   });
 
@@ -42,7 +47,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         statusDiv.innerHTML = `${message.text} <span id="progress">${Math.round(message.progress * 100)}%</span>`;
       }
     } else if (message.action === 'ai_complete') {
-        statusDiv.textContent = 'Done! (Placeholder)';
+        statusDiv.classList.add('hidden');
+        tailorBtn.disabled = false;
+        
+        const resultContainer = document.getElementById('result-container');
+        const resultText = document.getElementById('result-text');
+        
+        resultText.textContent = message.result;
+        resultContainer.classList.remove('hidden');
+    } else if (message.action === 'ai_error') {
+        statusDiv.innerHTML = `<span style="color: red;">Error: ${message.error}</span>`;
         tailorBtn.disabled = false;
     }
   });

@@ -8,7 +8,7 @@
 
 | Field             | Value      |
 | ----------------- | ---------- |
-| **Last Updated**  | 2025-12-26 |
+| **Last Updated**  | 2026-01-13 |
 | **Last Agent**    | Copilot    |
 | **Session State** | Active     |
 
@@ -16,43 +16,45 @@
 
 <!-- What are we actively working on right now? -->
 
-- ✅ Workflow toggles complete (Relay Mode + Audit Watch)
-- Ready for testing
+- 🛑 **PAUSED:** WebLLM / Local AI features (put on back burner)
+- 🔄 **PIVOT:** Using Vertex AI (Backend) for ALL AI features (including extension)
+- ✅ Session handoff documents updated (SESSION_37_HANDOFF.md created)
+- ✅ ROADMAP.md updated with MVP launch phases
+- MVP Launch Preparation - see `.context/MVP_MASTER_LIST.md`
 
 ## Recent Progress
 
 <!-- What was accomplished in the last session? -->
 
-- ✅ **Added Audit Watch toggle** (on/off mode with visual UI)
-- ✅ Updated audit-watch.sh to respect mode setting
-- ✅ **Created Prompt Relay system** (Copilot → PROMPT.md → Builder)
-- ✅ Added RELAY_MODE toggle (review/auto)
-- ✅ Created send-prompt.sh script
-- ✅ Updated first-time popup with new workflow
-- ✅ Added first-time welcome popup to builder-setup.sh
-- ✅ Configured split terminals (Audit Watch + AI Builder)
-- ✅ Fixed NODE_OPTIONS conflict for gemini/claude aliases
-- ✅ Created public ai-dev-workflow repo
-- ✅ Added smart exclusions to audit-file.py
-- ✅ **Created session context automation** (this file!)
-- ✅ Updated GEMINI.md, CLAUDE.md, copilot-instructions.md with mandatory context check
-- ✅ Added context reminder to start-ai-cli.sh
+- **STRATEGY SHIFT:** Paused WebLLM/Local AI. Focus on Vertex AI to use up credits and simplify launch.
+- ✅ **Refactored Extension:** Connected to Vertex AI, removed WebLLM.
+- ✅ **Rebuilt DevLive:** Environment running with new API endpoints.
+- ✅ **Finished Portfolio Feature:**
+    - Verified backend logic and created unit tests (`api/__tests__/unit/services/portfolioService.test.js`)
+    - Updated `portfolioService.js` to sync generated URL to user profile
+    - Enhanced frontend UI with template style selection (Modern/Minimal/Creative)
+    - Updated `.env.example` with required `GITHUB_PAT`
+- ✅ **Created SESSION_37_HANDOFF.md** documenting all changes since Session 36
+- ✅ **Updated ROADMAP.md** with 8-phase MVP launch plan
+- ✅ **MVP Master List created** with 12 blockers identified, 22 items deferred
 
 ## Blockers / Open Questions
 
 <!-- Anything stuck or waiting for user input? -->
 
-- None currently
+- **M1:** Production build needs diagnosis
+- **M2:** Test configuration needs fixing
+- **M12:** Quick Tailor needs verification (User Testing)
 
 ## Next Steps
 
 <!-- What should the next session focus on? -->
 
-1. Rebuild container to test full workflow end-to-end
-2. Verify agents check SESSION.md on startup
-3. Test first-time user experience (onboarding.sh)
-4. Continue feature development
-
+1. **Verify Extension (User):** Load `extension-dist` in Chrome, login to localhost:3000, test on a job page.
+2. **Priority: MVP Blockers** - Follow `.context/MVP_MASTER_LIST.md` phases
+3. Fix production build (M1)
+4. Fix test configuration (M2)
+5. Audit deprecated dependencies (M3)
 ---
 
 ## 📋 How Agents Should Use This File

@@ -41,7 +41,7 @@
 
 | ID | Task | Tags | Status | GitHub Issue |
 |----|------|------|--------|--------------|
-| M1 | **Fix Production Build** | `MVP` `INFRA` | 🔴 Open | — (SESSION.md blocker) |
+| M1 | **Fix Production Build** | `MVP` `INFRA` | ✅ Done | — (Fixed with FAST_REFRESH=false) |
 | M2 | **Fix Test Configuration** | `MVP` `INFRA` | 🔴 Open | — (SESSION.md blocker) |
 
 ### 2️⃣ Dependencies (Required: No Deprecated Code)
@@ -135,7 +135,8 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  PHASE 1: BUILD                                             │
-│  [ ] M1 - Fix Production Build                              │
+- [x] **F11:** Career Portfolio Generator (AI-powered GitHub Pages deployment) - *Completed 2026-01-13*
+- [ ] **M1:** Production build diagnosis
 │  [ ] M2 - Fix Test Configuration                            │
 ├─────────────────────────────────────────────────────────────┤
 │  PHASE 2: DEPENDENCIES                                      │
@@ -192,7 +193,7 @@ All other open issues tagged for post-launch.
 - **Total Open Issues:** 31
 - **MVP Issues:** ~12 (including build/test blockers not in GitHub)
 - **NON-MVP Issues:** ~22
-- **Strategy:** Ship MVP first, iterate after user feedback
+- **Strategy:** Ship MVP first, iterate after user feedback. **PIVOT (2026-01-13):** Paused WebLLM/Local AI; using Vertex AI for all features (including Quick Tailor) to simplify launch and use credits.
 
 ---
 
