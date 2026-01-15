@@ -130,7 +130,18 @@ function LandingPage() {
           alignItems="center"
           sx={{ mb: 8 }}
         >
-          <Box sx={{ position: 'relative' }}>
+          <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <IconButton 
+              size="small" 
+              onClick={handleInfoOpen}
+              sx={{ 
+                mr: 1,
+                color: 'rgba(255,255,255,0.5)',
+                '&:hover': { color: '#fdbb2d' }
+              }}
+            >
+              <InfoIcon />
+            </IconButton>
             <Button
               variant="contained"
               color="secondary"
@@ -148,20 +159,6 @@ function LandingPage() {
             >
               Easy CV
             </Button>
-            <IconButton 
-              size="small" 
-              onClick={handleInfoOpen}
-              sx={{ 
-                position: 'absolute', 
-                right: -40, 
-                top: '50%', 
-                transform: 'translateY(-50%)',
-                color: 'rgba(255,255,255,0.5)',
-                '&:hover': { color: '#fdbb2d' }
-              }}
-            >
-              <InfoIcon />
-            </IconButton>
             
             <Popover
               open={isInfoOpen}
@@ -193,7 +190,7 @@ function LandingPage() {
                 Easy CV clearly walks you through building a basic resume, which is the start of building a full profile on CVstomize.
               </Typography>
               <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
-                Otherwise, you can upload your own resume after signing up and it will be smart-parsed to your One Profile.
+                Otherwise, you can upload your own resume after signing up and it will be smart-parsed to your CVstom Profile.
               </Typography>
             </Popover>
           </Box>
@@ -234,7 +231,7 @@ function LandingPage() {
             >
               <PersonIcon sx={{ fontSize: 40, color: "#fdbb2d", mb: 2 }} />
               <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1, color: "#fff" }}>
-                One Profile
+                CVstom Profile
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
                 Your career belongs to you. Build one master profile that acts as your 
@@ -263,7 +260,7 @@ function LandingPage() {
                 Quick Tailor
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                Unlock the power of your Master Profile. Use our browser extension 
+                Unlock the power of your CVstom Profile. Use our browser extension 
                 to instantly tailor your resume to any job posting tab you have open.
               </Typography>
             </Paper>
@@ -288,7 +285,7 @@ function LandingPage() {
                 One-Click Portfolio
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                Turn your Master Profile into a stunning personal website with one click. 
+                Turn your CVstom Profile into a stunning personal website with one click. 
                 Share your link, not just a file.
               </Typography>
             </Paper>
