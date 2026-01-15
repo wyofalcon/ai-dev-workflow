@@ -177,11 +177,11 @@ function LandingPage() {
             >
               <PersonIcon sx={{ fontSize: 40, color: "#fdbb2d", mb: 2 }} />
               <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1, color: "#fff" }}>
-                Master Profile
+                One Profile
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                Your Profile is your Master Resume. Build it once with our AI 
-                questions, and use it as the single source of truth for every application. 
+                A single source of truth to ensure you always have your best resume 
+                ready to go. Even with your dream job, things happen. Always be ready. 
                 Continuously add skills as you learn them.
               </Typography>
             </Paper>
