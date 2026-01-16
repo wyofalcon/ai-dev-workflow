@@ -2,6 +2,20 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "👁️ Watch Builder",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/watch-builder.sh",
+      "isBackground": true,
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "🎯 Builder Setup",
       "type": "shell",
       "command": "bash ${workspaceFolder}/.devcontainer/builder-setup.sh",
@@ -32,7 +46,7 @@
     {
       "label": "🤖 AI Builder",
       "type": "shell",
-      "command": "${workspaceFolder}/scripts/start-ai-cli.sh",
+      "command": "${workspaceFolder}/scripts/start-builder-tmux.sh",
       "isBackground": true,
       "presentation": {
         "echo": true,

@@ -16,7 +16,7 @@ gcloud config set project ${PROJECT_ID}
 
 # Build the Docker image using Cloud Build
 echo "🔨 Building Docker image with Cloud Build..."
-gcloud builds submit --tag ${IMAGE_NAME} .
+gcloud builds submit --config cloudbuild.yaml .
 
 # Deploy to Cloud Run
 echo "🚢 Deploying to Cloud Run..."

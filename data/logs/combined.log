@@ -993,3 +993,64 @@
 {"level":"info","message":{"duration":"11ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/answer"},"timestamp":"2025-12-25T06:31:46.822Z"}
 {"level":"info","message":{"duration":"5332ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/complete"},"timestamp":"2025-12-25T06:31:52.155Z"}
 {"level":"info","message":{"duration":"4ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/results"},"timestamp":"2025-12-25T06:31:52.160Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":401,"url":"/generate"},"timestamp":"2026-01-15T11:21:42.642Z"}
+{"level":"info","message":{"duration":"1ms","ip":"::ffff:127.0.0.1","method":"POST","status":400,"url":"/generate"},"timestamp":"2026-01-15T11:21:42.652Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"POST","status":400,"url":"/generate"},"timestamp":"2026-01-15T11:21:42.660Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"POST","status":403,"url":"/generate"},"timestamp":"2026-01-15T11:21:42.701Z"}
+{"level":"info","message":{"duration":"9ms","ip":"::ffff:127.0.0.1","method":"POST","status":201,"url":"/generate"},"timestamp":"2026-01-15T11:21:42.715Z"}
+{"level":"info","message":{"duration":"5ms","ip":"::ffff:127.0.0.1","method":"POST","status":201,"url":"/generate"},"timestamp":"2026-01-15T11:21:42.725Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":201,"url":"/generate"},"timestamp":"2026-01-15T11:21:42.731Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":201,"url":"/generate"},"timestamp":"2026-01-15T11:21:42.737Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"GET","status":401,"url":"/list"},"timestamp":"2026-01-15T11:21:42.744Z"}
+{"level":"info","message":{"duration":"1ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/list"},"timestamp":"2026-01-15T11:21:42.748Z"}
+{"level":"info","message":{"duration":"1ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/list"},"timestamp":"2026-01-15T11:21:42.751Z"}
+{"level":"info","message":{"duration":"1ms","ip":"::ffff:127.0.0.1","method":"GET","status":401,"url":"/resume-123"},"timestamp":"2026-01-15T11:21:42.754Z"}
+{"level":"info","message":{"duration":"1ms","ip":"::ffff:127.0.0.1","method":"GET","status":404,"url":"/nonexistent"},"timestamp":"2026-01-15T11:21:42.757Z"}
+{"level":"info","message":{"duration":"1ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/resume-123"},"timestamp":"2026-01-15T11:21:42.760Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"GET","status":401,"url":"/resume-123/download"},"timestamp":"2026-01-15T11:21:42.763Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/resume-123/download"},"timestamp":"2026-01-15T11:21:42.766Z"}
+{"level":"info","message":{"duration":"1ms","ip":"::ffff:127.0.0.1","method":"POST","status":401,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:42.769Z"}
+{"level":"info","message":{"duration":"3ms","ip":"::ffff:127.0.0.1","method":"POST","status":400,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:42.774Z"}
+{"level":"info","message":{"duration":"4ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:42.783Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:42.787Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:42.792Z"}
+{"level":"info","message":{"duration":"3ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:42.797Z"}
+{"level":"info","message":{"duration":"3ms","ip":"::ffff:127.0.0.1","method":"POST","status":400,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:42.802Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:42.808Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:42.812Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:42.816Z"}
+{"level":"info","message":"Generating portfolio for user test-user-id","timestamp":"2026-01-15T11:21:46.499Z"}
+{"level":"info","message":"Generating portfolio HTML with Vertex AI...","timestamp":"2026-01-15T11:21:46.502Z"}
+{"level":"info","message":"Deploying to GitHub repo: portfolio-test-r-id","timestamp":"2026-01-15T11:21:46.502Z"}
+{"level":"info","message":"Portfolio deployed to https://test-user.github.io/portfolio-test-u-id/","timestamp":"2026-01-15T11:21:46.503Z"}
+{"level":"info","message":"Generating portfolio for user test-user-id","timestamp":"2026-01-15T11:21:46.512Z"}
+{"level":"info","message":"Generating portfolio for user test-user-id","timestamp":"2026-01-15T11:21:46.525Z"}
+{"level":"info","message":"Generating portfolio HTML with Vertex AI...","timestamp":"2026-01-15T11:21:46.525Z"}
+{"level":"info","message":"Deploying to GitHub repo: portfolio-test-r-id","timestamp":"2026-01-15T11:21:46.525Z"}
+{"level":"info","message":"Portfolio deployed to https://test-user.github.io/portfolio-test-u-id/","timestamp":"2026-01-15T11:21:46.525Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":401,"url":"/generate"},"timestamp":"2026-01-15T11:21:46.854Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":400,"url":"/generate"},"timestamp":"2026-01-15T11:21:46.866Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"POST","status":400,"url":"/generate"},"timestamp":"2026-01-15T11:21:46.885Z"}
+{"level":"info","message":{"duration":"1ms","ip":"::ffff:127.0.0.1","method":"POST","status":403,"url":"/generate"},"timestamp":"2026-01-15T11:21:46.889Z"}
+{"level":"info","message":{"duration":"11ms","ip":"::ffff:127.0.0.1","method":"POST","status":201,"url":"/generate"},"timestamp":"2026-01-15T11:21:46.902Z"}
+{"level":"info","message":{"duration":"6ms","ip":"::ffff:127.0.0.1","method":"POST","status":201,"url":"/generate"},"timestamp":"2026-01-15T11:21:46.917Z"}
+{"level":"info","message":{"duration":"3ms","ip":"::ffff:127.0.0.1","method":"POST","status":201,"url":"/generate"},"timestamp":"2026-01-15T11:21:46.922Z"}
+{"level":"info","message":{"duration":"3ms","ip":"::ffff:127.0.0.1","method":"POST","status":201,"url":"/generate"},"timestamp":"2026-01-15T11:21:46.927Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"GET","status":401,"url":"/list"},"timestamp":"2026-01-15T11:21:46.930Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/list"},"timestamp":"2026-01-15T11:21:46.933Z"}
+{"level":"info","message":{"duration":"1ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/list"},"timestamp":"2026-01-15T11:21:46.936Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"GET","status":401,"url":"/resume-123"},"timestamp":"2026-01-15T11:21:46.938Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"GET","status":404,"url":"/nonexistent"},"timestamp":"2026-01-15T11:21:46.941Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/resume-123"},"timestamp":"2026-01-15T11:21:46.943Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"GET","status":401,"url":"/resume-123/download"},"timestamp":"2026-01-15T11:21:46.947Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/resume-123/download"},"timestamp":"2026-01-15T11:21:46.949Z"}
+{"level":"info","message":{"duration":"0ms","ip":"::ffff:127.0.0.1","method":"POST","status":401,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:46.952Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":400,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:46.956Z"}
+{"level":"info","message":{"duration":"4ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:46.964Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:46.972Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:46.977Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:46.981Z"}
+{"level":"info","message":{"duration":"4ms","ip":"::ffff:127.0.0.1","method":"POST","status":400,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:46.987Z"}
+{"level":"info","message":{"duration":"3ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:46.992Z"}
+{"level":"info","message":{"duration":"1ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:46.996Z"}
+{"level":"info","message":{"duration":"2ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/extract-text"},"timestamp":"2026-01-15T11:21:47.001Z"}

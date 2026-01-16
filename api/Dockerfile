@@ -1,9 +1,6 @@
 # Use Node.js 20 LTS Alpine for smaller image size
 FROM node:20-alpine
 
-# Cache bust: 2025-11-10 - Session 28: Bug fixes (resume persistence + PDF generation)
-ARG CACHEBUST=3
-
 # Install Chromium and dependencies for PDF generation (Bug #2 fix)
 RUN apk add --no-cache \
     chromium \

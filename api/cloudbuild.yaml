@@ -1,13 +1,17 @@
 # Cloud Build configuration for CVstomize API
 # Forces fresh builds without Docker cache reuse
 steps:
-  # Build the container image with --no-cache to force fresh build
+  # Pull the previous image to support caching
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args: ['-c', 'docker pull gcr.io/$PROJECT_ID/cvstomize-api:latest || exit 0']
+
+  # Build the container image using cache
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
-      - '--no-cache'
-      - '--build-arg'
-      - 'CACHEBUST=$BUILD_ID'
+      - '--cache-from'
+      - 'gcr.io/$PROJECT_ID/cvstomize-api:latest'
       - '-t'
       - 'gcr.io/$PROJECT_ID/cvstomize-api:$BUILD_ID'
       - '-t'

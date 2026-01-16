@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+// [FEAT-EASYCV-REDESIGN-001] Redesign Easy CV Wizard - Contained Chat + Paper-Sized Resume Preview + Interactive Sections
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -16,13 +17,21 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Zoom,
+  Fab
 } from "@mui/material";
 import {
   Close as CloseIcon,
   Send as SendIcon,
   AutoAwesome as AiIcon,
   Save as SaveIcon,
+  Minimize as MinimizeIcon,
+  Edit as EditIcon,
 } from "@mui/icons-material";
+import LandingPage from "./LandingPage";
 
 // Configuration for the flow
 const FLOW_STEPS = [
@@ -121,92 +130,192 @@ const FLOW_STEPS = [
   // We can re-integrate structured loops later if the AI conversation ends or needs specific data.
 ];
 
-// Live Resume Preview Component
-const LiveResumePreview = ({ answers }) => {
+// Interactive Section Wrapper
+const EditableSection = ({ id, label, onEdit, children, isEmpty }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  if (isEmpty) return null;
+
+  const handleClick = (event) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = () => {
+    handleClose();
+    onEdit(id, label);
+  };
+
   return (
-    <Paper
-      elevation={4}
-      sx={{
-        height: "100%",
-        maxHeight: "80vh",
-        overflowY: "auto",
-        p: 4,
-        bgcolor: "#fff",
-        color: "#333",
-        borderRadius: 2,
-        fontFamily: "'Roboto', sans-serif",
-      }}
-    >
-      <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 2, textAlign: 'center' }}>
-        Live Preview
-      </Typography>
-
-      {/* Header */}
-      <Box sx={{ mb: 3, textAlign: "center", borderBottom: "2px solid #333", pb: 2 }}>
-        <Typography variant="h4" sx={{ fontWeight: "bold", textTransform: "uppercase" }}>
-          {answers.fullName || "Your Name"}
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          {[answers.location, answers.phone, answers.email, answers.website]
-            .filter(Boolean)
-            .join(" | ")}
-        </Typography>
-        {answers.linkedin && (
-          <Typography variant="body2" color="primary">
-            {answers.linkedin}
-          </Typography>
-        )}
-      </Box>
-
-      {/* Career Target / Summary from AI */}
-      {answers.summary && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
-            Professional Summary
-          </Typography>
-          <Typography variant="body2" fontStyle="italic">
-            {answers.summary}
-          </Typography>
+    <>
+      <Tooltip title="Click to Edit" arrow placement="left">
+        <Box
+          onClick={handleClick}
+          sx={{
+            cursor: "pointer",
+            borderRadius: 1,
+            p: 0.5,
+            m: -0.5,
+            "&:hover": {
+              bgcolor: "rgba(33, 150, 243, 0.08)",
+              outline: "1px dashed #2196f3",
+            },
+            position: "relative",
+            transition: "all 0.2s"
+          }}
+        >
+          {children}
         </Box>
-      )}
+      </Tooltip>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <MenuItem onClick={handleEdit}>
+          <EditIcon fontSize="small" sx={{ mr: 1 }} /> Edit {label}
+        </MenuItem>
+        {/* Placeholder for future delete functionality */}
+        {/* <MenuItem onClick={handleClose}><DeleteIcon fontSize="small" sx={{ mr: 1, color: 'error.main' }} /> Clear</MenuItem> */}
+      </Menu>
+    </>
+  );
+};
 
-      {/* Skills */}
-      {(answers.languages || answers.tools || answers.softSkills) && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
-            Skills
-          </Typography>
-          <Typography variant="body2">
-            {[answers.languages, answers.tools, answers.cloudTools, answers.softSkills]
-              .filter(Boolean)
-              .join(", ")}
-          </Typography>
-        </Box>
-      )}
+// Live Resume Preview Component (Paper Style)
+const LiveResumePreview = ({ answers, onEditSection }) => {
+  return (
+    <Box sx={{ 
+      width: "100%", 
+      height: "100%", 
+      display: "flex", 
+      justifyContent: "center",
+      overflowY: "auto",
+      py: 4,
+      bgcolor: "#525659" // Acrobat dark grey background
+    }}>
+      <Paper
+        elevation={6}
+        sx={{
+          width: "216mm", // A4/Letter approx width
+          minHeight: "279mm", // Letter height
+          maxWidth: "100%",
+          p: 5,
+          bgcolor: "#fff",
+          color: "#333",
+          borderRadius: 0,
+          fontFamily: "'Roboto', sans-serif",
+          boxSizing: "border-box",
+          position: "relative",
+          mb: 4
+        }}
+      >
+        {/* Header Section */}
+        <EditableSection 
+          id="header" 
+          label="Contact Info" 
+          onEdit={onEditSection} 
+          isEmpty={!answers.fullName && !answers.email}
+        >
+          <Box sx={{ mb: 3, textAlign: "center", borderBottom: "2px solid #333", pb: 2 }}>
+            <Typography variant="h3" sx={{ fontWeight: "bold", textTransform: "uppercase", fontSize: "2rem" }}>
+              {answers.fullName || "Your Name"}
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              {[answers.location, answers.phone, answers.email, answers.website]
+                .filter(Boolean)
+                .join(" | ")}
+            </Typography>
+            {answers.linkedin && (
+              <Typography variant="body2" color="primary">
+                {answers.linkedin}
+              </Typography>
+            )}
+          </Box>
+        </EditableSection>
 
-      {/* Work Experience */}
-      {(answers.workHistory?.length > 0 || answers.temp_company) && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1 }}>
-            Experience
-          </Typography>
-          {/* Confirmed Jobs */}
-          {answers.workHistory?.map((job, i) => (
-            <Box key={i} sx={{ mb: 2 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {job.title} at {job.company}
+        {/* Career Target / Summary */}
+        <EditableSection 
+          id="summary" 
+          label="Summary" 
+          onEdit={onEditSection} 
+          isEmpty={!answers.summary}
+        >
+          {answers.summary && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1, textTransform: "uppercase", fontSize: "0.9rem", letterSpacing: 1 }}>
+                Professional Summary
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {job.dates} | {job.location}
-              </Typography>
-              <Typography variant="body2" sx={{ mt: 0.5 }}>
-                {job.desc}
+              <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
+                {answers.summary}
               </Typography>
             </Box>
-          ))}
+          )}
+        </EditableSection>
+
+        {/* Skills */}
+        <EditableSection 
+          id="skills" 
+          label="Skills" 
+          onEdit={onEditSection} 
+          isEmpty={!answers.languages && !answers.tools && !answers.softSkills}
+        >
+          {(answers.languages || answers.tools || answers.softSkills) && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1, textTransform: "uppercase", fontSize: "0.9rem", letterSpacing: 1 }}>
+                Skills
+              </Typography>
+              <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
+                {[answers.languages, answers.tools, answers.cloudTools, answers.softSkills]
+                  .filter(Boolean)
+                  .join(", ")}
+              </Typography>
+            </Box>
+          )}
+        </EditableSection>
+
+        {/* Work Experience */}
+        <EditableSection 
+          id="work" 
+          label="Experience" 
+          onEdit={onEditSection} 
+          isEmpty={!answers.workHistory?.length && !answers.temp_company}
+        >
+          {(answers.workHistory?.length > 0 || answers.temp_company) && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2196f3", mb: 1, textTransform: "uppercase", fontSize: "0.9rem", letterSpacing: 1 }}>
+                Experience
+              </Typography>
+              {/* Confirmed Jobs */}
+              {answers.workHistory?.map((job, i) => (
+                <Box key={i} sx={{ mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    {job.title} at {job.company}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    {job.dates} | {job.location}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                    {job.desc}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
+        </EditableSection>
+        
+        {/* Page Number (Simulated) */}
+        <Box sx={{ position: "absolute", bottom: 20, right: 30, opacity: 0.5 }}>
+            <Typography variant="caption">Page 1</Typography>
         </Box>
-      )}
-    </Paper>
+      </Paper>
+    </Box>
   );
 };
 
@@ -219,11 +328,15 @@ function EasyCvWizard() {
   const [isTyping, setIsTyping] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showConsent, setShowConsent] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false);
   
   // AI State
   const [isAiMode, setIsAiMode] = useState(false);
   const [interventionMode, setInterventionMode] = useState(false);
   const [preInterventionStep, setPreInterventionStep] = useState(null);
+  
+  // Edit Mode State
+  const [editingSection, setEditingSection] = useState(null);
 
   const messagesEndRef = useRef(null);
 
@@ -232,6 +345,25 @@ function EasyCvWizard() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history, isTyping]);
+
+  // Handle Edit Request from Preview
+  const handleSectionEdit = (sectionId, sectionLabel) => {
+    setEditingSection(sectionId);
+    setInterventionMode(true);
+    
+    // Set a temporary "step" to handle the edit input
+    setPreInterventionStep({
+        id: `edit_${sectionId}`,
+        field: sectionId === "header" ? "fullName" : sectionId, // Simple mapping
+        next: currentStepId // Return to where we were
+    });
+
+    setHistory(prev => [...prev, { 
+        role: "bot", 
+        content: `I see you want to update your ${sectionLabel}. What would you like to change?`,
+        type: "message" 
+    }]);
+  };
 
   // Mock AI Logic (To be replaced with Vertex AI backend)
   const mockAiResponse = async (userText) => {
@@ -265,7 +397,7 @@ function EasyCvWizard() {
 
   // Standard Step Logic
   useEffect(() => {
-    if (!currentStep || isAiMode || interventionMode) return;
+    if (!currentStep || isAiMode || interventionMode || editingSection) return;
 
     setIsTyping(true);
     const delay = currentStep.type === "message" ? 1000 : 600;
@@ -290,7 +422,7 @@ function EasyCvWizard() {
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [currentStepId, isAiMode, interventionMode]);
+  }, [currentStepId, isAiMode, interventionMode, editingSection]);
 
   const handleInputSubmit = async (e) => {
     e.preventDefault();
@@ -313,10 +445,30 @@ function EasyCvWizard() {
         return;
     }
 
-    // --- INTERVENTION MODE LOGIC ---
+    // --- INTERVENTION MODE (Editing or correcting) ---
     if (interventionMode) {
-        // User answered the intervention
-        // Append to the original field
+        if (editingSection) {
+            // Logic to update the specific section based on user input
+            // For MVP, we just append or replace based on simple heuristics or direct update
+            // Real AI would parse "Change my email to x"
+            
+            // Simple MVP handling:
+            if (editingSection === "header") {
+                // Determine if it looks like email or phone
+                if (currentInput.includes("@")) setAnswers(prev => ({ ...prev, email: currentInput }));
+                else if (currentInput.match(/\d{3}/)) setAnswers(prev => ({ ...prev, phone: currentInput }));
+                else setAnswers(prev => ({ ...prev, fullName: currentInput }));
+            } else if (editingSection === "summary") {
+                setAnswers(prev => ({ ...prev, summary: currentInput }));
+            }
+            
+            setHistory(prev => [...prev, { role: "bot", content: "Got it, I've updated that section for you. Anything else?" }]);
+            setEditingSection(null); // Exit edit mode
+            setInterventionMode(false);
+            return;
+        }
+
+        // Normal intervention (from supervisor logic)
         const fieldName = preInterventionStep.field;
         setAnswers(prev => ({ ...prev, [fieldName]: prev[fieldName] + " " + currentInput }));
         
@@ -376,300 +528,308 @@ function EasyCvWizard() {
       navigate("/signup", { state: { savedAnswers: answers } });
   };
 
-  // Render Consent or Chat
-  if (showConsent) {
-    return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          bgcolor: "#121212",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          p: 2
-        }}
-      >
-        <Paper
-          elevation={10}
+  return (
+    <>
+      <LandingPage />
+
+      {/* Render Consent Overlay */}
+      {showConsent && (
+        <Box
           sx={{
-            maxWidth: 500,
+            position: "fixed",
+            top: 0,
+            left: 0,
             width: "100%",
-            p: 4,
-            bgcolor: "#1e1e1e",
-            color: "#fff",
-            textAlign: "center",
-            border: "1px solid #333",
-            borderRadius: 4
+            height: "100%",
+            zIndex: 1300,
+            bgcolor: "rgba(18, 18, 18, 0.98)", // High opacity to focus on start
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            p: 2,
+            backgroundImage: 'radial-gradient(circle at 50% 50%, #1e1e1e 0%, #121212 100%)'
           }}
         >
-          <Typography variant="h5" sx={{ fontWeight: "bold", mb: 2, color: "#fdbb2d" }}>
-            Professional Data Collection
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 3, color: "#ccc", lineHeight: 1.6 }}>
-            To use Easy CV without an account, we need to collect your professional data (skills, experience, education).
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2, color: "#fdbb2d", fontWeight: "bold" }}>
-            ⚠️ Note: This process may take a while as we build a complete picture of your background.
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 3, color: "#ccc", lineHeight: 1.6 }}>
-            You can <strong>save your progress</strong> and continue later by creating a CVstom Profile. 
-            Or, if you already have a resume, you can <strong>upload it directly</strong> to your profile to save time!
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 4, color: "#999", fontStyle: "italic" }}>
-            Your personal contact information remains private and secure.
-          </Typography>
-          
-          <Stack spacing={2}>
-            <Button 
-              variant="contained" 
-              color="secondary" 
-              size="large" 
-              onClick={() => {
-                setShowConsent(false);
-                setHistory([{ 
-                  role: "bot", 
-                  content: "Thanks! Let's get your contact info first. Remember, you can save and stop at any time by clicking 'Save' at the top.", 
-                  type: "message" 
-                }]);
-              }}
-              sx={{ py: 1.5, fontWeight: "bold" }}
-            >
-              I Agree, Start Easy CV
-            </Button>
-            <Button 
-              variant="outlined" 
-              color="inherit" 
-              onClick={() => navigate("/signup")}
-            >
-              Create Profile / Upload Resume
-            </Button>
-            <Button 
-              variant="text" 
-              color="error" 
-              size="small"
-              onClick={() => navigate("/")}
-            >
-              Cancel
-            </Button>
-          </Stack>
-        </Paper>
-      </Box>
-    );
-  }
-
-  return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "#121212",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
-      {/* Top Bar */}
-      <Box sx={{ width: "100%", px: 2, py: 1, bgcolor: "#1e1e1e", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #333" }}>
-        <IconButton onClick={() => navigate("/")} sx={{ color: "rgba(255,255,255,0.5)" }}>
-            <CloseIcon />
-        </IconButton>
-        <Typography variant="subtitle1" sx={{ color: "#fff", fontWeight: "bold" }}>
-            Easy CV Builder
-        </Typography>
-        <Button 
-            startIcon={<SaveIcon />} 
-            size="small" 
-            variant="outlined" 
-            color="secondary"
-            onClick={() => setShowSaveDialog(true)}
-        >
-            Save Progress
-        </Button>
-      </Box>
-
-      {/* Main Content: Split Layout */}
-      <Box sx={{ display: "flex", width: "100%", maxWidth: "1400px", flexGrow: 1, overflow: "hidden" }}>
-        
-        {/* Left: Chat Interface */}
-        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", borderRight: "1px solid #333" }}>
-            <Paper
-                elevation={0}
-                sx={{
-                    flexGrow: 1,
-                    bgcolor: "transparent",
-                    overflowY: "auto",
-                    px: 3,
-                    pb: 12,
-                    pt: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2
+          <Paper
+            elevation={10}
+            sx={{
+              maxWidth: 500,
+              width: "100%",
+              p: 4,
+              bgcolor: "rgba(30,30,30,0.9)",
+              backdropFilter: "blur(10px)",
+              color: "#fff",
+              textAlign: "center",
+              border: "1px solid #333",
+              borderRadius: 4
+            }}
+          >
+            <Typography variant="h5" sx={{ fontWeight: "bold", mb: 2, color: "#fdbb2d" }}>
+              Easy CV Wizard
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 3, color: "#ccc", lineHeight: 1.6 }}>
+              Let's build your resume through a quick chat. No forms, just conversation.
+            </Typography>
+            
+            <Stack spacing={2}>
+              <Button 
+                variant="contained" 
+                color="secondary" 
+                size="large" 
+                onClick={() => {
+                  setShowConsent(false);
+                  setHistory([{ 
+                    role: "bot", 
+                    content: "Hi there! I'm your resume assistant. I'll help you build a professional resume step-by-step. Let's start with your contact info.", 
+                    type: "message" 
+                  }]);
                 }}
-            >
-                {history.map((msg, index) => (
-                    <Box
-                        key={index}
-                        sx={{
-                            alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                            maxWidth: "85%",
-                            width: msg.type === "info" ? "100%" : "auto"
-                        }}
-                    >
-                        {msg.type === "info" && (
-                            <Fade in={true}>
-                                <Paper sx={{ p: 2, mb: 1, bgcolor: "rgba(253, 187, 45, 0.1)", border: "1px solid #fdbb2d", borderRadius: 2 }}>
-                                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold", color: "#fdbb2d" }}>
-                                        {msg.title}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ color: "#ddd" }}>
-                                        {msg.content}
-                                    </Typography>
-                                </Paper>
-                            </Fade>
-                        )}
-
-                        {msg.type !== "info" && (
-                            <Fade in={true}>
-                                <Box sx={{ display: "flex", gap: 1, flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
-                                    {msg.role === "bot" && (
-                                        <Avatar sx={{ width: 32, height: 32, bgcolor: "#fdbb2d" }}>
-                                            <AiIcon sx={{ fontSize: 20, color: "#000" }} />
-                                        </Avatar>
-                                    )}
-                                    <Paper
-                                        sx={{
-                                            p: 2,
-                                            borderRadius: 3,
-                                            bgcolor: msg.role === "user" ? "#fdbb2d" : "#252525",
-                                            color: msg.role === "user" ? "#000" : "#fff",
-                                            borderTopLeftRadius: msg.role === "bot" ? 4 : 24,
-                                            borderTopRightRadius: msg.role === "user" ? 4 : 24,
-                                        }}
-                                    >
-                                        <Typography variant="body1">{msg.content}</Typography>
-                                    </Paper>
-                                </Box>
-                            </Fade>
-                        )}
-                    </Box>
-                ))}
-
-                {isTyping && (
-                    <Box sx={{ alignSelf: "flex-start", display: "flex", gap: 1 }}>
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: "#fdbb2d" }}>
-                            <AiIcon sx={{ fontSize: 20, color: "#000" }} />
-                        </Avatar>
-                        <Paper sx={{ p: 2, borderRadius: 3, bgcolor: "#252525", borderTopLeftRadius: 4 }}>
-                            <Box sx={{ display: "flex", gap: 0.5 }}>
-                                <Box sx={{ width: 8, height: 8, bgcolor: "#666", borderRadius: "50%", animation: "pulse 1s infinite" }} />
-                                <Box sx={{ width: 8, height: 8, bgcolor: "#666", borderRadius: "50%", animation: "pulse 1s infinite 0.2s" }} />
-                                <Box sx={{ width: 8, height: 8, bgcolor: "#666", borderRadius: "50%", animation: "pulse 1s infinite 0.4s" }} />
-                            </Box>
-                        </Paper>
-                    </Box>
-                )}
-                
-                <div ref={messagesEndRef} />
-            </Paper>
-
-            <Box 
-                sx={{ 
-                    position: "absolute", 
-                    bottom: 0, 
-                    left: 0,
-                    right: 0, 
-                    p: 2, 
-                    bgcolor: "#121212",
-                    borderTop: "1px solid #333" 
-                }}
-            >
-                {!isTyping && currentStep?.options && !isAiMode && (
-                    <Stack direction="row" spacing={1} sx={{ mb: 2, overflowX: "auto", pb: 1 }}>
-                        {currentStep.options.map((opt, i) => (
-                            <Chip 
-                                key={i} 
-                                label={opt.label} 
-                                onClick={() => handleOptionClick(opt)}
-                                sx={{ 
-                                    bgcolor: "#fdbb2d", 
-                                    color: "#000", 
-                                    fontWeight: "bold",
-                                    "&:hover": { bgcolor: "#fff" }
-                                }} 
-                                clickable
-                            />
-                        ))}
-                    </Stack>
-                )}
-
-                {currentStep?.type === "final" && (
-                    <Button 
-                        fullWidth 
-                        variant="contained" 
-                        color="secondary" 
-                        size="large"
-                        onClick={handleSaveAndExit}
-                    >
-                        Generate & Create One Profile
-                    </Button>
-                )}
-
-                {(!currentStep?.options && currentStep?.type !== "final" && currentStep?.type !== "info" && currentStep?.type !== "message") || isAiMode && (
-                    <form onSubmit={handleInputSubmit} style={{ display: "flex", gap: 1 }}>
-                        <TextField
-                            fullWidth
-                            variant="outlined"
-                            placeholder={isAiMode ? "Type your response..." : (currentStep?.placeholder || "Type your answer...")}
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            disabled={isTyping}
-                            autoFocus
-                            sx={{
-                                bgcolor: "#1e1e1e",
-                                borderRadius: 1,
-                                "& .MuiOutlinedInput-root": { color: "#fff" }
-                            }}
-                        />
-                        <IconButton 
-                            type="submit" 
-                            color="secondary" 
-                            disabled={!inputValue.trim() || isTyping}
-                            sx={{ bgcolor: "rgba(253, 187, 45, 0.1)" }}
-                        >
-                            <SendIcon />
-                        </IconButton>
-                    </form>
-                )}
-            </Box>
+                sx={{ py: 1.5, fontWeight: "bold" }}
+              >
+                Start Conversation
+              </Button>
+              <Button 
+                variant="outlined" 
+                color="inherit" 
+                onClick={() => navigate("/signup")}
+              >
+                Skip to Dashboard
+              </Button>
+            </Stack>
+          </Paper>
         </Box>
+      )}
 
-        {/* Right: Live Preview (Hidden on mobile) */}
+      {/* Minimized State (FAB) */}
+      {!showConsent && isMinimized && (
+        <Box sx={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999 }}>
+          <Fab color="secondary" variant="extended" onClick={() => setIsMinimized(false)}>
+            <AiIcon sx={{ mr: 1 }} /> Resume Chat
+          </Fab>
+        </Box>
+      )}
+
+      {/* Floating Window Layout (Main Chat) */}
+      {!showConsent && !isMinimized && (
         <Box sx={{ 
-            width: "400px", 
-            p: 2, 
-            display: { xs: "none", md: "block" },
-            bgcolor: "#f5f5f5" // Light background for document feel
+          position: "fixed", 
+          top: 0, 
+          left: 0, 
+          width: "100vw", 
+          height: "100vh", 
+          bgcolor: "rgba(0,0,0,0.7)", 
+          zIndex: 1300,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
         }}>
-            <LiveResumePreview answers={answers} />
+            <Fade in={true}>
+                <Paper 
+                    elevation={24}
+                    sx={{
+                        width: "90vw",
+                        maxWidth: "1400px",
+                        height: "85vh",
+                        bgcolor: "#1e1e1e",
+                        borderRadius: 3,
+                        display: "flex",
+                        flexDirection: "column",
+                        overflow: "hidden",
+                        border: "1px solid #333"
+                    }}
+                >
+                    {/* Window Header */}
+                    <Box sx={{ 
+                        px: 2, py: 1.5, 
+                        bgcolor: "#252525", 
+                        display: "flex", 
+                        justifyContent: "space-between", 
+                        alignItems: "center", 
+                        borderBottom: "1px solid #333" 
+                    }}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                            <Avatar sx={{ width: 28, height: 28, bgcolor: "#fdbb2d" }}>
+                                <AiIcon sx={{ fontSize: 16, color: "#000" }} />
+                            </Avatar>
+                            <Typography variant="subtitle1" sx={{ color: "#fff", fontWeight: "bold" }}>
+                                Easy CV Builder
+                            </Typography>
+                            {editingSection && <Chip label="Editing Mode" size="small" color="primary" />}
+                        </Stack>
+                        
+                        <Stack direction="row" spacing={1}>
+                            <IconButton size="small" onClick={() => setIsMinimized(true)} sx={{ color: "#aaa" }}>
+                                <MinimizeIcon fontSize="small" />
+                            </IconButton>
+                            <Button 
+                                startIcon={<SaveIcon />} 
+                                size="small" 
+                                variant="text" 
+                                color="inherit"
+                                onClick={() => setShowSaveDialog(true)}
+                                sx={{ color: "#aaa", mx: 1 }}
+                            >
+                                Save
+                            </Button>
+                            <IconButton size="small" onClick={() => navigate("/")} sx={{ color: "#aaa", "&:hover": { color: "#f44336" } }}>
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        </Stack>
+                    </Box>
+
+                    {/* Main Content Split */}
+                    <Box sx={{ display: "flex", flexGrow: 1, overflow: "hidden" }}>
+                        
+                        {/* Left Panel: Chat (40%) */}
+                        <Box sx={{ 
+                            width: { xs: "100%", md: "40%" }, 
+                            display: "flex", 
+                            flexDirection: "column", 
+                            borderRight: "1px solid #333",
+                            bgcolor: "#121212"
+                        }}>
+                            <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+                                {history.map((msg, index) => (
+                                    <Zoom in={true} key={index} style={{ transitionDelay: `${index * 50}ms` }}>
+                                        <Box
+                                            sx={{
+                                                alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                                                maxWidth: "90%",
+                                            }}
+                                        >
+                                            <Paper
+                                                elevation={1}
+                                                sx={{
+                                                    p: 2,
+                                                    borderRadius: 3,
+                                                    bgcolor: msg.role === "user" ? "#fdbb2d" : "#2d2d2d",
+                                                    color: msg.role === "user" ? "#000" : "#fff",
+                                                    borderTopLeftRadius: msg.role === "bot" ? 4 : 20,
+                                                    borderTopRightRadius: msg.role === "user" ? 4 : 20,
+                                                    borderBottomLeftRadius: 20,
+                                                    borderBottomRightRadius: 20,
+                                                    boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
+                                                }}
+                                            >
+                                                {msg.title && (
+                                                    <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 0.5, opacity: 0.8 }}>
+                                                        {msg.title}
+                                                    </Typography>
+                                                )}
+                                                <Typography variant="body1" sx={{ lineHeight: 1.5 }}>
+                                                    {msg.content}
+                                                </Typography>
+                                            </Paper>
+                                        </Box>
+                                    </Zoom>
+                                ))}
+                                {isTyping && (
+                                    <Box sx={{ alignSelf: "flex-start", display: "flex", gap: 1, mt: 1 }}>
+                                        <Avatar sx={{ width: 24, height: 24, bgcolor: "transparent" }}>
+                                            <AiIcon sx={{ fontSize: 16, color: "#666" }} />
+                                        </Avatar>
+                                        <Typography variant="caption" sx={{ color: "#666", fontStyle: "italic", mt: 0.5 }}>
+                                            AI is thinking...
+                                        </Typography>
+                                    </Box>
+                                )}
+                                <div ref={messagesEndRef} />
+                            </Box>
+
+                            {/* Input Area */}
+                            <Box sx={{ p: 2, borderTop: "1px solid #333", bgcolor: "#1e1e1e" }}>
+                                {!isTyping && currentStep?.options && !isAiMode && !interventionMode && (
+                                    <Stack direction="row" spacing={1} sx={{ mb: 2, overflowX: "auto", pb: 1 }}>
+                                        {currentStep.options.map((opt, i) => (
+                                            <Chip 
+                                                key={i} 
+                                                label={opt.label} 
+                                                onClick={() => handleOptionClick(opt)}
+                                                sx={{ 
+                                                    bgcolor: "#fdbb2d", 
+                                                    color: "#000", 
+                                                    fontWeight: "bold",
+                                                    "&:hover": { bgcolor: "#fff" }
+                                                }} 
+                                                clickable
+                                            />
+                                        ))}
+                                    </Stack>
+                                )}
+
+                                {(!currentStep?.options || isAiMode || interventionMode) && (
+                                    <form onSubmit={handleInputSubmit} style={{ display: "flex", gap: 10 }}>
+                                        <TextField
+                                            fullWidth
+                                            size="small"
+                                            variant="outlined"
+                                            placeholder={
+                                                interventionMode ? "Type your correction..." :
+                                                isAiMode ? "Type your response..." : 
+                                                (currentStep?.placeholder || "Type your answer...")
+                                            }
+                                            value={inputValue}
+                                            onChange={(e) => setInputValue(e.target.value)}
+                                            disabled={isTyping}
+                                            autoFocus
+                                            sx={{
+                                                bgcolor: "#2d2d2d",
+                                                borderRadius: 2,
+                                                "& .MuiOutlinedInput-root": { 
+                                                    color: "#fff",
+                                                    "& fieldset": { borderColor: "transparent" },
+                                                    "&:hover fieldset": { borderColor: "#444" },
+                                                    "&.Mui-focused fieldset": { borderColor: "#fdbb2d" },
+                                                }
+                                            }}
+                                        />
+                                        <IconButton 
+                                            type="submit" 
+                                            sx={{ 
+                                                bgcolor: inputValue.trim() ? "#fdbb2d" : "#333", 
+                                                color: inputValue.trim() ? "#000" : "#666",
+                                                "&:hover": { bgcolor: inputValue.trim() ? "#e0a825" : "#333" }
+                                            }}
+                                            disabled={!inputValue.trim() || isTyping}
+                                        >
+                                            <SendIcon />
+                                        </IconButton>
+                                    </form>
+                                )}
+                            </Box>
+                        </Box>
+
+                        {/* Right Panel: Preview (60%) */}
+                        <Box sx={{ 
+                            flex: 1, 
+                            display: { xs: "none", md: "block" },
+                            bgcolor: "#525659",
+                            overflow: "hidden"
+                        }}>
+                            <LiveResumePreview answers={answers} onEditSection={handleSectionEdit} />
+                        </Box>
+
+                    </Box>
+                </Paper>
+            </Fade>
+
+          <Dialog open={showSaveDialog} onClose={() => setShowSaveDialog(false)}>
+            <DialogTitle>Save Progress?</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                To save your answers and continue later, you need to create a free account.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+              <Button onClick={handleSaveAndExit} variant="contained" color="primary">
+                Create Account
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Box>
-
-      </Box>
-
-      <Dialog open={showSaveDialog} onClose={() => setShowSaveDialog(false)}>
-        <DialogTitle>Save Progress?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            To save your answers and continue later, you need to create a free account.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowSaveDialog(false)}>Cancel</Button>
-          <Button onClick={handleSaveAndExit} variant="contained" color="primary">
-            Create Account
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-    </Box>
+      )}
+    </>
   );
 }
 

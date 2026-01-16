@@ -109,7 +109,7 @@
         "-y",
         "@anthropic-ai/mcp-server-git",
         "--repository",
-        "/home/wyofalcon/cvstomize"
+        "${workspaceFolder}"
       ]
     },
     "filesystem": {
@@ -117,7 +117,7 @@
       "args": [
         "-y",
         "@anthropic-ai/mcp-server-filesystem",
-        "/home/wyofalcon/cvstomize"
+        "${workspaceFolder}"
       ]
     },
     "memory": {

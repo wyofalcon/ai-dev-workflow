@@ -18,10 +18,16 @@
 **When the user describes an idea or feature request:**
 
 1. **Refine the idea** into a clear, well-structured prompt for the Builder
-2. **Check `.context/RELAY_MODE`** for the current mode:
-   - `review` (default): Write the prompt to `.context/PROMPT.md` for user review
-   - `auto`: Write to PROMPT.md AND tell user to run `./scripts/send-prompt.sh`
-3. **Format the prompt** with clear context, requirements, and constraints
+2. **Check if tmux builder session is running:** Run `./scripts/check-builder.sh`
+3. **Based on mode and session status:**
+   - **If builder tmux is running + `auto` mode:** Inject directly using `./scripts/inject-prompt.sh "prompt"`
+   - **If builder tmux is running + `review` mode:** Write to `.context/PROMPT.md`, ask user to confirm, then inject
+   - **If builder not running:** Write to `.context/PROMPT.md` and tell user to start builder with `./scripts/start-builder-tmux.sh`
+
+**Direct Injection (Preferred when tmux session is running):**
+```bash
+./scripts/inject-prompt.sh "Your refined prompt here"
+```
 
 **Prompt Template for Builder:**
 

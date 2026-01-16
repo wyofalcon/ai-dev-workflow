@@ -13,3 +13,4 @@ Format: `[FEATURE-ID] - Feature Name (Date Added)`
 | **FEAT-SKILL-001** | Smart Skill Input | O*NET-integrated skill suggestion component. | ✅ Done |
 | **FEAT-PROFILE-001** | Profile Enhancements | Skills sorting, Resume list tab, UI cleanup. | ✅ Done |
 | **FEAT-ONBOARDING-001** | Resume Chat Builder | Chat-based resume builder (Experimental, proxied to Vertex AI). | 🚧 Beta |
+| **FEAT-EASYCV-REDESIGN-001** | Easy CV Redesign | Floating chat window, paper-like preview, interactive sections. | ✅ Done |
