@@ -15,8 +15,8 @@ echo ""
 
 # Install system dependencies
 echo "🔧 [0/8] Installing system dependencies..."
-sudo apt-get update -qq && sudo apt-get install -y -qq whiptail inotify-tools > /dev/null
-echo "   ✓ whiptail & inotify-tools installed"
+sudo apt-get update -qq && sudo apt-get install -y -qq whiptail inotify-tools tmux > /dev/null
+echo "   ✓ whiptail, inotify-tools & tmux installed"
 
 # Install root dependencies
 echo "📦 [1/6] Installing frontend dependencies..."
@@ -48,12 +48,18 @@ else
 fi
 
 # Install Gemini CLI
-echo "🤖 [6/8] Installing Gemini CLI..."
+echo "🤖 [6/9] Installing Gemini CLI..."
 if ! command -v gemini &> /dev/null; then
     npm install -g @anthropic-ai/claude-code @google/gemini-cli 2>/dev/null || npm install -g @google/gemini-cli 2>/dev/null || echo "   ⚠️  Gemini CLI install failed (install manually: npm i -g @google/gemini-cli)"
     echo "   ✓ Gemini CLI installed"
 else
     echo "   ✓ Gemini CLI already installed"
+fi
+
+# Setup MCP servers for Gemini CLI
+echo "🔌 [7/9] Setting up MCP servers..."
+if [ -f .devcontainer/setup-mcp-servers.sh ]; then
+    bash .devcontainer/setup-mcp-servers.sh 2>/dev/null || echo "   ⚠️  MCP setup will complete on first Gemini launch"
 fi
 
 # Set up git configuration
@@ -185,14 +191,14 @@ if [ -z "$CVSTOMIZE_WELCOMED" ]; then
     export CVSTOMIZE_WELCOMED=1
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  🔍 Audit Watch is running in background!"
-    echo "     View: Terminal → 🔍 Audit Watch (or Ctrl+\` to toggle)"
+    echo "  � CVstomize Dev Container Ready!"
     echo ""
-    echo "  💡 Quick Commands:"
-    echo "     status        - Show workflow mode status"
-    echo "     gss           - Switch session mode"
-    echo "     gemini        - Start Gemini CLI (Builder)"
-    echo "     claude        - Start Claude CLI (Builder)"
+    echo "  💡 Quick Start:"
+    echo "     gemini        - Start Gemini CLI (AI Builder)"
+    echo "     claude        - Start Claude CLI (AI Builder)"
+    echo "     status        - Show workflow status"
+    echo ""
+    echo "  📖 Copilot (Ctrl+Shift+I) reviews your code changes"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 fi

@@ -78,7 +78,9 @@ echo "$PROMPT" > "$TEMP_FILE"
 # Load into tmux buffer and paste
 tmux load-buffer -b prompt "$TEMP_FILE"
 tmux paste-buffer -b prompt -t "$SESSION_NAME"
-tmux send-keys -t "$SESSION_NAME" Enter
+# Small delay to ensure paste completes before sending Enter
+sleep 0.3
+tmux send-keys -t "$SESSION_NAME" C-m
 
 rm -f "$TEMP_FILE"
 

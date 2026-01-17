@@ -172,7 +172,7 @@
 
   // Lifecycle scripts
   "postCreateCommand": "bash .devcontainer/post-create.sh",
-  "postStartCommand": "docker compose up -d && sleep 8 && docker exec cvstomize-api-local npx prisma migrate deploy 2>/dev/null || true && echo '\\n🚀 Dev environment ready! Frontend: http://localhost:3000\\n'",
+  "postStartCommand": "bash .ai-workflow/config/ensure-mcp-servers.sh 2>/dev/null; docker compose up -d && sleep 8 && docker exec cvstomize-api-local npx prisma migrate deploy 2>/dev/null || true && echo '\\n🚀 Dev environment ready! Frontend: http://localhost:3000\\n'",
 
   // Container settings
   "remoteUser": "node",

@@ -1,21 +1,21 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App.js';
-import reportWebVitals from './reportWebVitals.js';
-import { ThemeProvider } from '@mui/material/styles';
-import theme from './theme.js';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import App from "./App.js";
+import reportWebVitals from "./reportWebVitals.js";
+import { ThemeProvider } from "@mui/material/styles";
+import theme from "./theme.js";
 
-if (process.env.NODE_ENV === 'development') {
-  import('@locator/runtime').then((locator) => {
+if (process.env.NODE_ENV === "development") {
+  import("@locator/runtime").then((locator) => {
     locator.setup({
-      // If you are running Docker and the links fail, set your host path here:
-      // projectPath: "/absolute/path/to/cvstomize/on/your/host/machine",
+      // Use built-in VS Code preset - works with devcontainers
+      editor: "vscode",
     });
   });
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>

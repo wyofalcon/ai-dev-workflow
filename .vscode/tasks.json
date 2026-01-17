@@ -1,10 +1,13 @@
 {
   "version": "2.0.0",
   "tasks": [
+    // ═══════════════════════════════════════════════════════════
+    // AI WORKFLOW TASKS (from .ai-workflow/ - reusable template)
+    // ═══════════════════════════════════════════════════════════
     {
       "label": "👁️ Watch Builder",
       "type": "shell",
-      "command": "${workspaceFolder}/scripts/watch-builder.sh",
+      "command": "${workspaceFolder}/.ai-workflow/scripts/watch-builder.sh",
       "isBackground": true,
       "presentation": {
         "echo": false,
@@ -18,7 +21,7 @@
     {
       "label": "🎯 Builder Setup",
       "type": "shell",
-      "command": "bash ${workspaceFolder}/.devcontainer/builder-setup.sh",
+      "command": "bash ${workspaceFolder}/.ai-workflow/config/builder-setup.sh",
       "presentation": {
         "echo": false,
         "reveal": "always",
@@ -31,7 +34,7 @@
     {
       "label": "🔍 Audit Watch",
       "type": "shell",
-      "command": "${workspaceFolder}/scripts/audit-watch.sh",
+      "command": "${workspaceFolder}/.ai-workflow/scripts/audit-watch.sh",
       "isBackground": true,
       "presentation": {
         "echo": true,
@@ -46,7 +49,7 @@
     {
       "label": "🤖 AI Builder",
       "type": "shell",
-      "command": "${workspaceFolder}/scripts/start-builder-tmux.sh",
+      "command": "${workspaceFolder}/.ai-workflow/scripts/start-builder-tmux.sh",
       "isBackground": true,
       "presentation": {
         "echo": true,
@@ -76,7 +79,7 @@
     {
       "label": "🚀 Recalibrate Agents",
       "type": "shell",
-      "command": "${workspaceFolder}/scripts/recalibrate.py",
+      "command": "${workspaceFolder}/.ai-workflow/scripts/recalibrate.py",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -89,7 +92,7 @@
     {
       "label": "📊 Show Workflow Status",
       "type": "shell",
-      "command": "bash ${workspaceFolder}/scripts/show-status.sh",
+      "command": "bash ${workspaceFolder}/.ai-workflow/scripts/show-status.sh",
       "presentation": {
         "echo": false,
         "reveal": "always",
@@ -102,7 +105,7 @@
     {
       "label": "⚙️ Toggle Relay Mode",
       "type": "shell",
-      "command": "bash ${workspaceFolder}/scripts/toggle-relay-mode.sh",
+      "command": "bash ${workspaceFolder}/.ai-workflow/scripts/toggle-relay-mode.sh",
       "presentation": {
         "echo": false,
         "reveal": "always",
@@ -115,7 +118,7 @@
     {
       "label": "📤 Send Prompt to Builder",
       "type": "shell",
-      "command": "bash ${workspaceFolder}/scripts/send-prompt.sh",
+      "command": "bash ${workspaceFolder}/.ai-workflow/scripts/send-prompt.sh",
       "presentation": {
         "echo": false,
         "reveal": "always",
@@ -126,9 +129,9 @@
       "problemMatcher": []
     },
     {
-      "label": "� Toggle Audit Watch",
+      "label": "🔄 Toggle Audit Watch",
       "type": "shell",
-      "command": "bash ${workspaceFolder}/scripts/toggle-audit-watch.sh",
+      "command": "bash ${workspaceFolder}/.ai-workflow/scripts/toggle-audit-watch.sh",
       "presentation": {
         "echo": false,
         "reveal": "always",

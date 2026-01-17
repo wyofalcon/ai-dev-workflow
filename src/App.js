@@ -5,7 +5,6 @@ import {
   Route,
   Navigate,
   useNavigate,
-  useLocation,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext.js";
 import { WebLlmProvider, useWebLlm } from "./contexts/WebLlmContext.js";
@@ -49,38 +48,13 @@ import logo from "./components/logo.png";
 import "./App.css";
 import DebugInspector from "./components/DebugInspector.js";
 
-// Protected Route wrapper - redirects to landing if not authenticated, or to onboarding if not completed
+// Protected Route wrapper - redirects to landing if not authenticated
 function ProtectedRoute({ children }) {
-  const { currentUser, onboardingCompleted } = useAuth();
-  const location = useLocation();
+  const { currentUser } = useAuth();
 
   if (!currentUser) {
     // Redirect to public landing page instead of login
     return <Navigate to="/welcome" replace />;
-  }
-
-  // Redirect to onboarding if not completed (but not if already on onboarding page or build-resume page)
-  if (onboardingCompleted === false && location.pathname !== "/onboarding" && location.pathname !== "/build-resume") {
-    return <Navigate to="/onboarding" replace />;
-  }
-
-  return children;
-}
-
-// Onboarding Route wrapper - accessible to any logged in user
-// Redirects completed users back to home unless they intentionally navigated here
-function OnboardingRoute({ children }) {
-  const { currentUser, onboardingCompleted } = useAuth();
-  const location = useLocation();
-
-  if (!currentUser) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // If user already completed onboarding and didn't intentionally navigate here
-  // (e.g., via browser back button), redirect them to home
-  if (onboardingCompleted === true && !location.state?.intentional) {
-    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -99,13 +73,10 @@ function PublicRoute({ children }) {
 
 // Landing Page Route - shows landing for guests, redirects logged-in users to dashboard
 function LandingPageRoute() {
-  const { currentUser, onboardingCompleted } = useAuth();
+  const { currentUser } = useAuth();
 
-  // If logged in, go to dashboard (or onboarding if needed)
+  // If logged in, go to dashboard
   if (currentUser) {
-    if (onboardingCompleted === false) {
-      return <Navigate to="/onboarding" replace />;
-    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -400,13 +371,13 @@ function App() {
             />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            {/* Onboarding Route - first-time setup */}
+            {/* Onboarding Route - first-time setup (Optional) */}
             <Route
               path="/onboarding"
               element={
-                <OnboardingRoute>
+                <ProtectedRoute>
                   <OnboardingPage />
-                </OnboardingRoute>
+                </ProtectedRoute>
               }
             />
 

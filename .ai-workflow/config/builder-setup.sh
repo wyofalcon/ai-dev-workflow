@@ -32,29 +32,28 @@ show_first_time_popup() {
 Welcome! This dev container uses a Builder/Auditor workflow:
 
 📝 HOW IT WORKS:
-   1. Describe your idea to Copilot (Auditor)
-   2. Copilot refines it into a Builder prompt
-   3. Review the prompt, then send to Builder
-   4. Builder (Gemini/Claude) implements it
+   • Open a terminal and run 'gemini' or 'claude'
+   • Ask the Builder to implement features for you
+   • Copilot (Ctrl+Shift+I) reviews your changes
+   • Pre-commit hooks catch issues before commits
 
-🤖 BUILDER: Gemini or Claude CLI (generates code)
-🔍 AUDITOR: GitHub Copilot (reviews & refines)
+🤖 BUILDER: Gemini or Claude CLI (your coding AI)
+🔍 AUDITOR: GitHub Copilot + pre-commit checks
 
-⚙️  MODES:
-   • Review Mode: You check prompts before sending
-   • Auto Mode: Prompts send automatically
+� SMART BRANCHING:
+   • Copilot can auto-create branches for your tasks
+   • Just describe your idea - it picks the branch name!
 
 📋 NEXT STEPS:
    1. Set up your AI Builder (next screen)
-   2. Check .context/SESSION.md for status
-   3. Use Copilot Chat (Ctrl+Shift+I)
+   2. Start coding with your Builder CLI!
 
 Press OK to continue...
 EOF
 )" 24 62
 
         # Offer to create desktop shortcut
-        if whiptail --title "🖥️ Desktop Shortcut" --yesno "Would you like to create a Desktop shortcut to quickly reopen this project?\n\nThis creates a clickable icon that:\n  • Starts Docker if needed\n  • Opens VS Code with this dev container\n  • Works even after restart" 14 60; then
+        if whiptail --title "🖥️ Desktop Shortcut" --yesno "Would you like to create a Desktop shortcut to quickly reopen this project?\n\nThis creates a clickable icon that:\n  • Starts Docker if needed\n  • Opens VS Code with this dev container\n  • Works even after restart\n\n(WSL users can choose Windows or Linux desktop)" 16 60; then
             # Run the shortcut creator
             if [ -f "/workspaces/cvstomize/scripts/create-shortcut.sh" ]; then
                 bash /workspaces/cvstomize/scripts/create-shortcut.sh
@@ -97,13 +96,16 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo -e "   ${BOLD}How it works:${NC}"
 echo ""
-echo -e "   ${GREEN}🤖 Builder${NC}    Your AI coding assistant (Gemini or Claude CLI)"
-echo -e "                Generates code, answers questions, helps you build"
+echo -e "   ${GREEN}🤖 Builder${NC}    Run 'gemini' or 'claude' in terminal"
+echo -e "                Ask it to implement features, it writes the code"
 echo ""
-echo -e "   ${GREEN}🔍 Auditor${NC}    GitHub Copilot (this chat) + automated checks"
-echo -e "                Reviews code, catches bugs, ensures quality"
+echo -e "   ${GREEN}🔍 Auditor${NC}    GitHub Copilot (Ctrl+Shift+I) + pre-commit hooks"
+echo -e "                Reviews your changes and catches issues"
 echo ""
-echo -e "   ${GREEN}📁 Workflow${NC}   Builder writes → Auditor reviews → You ship!"
+echo -e "   ${GREEN}� Branches${NC}   Copilot auto-creates branches for your tasks"
+echo -e "                Describe an idea, it picks the right branch name"
+echo ""
+echo -e "   ${GREEN}�📁 Workflow${NC}   Builder writes code → You commit → Auditor reviews"
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""

@@ -2,7 +2,10 @@
 # Toggle between Review and Auto mode for prompt relay
 # Shows a visual menu to switch modes
 
-RELAY_MODE_FILE=".context/RELAY_MODE"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONTEXT_DIR="$(dirname "$SCRIPT_DIR")/context"
+
+RELAY_MODE_FILE="$CONTEXT_DIR/RELAY_MODE"
 
 # Colors
 GREEN='\033[0;32m'

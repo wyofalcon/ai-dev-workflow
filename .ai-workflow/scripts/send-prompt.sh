@@ -1,9 +1,12 @@
 #!/bin/bash
-# Send the pending prompt from .context/PROMPT.md to the Builder terminal
+# Send the pending prompt from .ai-workflow/context/PROMPT.md to the Builder terminal
 # Works with both Gemini and Claude CLI
 
-PROMPT_FILE=".context/PROMPT.md"
-RELAY_MODE_FILE=".context/RELAY_MODE"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONTEXT_DIR="$(dirname "$SCRIPT_DIR")/context"
+
+PROMPT_FILE="$CONTEXT_DIR/PROMPT.md"
+RELAY_MODE_FILE="$CONTEXT_DIR/RELAY_MODE"
 
 # Colors
 GREEN='\033[0;32m'

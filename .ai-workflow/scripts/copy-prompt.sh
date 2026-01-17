@@ -2,7 +2,10 @@
 # Copy the contents of PROMPT.md to clipboard using VS Code
 # Works in devcontainers where system clipboard isn't available
 
-PROMPT_FILE=".context/PROMPT.md"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONTEXT_DIR="$(dirname "$SCRIPT_DIR")/context"
+
+PROMPT_FILE="$CONTEXT_DIR/PROMPT.md"
 
 if [ ! -f "$PROMPT_FILE" ]; then
     echo "❌ No prompt file found"

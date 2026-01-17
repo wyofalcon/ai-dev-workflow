@@ -359,3 +359,69 @@ import LandingPage from './LandingPage.js';
 2. Expanded = chat overlays landing page with backdrop  
 3. FAB appears when minimized to re-open chat
 ```
+
+---
+## 2026-01-17 05:36:09
+
+```
+## Task: Remove Mandatory Onboarding - Let Users Explore Freely
+
+### Context
+Currently, new users are forced to complete OnboardingPage before accessing the app. The user wants to remove this gate so users can explore the platform freely without completing onboarding first.
+
+### Requirements
+1. **Remove the onboarding redirect logic** in src/App.js:
+   - In LandingPageRoute: Remove the redirect to /onboarding when onboardingCompleted === false
+   - Logged-in users should go directly to /dashboard regardless of onboarding status
+
+2. **Keep the /onboarding route accessible** (optional path, not mandatory):
+   - Users can still visit /onboarding if they choose to
+   - Remove the OnboardingRoute wrapper that enforces the gate
+
+3. **Update AuthContext if needed**:
+   - The onboardingCompleted flag can remain for tracking, but should not block access
+
+4. **Do NOT delete the OnboardingPage component file yet** - just remove the mandatory redirect
+
+### Files to Modify
+- src/App.js - Remove onboarding gate logic in LandingPageRoute and simplify /onboarding route
+
+### Constraints
+- Keep existing authentication checks (user must be logged in for protected routes)
+- Maintain backward compatibility - dont break existing user sessions
+```
+
+---
+## 2026-01-17 15:34:14
+
+```
+Hello! This is a test prompt from Copilot. Just respond with 'Test successful!' and nothing else.
+```
+
+---
+## 2026-01-17 15:37:24
+
+```
+What is 2+2? Answer with just the number.
+```
+
+---
+## 2026-01-17 15:38:30
+
+```
+Say Workflow test complete
+```
+
+---
+## 2026-01-17 15:38:33
+
+```
+Say Workflow test complete
+```
+
+---
+## 2026-01-17 15:40:25
+
+```
+What is the capital of France? One word answer.
+```

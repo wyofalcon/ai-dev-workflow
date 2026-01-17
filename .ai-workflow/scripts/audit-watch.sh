@@ -3,9 +3,10 @@
 # Uses inotifywait (from inotify-tools) to watch for changes
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-AUDIT_MODE_FILE="$PROJECT_ROOT/.context/AUDIT_WATCH_MODE"
-PID_FILE="$PROJECT_ROOT/.context/.audit-watch.pid"
+CONTEXT_DIR="$(dirname "$SCRIPT_DIR")/context"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+AUDIT_MODE_FILE="$CONTEXT_DIR/AUDIT_WATCH_MODE"
+PID_FILE="$CONTEXT_DIR/.audit-watch.pid"
 
 # Colors
 RED='\033[0;31m'

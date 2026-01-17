@@ -134,13 +134,18 @@ create_windows_shortcut() {
 
     echo -e "${CYAN}Creating Windows shortcut...${NC}"
 
-    # Convert WSL path to Windows path
+    # Convert WSL path to Windows path for Docker check
     WIN_PROJECT_PATH=$(wslpath -w "$PROJECT_DIR" 2>/dev/null || echo "")
+
+    # Create hex-encoded path for dev container URI
+    # The dev container URI format: vscode-remote://dev-container+<hex-encoded-path>/workspaces/cvstomize
+    HEX_PATH=$(echo -n "$WIN_PROJECT_PATH" | xxd -p | tr -d '\n')
 
     if [ -n "$WIN_PROJECT_PATH" ]; then
         cat > "$SHORTCUT_PATH" << BATCH
 @echo off
 :: Launch CVstomize Dev Container
+:: This opens directly into the dev container, preserving your session state
 
 :: Start Docker Desktop if not running
 docker info >nul 2>&1
@@ -154,9 +159,14 @@ if errorlevel 1 (
     echo Docker is ready!
 )
 
-:: Open in VS Code
-cd /d "${WIN_PROJECT_PATH}"
-code .
+:: Open directly in VS Code Dev Container (preserves session state)
+code --folder-uri "vscode-remote://dev-container+${HEX_PATH}/workspaces/cvstomize"
+
+:: Fallback: if remote URI fails, open folder normally
+if errorlevel 1 (
+    cd /d "${WIN_PROJECT_PATH}"
+    code .
+)
 BATCH
         echo -e "${GREEN}✅ Created: ${SHORTCUT_PATH}${NC}"
     else
@@ -171,20 +181,22 @@ BATCH
 
     echo ""
     echo -e "${CYAN}Double-click ${PROJECT_NAME}.bat on your Desktop to launch!${NC}"
+    echo -e "${GREEN}   ✓ Opens directly into dev container${NC}"
+    echo -e "${GREEN}   ✓ Preserves your session state${NC}"
 }
 
 create_linux_shortcut() {
-    DESKTOP="$HOME/Desktop"
+    local target_desktop="${1:-$HOME/Desktop}"
 
-    # Also try XDG desktop directory
-    if [ -f "$HOME/.config/user-dirs.dirs" ]; then
+    # Also try XDG desktop directory if not specified
+    if [ "$target_desktop" = "$HOME/Desktop" ] && [ -f "$HOME/.config/user-dirs.dirs" ]; then
         source "$HOME/.config/user-dirs.dirs"
-        DESKTOP="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
+        target_desktop="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
     fi
 
-    mkdir -p "$DESKTOP"
+    mkdir -p "$target_desktop"
 
-    SHORTCUT_PATH="$DESKTOP/${PROJECT_NAME}.desktop"
+    SHORTCUT_PATH="$target_desktop/${PROJECT_NAME}.desktop"
 
     echo -e "${CYAN}Creating Linux .desktop entry...${NC}"
 
@@ -215,13 +227,59 @@ DESKTOP
     echo -e "${YELLOW}Note: You may need to right-click → 'Allow Launching' first${NC}"
 }
 
+# WSL-specific: let user choose Windows or Linux desktop
+create_wsl_shortcut() {
+    local choice=""
+
+    # Check if whiptail is available for nice UI
+    if command -v whiptail &> /dev/null; then
+        choice=$(whiptail --title "🖥️ Desktop Shortcut Location" \
+            --menu "\nWhere would you like to create the shortcut?" 14 60 3 \
+            "windows" "Windows Desktop (recommended for WSL)" \
+            "wsl" "WSL/Linux Desktop" \
+            "both" "Both locations" \
+            3>&1 1>&2 2>&3) || return 1
+    else
+        echo ""
+        echo -e "${CYAN}Where would you like to create the shortcut?${NC}"
+        echo ""
+        echo "  1) Windows Desktop (recommended for WSL)"
+        echo "  2) WSL/Linux Desktop"
+        echo "  3) Both locations"
+        echo ""
+        read -p "Choose [1-3]: " choice_num
+        case "$choice_num" in
+            1) choice="windows" ;;
+            2) choice="wsl" ;;
+            3) choice="both" ;;
+            *) echo -e "${RED}Invalid choice${NC}"; return 1 ;;
+        esac
+    fi
+
+    case "$choice" in
+        windows)
+            create_windows_shortcut
+            ;;
+        wsl)
+            create_linux_shortcut
+            ;;
+        both)
+            echo -e "${CYAN}Creating shortcuts in both locations...${NC}"
+            echo ""
+            create_windows_shortcut
+            echo ""
+            create_linux_shortcut
+            ;;
+    esac
+}
+
 # Main
 case "$OS" in
     macos)
         create_macos_shortcut
         ;;
     wsl)
-        create_windows_shortcut
+        create_wsl_shortcut
         ;;
     windows)
         create_windows_shortcut

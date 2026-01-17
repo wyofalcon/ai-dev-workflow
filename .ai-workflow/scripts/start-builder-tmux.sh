@@ -1,9 +1,14 @@
 #!/bin/bash
 # Start Gemini CLI in a tmux session for automated prompt injection
 # Session name: builder
+#
+# IMPORTANT: This creates a DETACHED session so VS Code terminals remain usable.
+# Copilot injects prompts via tmux send-keys, no need to attach.
+# To view Gemini: tmux attach -t builder
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+WORKFLOW_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$WORKFLOW_ROOT")"
 SESSION_NAME="builder"
 
 # Colors
@@ -21,15 +26,15 @@ cd "$PROJECT_ROOT" || exit 1
 # Check if tmux session already exists
 if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}✓ Builder session already running${NC}"
+    echo -e "${GREEN}✓ Builder session already running (detached)${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo "Options:"
-    echo "  • Attach: tmux attach -t $SESSION_NAME"
-    echo "  • Kill:   tmux kill-session -t $SESSION_NAME"
+    echo "Copilot can inject prompts - no need to attach!"
     echo ""
-    echo -e "${CYAN}Attaching now...${NC}"
-    exec tmux attach -t "$SESSION_NAME"
+    echo "To view Gemini:  tmux attach -t $SESSION_NAME"
+    echo "To kill:         tmux kill-session -t $SESSION_NAME"
+    echo ""
+    exit 0
 fi
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -58,10 +63,12 @@ tmux send-keys -t "$SESSION_NAME" "echo '🤖 AI Builder Ready - Copilot can inj
 tmux send-keys -t "$SESSION_NAME" "echo ''" Enter
 tmux send-keys -t "$SESSION_NAME" "$CLI_CMD" Enter
 
-echo -e "${GREEN}✓ Builder session started${NC}"
+echo -e "${GREEN}✓ Builder session started (detached)${NC}"
 echo ""
-echo -e "To view: ${CYAN}tmux attach -t $SESSION_NAME${NC}"
+echo "Copilot can now inject prompts directly!"
 echo ""
-
-# Attach to the session
-exec tmux attach -t "$SESSION_NAME"
+echo -e "To view Gemini: ${CYAN}tmux attach -t $SESSION_NAME${NC}"
+echo -e "   (Detach with: Ctrl+B, then D)"
+echo ""
+# Don't attach - keep the terminal free for Copilot commands
+exit 0

@@ -2,7 +2,10 @@
 # Toggle Audit Watch Mode on/off
 # Shows a visual menu to switch modes
 
-AUDIT_MODE_FILE=".context/AUDIT_WATCH_MODE"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONTEXT_DIR="$(dirname "$SCRIPT_DIR")/context"
+
+AUDIT_MODE_FILE="$CONTEXT_DIR/AUDIT_WATCH_MODE"
 
 # Colors
 GREEN='\033[0;32m'

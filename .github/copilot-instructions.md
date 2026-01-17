@@ -4,12 +4,12 @@
 
 **EVERY TIME a user starts a conversation, do this FIRST:**
 
-1. Read `.context/SESSION.md` to understand current state
-2. Read `.context/RELAY_MODE` to check prompt relay mode (`review` or `auto`)
+1. Read `.ai-workflow/context/SESSION.md` to understand current state
+2. Read `.ai-workflow/context/RELAY_MODE` to check prompt relay mode (`review` or `auto`)
 3. Briefly summarize what's in progress
 4. Ask if they want to continue with the listed next steps or do something else
 
-**Update `.context/SESSION.md` after completing significant tasks.**
+**Update `.ai-workflow/context/SESSION.md` after completing significant tasks.**
 
 ---
 
@@ -18,16 +18,26 @@
 **When the user describes an idea or feature request:**
 
 1. **Refine the idea** into a clear, well-structured prompt for the Builder
-2. **Check if tmux builder session is running:** Run `./scripts/check-builder.sh`
+2. **Check if tmux builder session is running:** Run `./.ai-workflow/scripts/check-builder.sh`
 3. **Based on mode and session status:**
-   - **If builder tmux is running + `auto` mode:** Inject directly using `./scripts/inject-prompt.sh "prompt"`
-   - **If builder tmux is running + `review` mode:** Write to `.context/PROMPT.md`, ask user to confirm, then inject
-   - **If builder not running:** Write to `.context/PROMPT.md` and tell user to start builder with `./scripts/start-builder-tmux.sh`
+   - **If builder tmux is running + `auto` mode:** Inject using `./.ai-workflow/scripts/smart-inject.sh "prompt"` (auto-switches branches!)
+   - **If builder tmux is running + `review` mode:** Write to `.ai-workflow/context/PROMPT.md`, ask user to confirm, then inject
+   - **If builder not running:** Write to `.ai-workflow/context/PROMPT.md` and tell user to start builder with `./.ai-workflow/scripts/start-builder-tmux.sh`
 
-**Direct Injection (Preferred when tmux session is running):**
+**Smart Injection (Preferred - handles branch switching automatically):**
+
 ```bash
-./scripts/inject-prompt.sh "Your refined prompt here"
+./.ai-workflow/scripts/smart-inject.sh "Your refined prompt here"
+# Or force a specific branch:
+./.ai-workflow/scripts/smart-inject.sh "Your prompt" "my-branch-name"
 ```
+
+**Branch Detection:** The smart-inject script automatically:
+
+- Analyzes your prompt for keywords (onboarding, auth, test, bug, etc.)
+- Suggests an appropriate branch name
+- Creates/switches to the branch before injecting
+- Stashes and restores uncommitted changes
 
 **Prompt Template for Builder:**
 
