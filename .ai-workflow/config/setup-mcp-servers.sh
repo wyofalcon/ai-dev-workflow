@@ -45,7 +45,7 @@ add_mcp_server "memory" npx -y @modelcontextprotocol/server-memory
 
 # NOTE: The following Anthropic MCP servers don't exist on npm:
 # - @anthropic-ai/mcp-server-filesystem (404)
-# - @anthropic-ai/mcp-server-fetch (404)  
+# - @anthropic-ai/mcp-server-fetch (404)
 # - @anthropic-ai/mcp-server-git (404)
 # If filesystem/git MCP servers become available, add them here.
 
