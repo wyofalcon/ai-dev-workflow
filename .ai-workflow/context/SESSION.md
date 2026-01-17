@@ -26,6 +26,18 @@
 
 <!-- What was accomplished in the last session? -->
 
+- ✅ **Fixed Workflow Startup Issues:**
+  - Added `tmux` to devcontainer apt-get install (was missing)
+  - Fixed `start-builder-tmux.sh` - now runs DETACHED, doesn't hijack VS Code terminals
+  - Fixed prompt injection - changed `Enter` to `C-m` with 0.3s delay after paste
+  - Added `watch-builder.sh` for read-only monitoring of Gemini CLI
+- ✅ **Cleaned Up MCP Servers:**
+  - Removed non-existent Anthropic servers (filesystem, fetch, git - 404 on npm)
+  - Updated `setup-mcp-servers.sh` to only configure 5 working servers
+  - Working servers: context7, github, playwright, sequential-thinking, memory
+- ✅ **Pushed Template to ai-dev-workflow Repo:**
+  - Template now at https://github.com/wyofalcon/ai-dev-workflow
+  - Includes all workflow scripts, config, and context structure
 - ✅ **Reorganized AI Workflow as Reusable Template:**
   - Moved all AI workflow scripts from `/scripts/` to `/.ai-workflow/scripts/`
   - Moved MCP config from `.devcontainer/` to `/.ai-workflow/config/`
