@@ -1,94 +1,19 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# =================================
 # Dependencies
-# =================================
 node_modules/
-/.pnp
-.pnp.js
 
-# =================================
-# Build Output
-# =================================
-/build
-/dist
-
-# =================================
-# Testing
-# =================================
-/coverage
-api/coverage/
-tests/reports/
-test-results/
-playwright-report/
-playwright/.cache/
-tests/test-progress.backup.json
-# Keep only error screenshots
-tests/reports/screenshots/*
-!tests/reports/screenshots/*error*.png
-!tests/reports/screenshots/.gitkeep
-
-# =================================
-# Environment & Secrets - NEVER COMMIT!
-# =================================
+# Environment
 .env
-.env.*
-!.env.example
-api/.env
-api/.env.*
-!api/.env.example
+.env.local
+.env.*.local
 
-# GCP/Firebase credentials
-**/gcp-key.json
-**/firebase-admin-key.json
-**/firebase-service-account.json
-**/cvstomize-deployer-key.json
-**/service-account*.json
-gha-creds-*.json
-secrets/
-.secrets/
-
-# =================================
-# Database & Infrastructure
-# =================================
-**/cloud-sql-proxy
-*.sqlite
-
-# =================================
 # Logs
-# =================================
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-combined.log
-error.log
-/logs/
-/data/logs/
-/data/generated_resumes/
+.ai-workflow/context/audit.log
 
-# =================================
-# IDE & Editor
-# =================================
-.vs/
-*.swp
-*.swo
-*~
+# Python
+__pycache__/
+*.pyc
 
-# =================================
-# OS Files
-# =================================
+# OS
 .DS_Store
 Thumbs.db
-
-# =================================
-# Misc
-# =================================
-.vercel
-.gemini/
-
-# Workflow PID files (used for duplicate instance detection)
-.context/.*.pid
-
-*storybook.log
-storybook-static
