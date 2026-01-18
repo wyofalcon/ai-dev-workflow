@@ -56,9 +56,20 @@ else
     echo "   ✓ Gemini CLI already installed"
 fi
 
+# Install GitHub Copilot CLI
+echo "🤖 [6b/9] Installing GitHub Copilot CLI..."
+if ! command -v copilot &> /dev/null; then
+    npm install -g @github/copilot 2>/dev/null || echo "   ⚠️  Copilot CLI install failed (install manually: npm i -g @github/copilot)"
+    echo "   ✓ GitHub Copilot CLI installed"
+else
+    echo "   ✓ GitHub Copilot CLI already installed"
+fi
+
 # Setup MCP servers for Gemini CLI
 echo "🔌 [7/9] Setting up MCP servers..."
-if [ -f .devcontainer/setup-mcp-servers.sh ]; then
+if [ -f .ai-workflow/config/setup-mcp-servers.sh ]; then
+    bash .ai-workflow/config/setup-mcp-servers.sh 2>/dev/null || echo "   ⚠️  MCP setup will complete on first Gemini launch"
+elif [ -f .devcontainer/setup-mcp-servers.sh ]; then
     bash .devcontainer/setup-mcp-servers.sh 2>/dev/null || echo "   ⚠️  MCP setup will complete on first Gemini launch"
 fi
 

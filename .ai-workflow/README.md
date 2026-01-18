@@ -120,5 +120,44 @@ To use this in another project:
 - **Builder**: Gemini CLI or Claude CLI generates code
 - **Auditor 1**: Pre-commit pattern checks (secrets, console.log, etc.)
 - **Auditor 2**: GitHub Copilot for complex reviews
+- **Copilot CLI**: Terminal-based AI reviews with Sonnet/Opus escalation
+- **Context Sync**: Keeps session state fresh across agent handoffs
+- **Prompt Pre-Audit**: Detects duplicates, auto-appends coding standards
+
+## 🧠 Copilot CLI Smart Review
+
+The `copilot-review.sh` script uses Claude Sonnet 4.5 by default and
+automatically escalates to Opus 4.5 for:
+
+- Large diffs (>100 lines)
+- Security-related changes (passwords, tokens, keys)
+- Complex async/hook patterns
+
+```bash
+# Review staged changes
+.ai-workflow/scripts/copilot-review.sh
+
+# Force Opus for deep analysis
+.ai-workflow/scripts/copilot-review.sh --opus
+
+# Review specific file
+.ai-workflow/scripts/copilot-review.sh -f src/App.js
+
+# Review a PR
+.ai-workflow/scripts/copilot-review.sh -p 123
+```
+
+## 📦 Dependencies
+
+The workflow requires these tools (installed automatically in devcontainer):
+
+- `tmux` - Detached builder sessions
+- `inotify-tools` - File watching for audit-watch
+- `whiptail` - Setup wizard UI
+- `@google/gemini-cli` - Gemini builder
+- `@github/copilot` - Copilot CLI for reviews
+- `gh` - GitHub CLI for PR operations
+- **Auditor 1**: Pre-commit pattern checks (secrets, console.log, etc.)
+- **Auditor 2**: GitHub Copilot for complex reviews
 - **Context Sync**: Keeps session state fresh across agent handoffs
 - **Prompt Pre-Audit**: Detects duplicates, auto-appends coding standards
