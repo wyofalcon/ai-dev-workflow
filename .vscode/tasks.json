@@ -47,6 +47,43 @@
       "problemMatcher": []
     },
     {
+      "label": "🔍 Audit Watch + Copilot",
+      "type": "shell",
+      "command": "COPILOT_REVIEW=1 ${workspaceFolder}/.ai-workflow/scripts/audit-watch.sh",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "clear": true,
+        "group": "dev-workflow"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🤖 Copilot Review (Staged)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.ai-workflow/scripts/copilot-review.sh",
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🧠 Copilot Review (Opus)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.ai-workflow/scripts/copilot-review.sh --opus",
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "🤖 AI Builder",
       "type": "shell",
       "command": "${workspaceFolder}/.ai-workflow/scripts/start-builder-tmux.sh",

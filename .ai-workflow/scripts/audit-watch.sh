@@ -13,6 +13,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
 NC='\033[0m'
 
 # Cleanup function
@@ -88,6 +89,11 @@ fi
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║${NC}  🔍 ${GREEN}AUDIT WATCH MODE: ON${NC}                                 ${BLUE}║${NC}"
 echo -e "${BLUE}║${NC}     Watching for changes... Press Ctrl+C to stop.        ${BLUE}║${NC}"
+if [ "$COPILOT_REVIEW" = "1" ]; then
+echo -e "${BLUE}║${NC}  🤖 ${PURPLE}COPILOT CLI: ENABLED${NC} (Sonnet/Opus auto-escalation)   ${BLUE}║${NC}"
+else
+echo -e "${BLUE}║${NC}  💡 Tip: COPILOT_REVIEW=1 to enable AI reviews           ${BLUE}║${NC}"
+fi
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -111,6 +117,11 @@ fi
 # Debounce: track last run time to avoid running multiple times for one save
 LAST_RUN=0
 DEBOUNCE_SECONDS=2
+
+# Copilot CLI review mode (off by default, enable with COPILOT_REVIEW=1)
+COPILOT_REVIEW="${COPILOT_REVIEW:-0}"
+COPILOT_REVIEW_INTERVAL=30  # Minimum seconds between Copilot reviews
+LAST_COPILOT_RUN=0
 
 run_audit() {
     local file="$1"
@@ -140,8 +151,25 @@ run_audit() {
     # Run audit on current working directory changes
     cd "$PROJECT_ROOT"
 
-    # Check the specific file for issues
+    # Check the specific file for issues (pattern-based)
     python3 "$SCRIPT_DIR/audit-file.py" "$file"
+    local audit_exit=$?
+    
+    # If pattern audit found issues OR Copilot review is enabled, run Copilot
+    if [ "$COPILOT_REVIEW" = "1" ]; then
+        local time_since_copilot=$((current_time - LAST_COPILOT_RUN))
+        if [ $time_since_copilot -ge $COPILOT_REVIEW_INTERVAL ]; then
+            LAST_COPILOT_RUN=$current_time
+            echo ""
+            echo -e "${PURPLE}🤖 Running Copilot CLI review...${NC}"
+            "$SCRIPT_DIR/copilot-review.sh" -f "$file" 2>/dev/null || true
+        fi
+    elif [ $audit_exit -ne 0 ]; then
+        # Pattern audit found issues - offer Copilot escalation
+        echo ""
+        echo -e "${YELLOW}💡 Tip: Run 'COPILOT_REVIEW=1' to enable AI review${NC}"
+        echo -e "${YELLOW}   Or: .ai-workflow/scripts/copilot-review.sh -f $file${NC}"
+    fi
 }
 
 # Watch for changes
