@@ -5,8 +5,12 @@
 # Usage: ./scripts/inject-prompt.sh "your prompt here"
 #    or: ./scripts/inject-prompt.sh --file /path/to/prompt.md
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKFLOW_ROOT="$(dirname "$SCRIPT_DIR")"
+CONTEXT_DIR="$WORKFLOW_ROOT/context"
+
 SESSION_NAME="builder"
-PROMPT_LOG=".context/PROMPT_HISTORY.md"
+PROMPT_LOG="$CONTEXT_DIR/PROMPT_HISTORY.md"
 
 # Colors
 GREEN='\033[0;32m'

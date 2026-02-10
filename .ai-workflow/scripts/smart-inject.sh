@@ -65,6 +65,34 @@ $PROMPT"
 fi
 
 # ═══════════════════════════════════════════════════════════════
+# PROTECTED FILES ENFORCEMENT
+# ═══════════════════════════════════════════════════════════════
+
+# Always append protected-files reminder to every prompt
+PROTECTED_REMINDER="
+
+---
+⛔ PROTECTED FILES — DO NOT MODIFY:
+- .ai-workflow/context/SESSION.md
+- .ai-workflow/context/RELAY_MODE
+- .github/copilot-instructions.md
+- GEMINI.md
+- CLAUDE.md
+If you need to update session state, leave a comment in your commit message instead.
+---"
+
+PROMPT="${PROMPT}${PROTECTED_REMINDER}"
+echo "🛡️ Protected-files reminder appended"
+
+# Backup SESSION.md before Builder runs
+SESSION_FILE="$PROJECT_ROOT/.ai-workflow/context/SESSION.md"
+SESSION_BACKUP="$PROJECT_ROOT/.ai-workflow/context/.SESSION.md.bak"
+if [ -f "$SESSION_FILE" ]; then
+    cp "$SESSION_FILE" "$SESSION_BACKUP"
+    echo "💾 SESSION.md backed up (will auto-restore if Builder modifies it)"
+fi
+
+# ═══════════════════════════════════════════════════════════════
 # BRANCH ANALYSIS
 # ═══════════════════════════════════════════════════════════════
 

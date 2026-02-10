@@ -24,6 +24,8 @@ echo ""
 
 i=0
 last_output=""
+was_active=false
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 while true; do
     # Check if session exists
     if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
@@ -48,8 +50,16 @@ while true; do
     # Detect activity
     if [ "$current_output" != "$last_output" ]; then
         echo -e "${GREEN}● ACTIVE${NC} - Gemini is working..."
+        was_active=true
     else
         echo -e "${YELLOW}○ IDLE${NC} - Waiting or complete"
+        # If transitioning from ACTIVE → IDLE, Builder just finished — protect SESSION.md
+        if [ "$was_active" = true ]; then
+            was_active=false
+            echo ""
+            echo -e "${CYAN}🛡️  Builder finished — checking SESSION.md protection...${NC}"
+            "$SCRIPT_DIR/restore-session.sh" 2>/dev/null || true
+        fi
     fi
     last_output="$current_output"
 

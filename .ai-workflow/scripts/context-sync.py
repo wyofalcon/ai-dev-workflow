@@ -13,6 +13,7 @@ import os
 import re
 from pathlib import Path
 from datetime import datetime, timedelta
+from typing import List, Tuple, Optional
 
 # Paths relative to this script's location
 SCRIPT_DIR = Path(__file__).parent
@@ -26,7 +27,7 @@ AUDIT_LOG = CONTEXT_DIR / "audit.log"
 # How old SESSION.md can be before warning (in hours)
 STALE_THRESHOLD_HOURS = 24
 
-def run_cmd(cmd: list[str]) -> str:
+def run_cmd(cmd: List[str]) -> str:
     """Run a shell command and return output."""
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=PROJECT_ROOT)
@@ -38,19 +39,19 @@ def get_current_branch() -> str:
     """Get current git branch."""
     return run_cmd(["git", "branch", "--show-current"])
 
-def get_recent_commits(n: int = 5) -> list[str]:
+def get_recent_commits(n: int = 5) -> List[str]:
     """Get last N commit messages."""
     output = run_cmd(["git", "log", "--oneline", f"-{n}"])
     return output.split("\n") if output else []
 
-def get_uncommitted_changes() -> list[str]:
+def get_uncommitted_changes() -> List[str]:
     """Get list of uncommitted/unstaged files."""
     output = run_cmd(["git", "status", "--porcelain"])
     if not output:
         return []
     return [line[3:] for line in output.split("\n") if line]
 
-def get_session_last_updated() -> tuple[datetime | None, str | None]:
+def get_session_last_updated() -> Tuple[Optional[datetime], Optional[str]]:
     """Parse SESSION.md for last updated date and agent."""
     if not SESSION_FILE.exists():
         return None, None
@@ -72,7 +73,7 @@ def get_session_last_updated() -> tuple[datetime | None, str | None]:
 
     return last_date, last_agent
 
-def get_current_focus() -> list[str]:
+def get_current_focus() -> List[str]:
     """Extract current focus items from SESSION.md."""
     if not SESSION_FILE.exists():
         return []
@@ -99,7 +100,7 @@ def get_mvp_status() -> dict:
 
     return {"total": done + pending, "done": done, "pending": pending}
 
-def check_session_freshness() -> tuple[bool, str]:
+def check_session_freshness() -> Tuple[bool, str]:
     """Check if SESSION.md is stale."""
     last_updated, last_agent = get_session_last_updated()
 
@@ -168,7 +169,7 @@ def log_sync(status: str, details: str):
     except Exception:
         pass
 
-def sync_context(auto_update: bool = False) -> tuple[bool, str, str]:
+def sync_context(auto_update: bool = False) -> Tuple[bool, str, str]:
     """
     Sync and validate project context.
     Returns: (is_fresh, status_message, context_summary)

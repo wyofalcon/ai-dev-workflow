@@ -32,25 +32,27 @@ show_first_time_popup() {
 Welcome! This dev container uses a Builder/Auditor workflow:
 
 📝 HOW IT WORKS:
-   • Open a terminal and run 'gemini' or 'claude'
-   • Ask the Builder to implement features for you
-   • Copilot (Ctrl+Shift+I) reviews your changes
-   • Pre-commit hooks catch issues before commits
+   • Talk to Copilot (Ctrl+I) to describe features
+   • Copilot refines your idea into a clear prompt
+   • Copilot sends the prompt to the Builder (Gemini/Claude)
+   • Builder implements the code automatically
+   • Pre-commit hooks + Copilot review your changes
 
-🤖 BUILDER: Gemini or Claude CLI (your coding AI)
-🔍 AUDITOR: GitHub Copilot + pre-commit checks
+💬 COPILOT: Your interface (refines & relays prompts)
+🔨 BUILDER: Gemini or Claude CLI (implements code)
+🔍 AUDITOR: Pre-commit checks + Copilot reviews
 
-� SMART BRANCHING:
+🌿 SMART BRANCHING:
    • Copilot can auto-create branches for your tasks
    • Just describe your idea - it picks the branch name!
 
 📋 NEXT STEPS:
    1. Set up your AI Builder (next screen)
-   2. Start coding with your Builder CLI!
+   2. Describe ideas to Copilot - it handles the rest!
 
 Press OK to continue...
 EOF
-)" 24 62
+)" 24 64
 
         # Offer to create desktop shortcut
         if whiptail --title "🖥️ Desktop Shortcut" --yesno "Would you like to create a Desktop shortcut to quickly reopen this project?\n\nThis creates a clickable icon that:\n  • Starts Docker if needed\n  • Opens VS Code with this dev container\n  • Works even after restart\n\n(WSL users can choose Windows or Linux desktop)" 16 60; then
@@ -96,19 +98,19 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo -e "   ${BOLD}How it works:${NC}"
 echo ""
-echo -e "   ${GREEN}🤖 Builder${NC}    Run 'gemini' or 'claude' in terminal"
-echo -e "                Ask it to implement features, it writes the code"
+echo -e "   ${GREEN}💬 You → Copilot${NC}  Describe features to Copilot (Ctrl+I)"
+echo -e "                    Copilot refines your idea into a clear prompt"
 echo ""
-echo -e "   ${GREEN}🔍 Auditor${NC}    GitHub Copilot (Ctrl+Shift+I) + pre-commit hooks"
-echo -e "                Reviews your changes and catches issues"
+echo -e "   ${GREEN}🤖 Builder${NC}       Gemini or Claude CLI (runs in tmux)"
+echo -e "                    Receives prompts from Copilot, implements code"
 echo ""
-echo -e "   ${GREEN}🧠 Copilot CLI${NC} Terminal AI reviews (Sonnet → Opus escalation)"
-echo -e "                Run: copilot-review.sh for smart code review"
+echo -e "   ${GREEN}🔍 Auditor${NC}       Pre-commit hooks + Copilot reviews"
+echo -e "                    Catches issues and reviews your changes"
 echo ""
-echo -e "   ${GREEN}🌿 Branches${NC}   Copilot auto-creates branches for your tasks"
-echo -e "                Describe an idea, it picks the right branch name"
+echo -e "   ${GREEN}🌿 Branches${NC}      Copilot auto-creates branches for your tasks"
+echo -e "                    Describe an idea, it picks the right branch name"
 echo ""
-echo -e "   ${GREEN}📁 Workflow${NC}   Builder writes code → You commit → Auditor reviews"
+echo -e "   ${GREEN}📁 Workflow${NC}      You → Copilot → Builder → Commit → Auditor"
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""

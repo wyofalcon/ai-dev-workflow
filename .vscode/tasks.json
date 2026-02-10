@@ -114,11 +114,11 @@
       }
     },
     {
-      "label": "🚀 Recalibrate Agents",
+      "label": "📊 Workflow Signals",
       "type": "shell",
-      "command": "${workspaceFolder}/.ai-workflow/scripts/recalibrate.py",
+      "command": "bash ${workspaceFolder}/.ai-workflow/scripts/workflow-signals.sh",
       "presentation": {
-        "echo": true,
+        "echo": false,
         "reveal": "always",
         "focus": true,
         "panel": "shared",
@@ -127,7 +127,7 @@
       "problemMatcher": []
     },
     {
-      "label": "📊 Show Workflow Status",
+      "label": " Show Workflow Status",
       "type": "shell",
       "command": "bash ${workspaceFolder}/.ai-workflow/scripts/show-status.sh",
       "presentation": {

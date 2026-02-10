@@ -53,7 +53,12 @@ def audit_diff(diff):
     issues = {"critical": [], "warning": []}
     lines = diff.split('\n')
 
+    current_file = ""
     for i, line in enumerate(lines):
+        # Track which file we're in
+        if line.startswith('+++ b/'):
+            current_file = line[6:]
+            continue
         if not line.startswith('+') or line.startswith('+++'):
             continue
 
@@ -75,9 +80,10 @@ def audit_diff(diff):
                 if 'process.env' not in line_content and 'example' not in line_lower and 'test' not in line_lower:
                     issues["critical"].append(f"🔐 Possible {name} found (line ~{i+1})")
 
-        # CRITICAL: SQL injection patterns
-        if re.search(r'\$\{.*\}.*(?:SELECT|INSERT|UPDATE|DELETE|DROP)', line_content, re.IGNORECASE):
-            issues["critical"].append(f"💉 Possible SQL injection (line ~{i+1})")
+        # CRITICAL: SQL injection patterns (skip shell scripts — ${VAR} is normal bash syntax)
+        if not current_file.endswith(('.sh', '.bash', '.md')):
+            if re.search(r'\$\{.*\}.*(?:SELECT|INSERT|UPDATE|DELETE|DROP)', line_content, re.IGNORECASE):
+                issues["critical"].append(f"💉 Possible SQL injection (line ~{i+1})")
 
         # WARNING: Console.log in non-test files
         if 'console.log' in line_content:

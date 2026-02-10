@@ -123,6 +123,21 @@ COPILOT_REVIEW="${COPILOT_REVIEW:-0}"
 COPILOT_REVIEW_INTERVAL=30  # Minimum seconds between Copilot reviews
 LAST_COPILOT_RUN=0
 
+# Workflow signal detection interval
+WORKFLOW_CHECK_INTERVAL=60
+LAST_WORKFLOW_CHECK=0
+
+show_workflow_signals() {
+    local current_time=$(date +%s)
+    if (( current_time - LAST_WORKFLOW_CHECK >= WORKFLOW_CHECK_INTERVAL )); then
+        LAST_WORKFLOW_CHECK=$current_time
+        echo ""
+        if [ -x "$SCRIPT_DIR/workflow-signals.sh" ]; then
+            "$SCRIPT_DIR/workflow-signals.sh"
+        fi
+    fi
+}
+
 run_audit() {
     local file="$1"
     local current_time=$(date +%s)
@@ -154,7 +169,7 @@ run_audit() {
     # Check the specific file for issues (pattern-based)
     python3 "$SCRIPT_DIR/audit-file.py" "$file"
     local audit_exit=$?
-    
+
     # If pattern audit found issues OR Copilot review is enabled, run Copilot
     if [ "$COPILOT_REVIEW" = "1" ]; then
         local time_since_copilot=$((current_time - LAST_COPILOT_RUN))
@@ -170,6 +185,9 @@ run_audit() {
         echo -e "${YELLOW}💡 Tip: Run 'COPILOT_REVIEW=1' to enable AI review${NC}"
         echo -e "${YELLOW}   Or: .ai-workflow/scripts/copilot-review.sh -f $file${NC}"
     fi
+
+    # Periodically show workflow status
+    show_workflow_signals
 }
 
 # Watch for changes
