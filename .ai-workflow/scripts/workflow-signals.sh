@@ -20,29 +20,6 @@ NC='\033[0m'
 # DETECTION FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-check_for_secrets() {
-    # Quick secret scan of staged changes
-    local secrets_found=0
-    local staged_diff=$(git diff --cached 2>/dev/null)
-
-    # Common secret patterns
-    local patterns=(
-        'AKIA[0-9A-Z]{16}'                    # AWS Access Key
-        'AIza[0-9A-Za-z_-]{35}'               # Google API Key
-        'ghp_[a-zA-Z0-9]{36}'                 # GitHub Personal Access Token
-        'sk-[a-zA-Z0-9]{48}'                  # OpenAI API Key
-    )
-
-    for pattern in "${patterns[@]}"; do
-        if echo "$staged_diff" | grep -qE "$pattern"; then
-            secrets_found=1
-            break
-        fi
-    done
-
-    echo "$secrets_found"
-}
-
 detect_ready_signals() {
     local status="In progress"
     local signals=""

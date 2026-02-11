@@ -28,18 +28,31 @@ Controls whether the Auditor automatically checks files when you save them.
 
 ## How It Works
 
-### Prompt Relay (Review Mode - Default)
+### Hybrid Task Routing (Default)
+
+The Auditor (Copilot) uses a **hybrid approach** — it can either code directly or delegate to the Builder:
+
+| Task Size | Who Codes | Examples |
+|-----------|-----------|----------|
+| **Small/focused** | Auditor (Copilot) directly | Add a button, fix a bug, small refactor |
+| **Large/multi-file** | Builder (Gemini/Claude) | New feature, new API endpoints, major refactor |
+
+**Audit runs on ALL code regardless of author.**
+
+### Prompt Relay (Review Mode)
 
 1. You describe your idea to Copilot
-2. Copilot refines it into a proper prompt
-3. Prompt is saved to `.context/PROMPT.md`
-4. You review and copy/paste to Builder terminal (or run `send-prompt`)
+2. Copilot assesses: small task or large task?
+3. **If small:** Copilot implements directly, commits through audit
+4. **If large:** Prompt refined, saved to `.context/PROMPT.md`
+5. You review and copy/paste to Builder terminal (or run `send-prompt`)
 
 ### Prompt Relay (Auto Mode)
 
 1. You describe your idea to Copilot
-2. Copilot refines it into a proper prompt
-3. Prompt is automatically piped to Builder terminal
+2. Copilot assesses: small task or large task?
+3. **If small:** Copilot implements directly, commits through audit
+4. **If large:** Prompt refined and automatically piped to Builder terminal
 
 ### Audit Watch (On - Default)
 

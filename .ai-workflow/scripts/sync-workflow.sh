@@ -45,9 +45,6 @@ WORKFLOW_FILES=(
     ".ai-workflow/config/ensure-mcp-servers.sh"
     ".ai-workflow/config/setup-mcp-servers.sh"
     ".ai-workflow/config/models.conf"
-    ".github/copilot-instructions.md"
-    "GEMINI.md"
-    "CLAUDE.md"
     ".vscode/tasks.json"
 )
 

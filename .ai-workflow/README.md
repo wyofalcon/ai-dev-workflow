@@ -117,12 +117,36 @@ To use this in another project:
 
 ## 🛡️ What It Does
 
-- **Builder**: Gemini CLI or Claude CLI generates code
-- **Auditor 1**: Pre-commit pattern checks (secrets, console.log, etc.)
-- **Auditor 2**: GitHub Copilot for complex reviews
-- **Copilot CLI**: Terminal-based AI reviews with Sonnet/Opus escalation
-- **Context Sync**: Keeps session state fresh across agent handoffs
-- **Prompt Pre-Audit**: Detects duplicates, auto-appends coding standards
+**The Complete Workflow (Hybrid Model):**
+
+```
+User → Auditor 2 (Copilot: assess, route, implement small tasks)
+                ├── Small tasks → Implement directly → Audit → Commit
+                └── Large tasks → Refine → Builder (Gemini/Claude) → Audit → Commit
+```
+
+### Task Routing
+
+| Task Size | Who Codes | Examples |
+|-----------|-----------|----------|
+| **Small/focused** | Auditor (Copilot) directly | Add a button, fix a bug, rename variables, small refactor |
+| **Large/multi-file** | Builder (Gemini/Claude) | New wizard section, new API endpoints, new components, major refactor |
+
+**Audit is mandatory for ALL changes regardless of who wrote the code:**
+1. Auditor 1 (pre-commit) runs on `git commit`
+2. Auditor 2 (Copilot) reviews the diff before pushing
+3. Commit → push → PR as usual
+
+### Components
+
+- **User → Copilot:** User describes ideas/features to GitHub Copilot in VS Code
+- **Copilot (Hybrid Router):** Assesses task complexity; implements small changes directly or refines prompts for Builder
+- **Builder (Gemini/Claude CLI):** Generates code for large features based on Copilot's refined prompts
+- **Auditor 1 (Pre-commit):** Pattern checks (secrets, console.log, etc.) on ALL commits
+- **Auditor 2 (Copilot):** Reviews PRs and provides feedback
+- **Copilot CLI:** Terminal-based AI reviews with Sonnet/Opus escalation
+- **Context Sync:** Keeps session state fresh across agent handoffs
+- **Prompt Pre-Audit:** Detects duplicates, auto-appends coding standards
 
 ## 🧠 Copilot CLI Smart Review
 
