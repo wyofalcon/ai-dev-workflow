@@ -138,6 +138,61 @@ show_workflow_signals() {
     fi
 }
 
+show_audit_panel() {
+    local audit_result="${1:-unknown}"  # pass | warn | fail | unknown
+
+    echo ""
+    echo -e "${BLUE}┌─────────────────────────────────────────────────────────────┐${NC}"
+
+    # ── Audit result ──
+    case "$audit_result" in
+        pass)   echo -e "${BLUE}│${NC}  🟢 ${GREEN}Audit: PASS${NC}$(printf '%*s' 48 '')${BLUE}│${NC}" ;;
+        warn)   echo -e "${BLUE}│${NC}  🟡 ${YELLOW}Audit: WARNINGS${NC}$(printf '%*s' 44 '')${BLUE}│${NC}" ;;
+        fail)   echo -e "${BLUE}│${NC}  🔴 ${RED}Audit: ISSUES FOUND${NC}$(printf '%*s' 40 '')${BLUE}│${NC}" ;;
+        *)      echo -e "${BLUE}│${NC}  ⚪ Audit: complete$(printf '%*s' 42 '')${BLUE}│${NC}" ;;
+    esac
+
+    echo -e "${BLUE}├─────────────────────────────────────────────────────────────┤${NC}"
+
+    # ── Git info ──
+    local branch dirty_count last_commit_hash last_commit_msg
+    branch=$(git -C "$PROJECT_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
+    dirty_count=$(git -C "$PROJECT_ROOT" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+    last_commit_hash=$(git -C "$PROJECT_ROOT" log -1 --format="%h" 2>/dev/null || echo "?")
+    last_commit_msg=$(git -C "$PROJECT_ROOT" log -1 --format="%s" 2>/dev/null | cut -c1-45 || echo "?")
+
+    local dirty_display=""
+    if [ "$dirty_count" -gt 0 ]; then
+        dirty_display="${YELLOW} (${dirty_count} dirty)${NC}"
+    fi
+
+    echo -e "${BLUE}│${NC}  🌿 Branch:      ${CYAN}${branch}${NC}${dirty_display}"
+    echo -e "${BLUE}│${NC}  📦 Last Commit: ${DIM}${last_commit_hash}${NC} ${last_commit_msg}"
+
+    echo -e "${BLUE}├─────────────────────────────────────────────────────────────┤${NC}"
+
+    # ── Builder session status ──
+    local builder_status="stopped"
+    if tmux has-session -t builder 2>/dev/null; then
+        builder_status="${GREEN}alive${NC}"
+    else
+        builder_status="${RED}stopped${NC}"
+    fi
+    echo -e "${BLUE}│${NC}  🤖 Builder:     ${builder_status}"
+
+    echo -e "${BLUE}├─────────────────────────────────────────────────────────────┤${NC}"
+
+    # ── Prompt tracker ──
+    echo -e "${BLUE}│${NC}  🏷️  Prompts:"
+    if [ -x "$SCRIPT_DIR/prompt-tracker.sh" ]; then
+        "$SCRIPT_DIR/prompt-tracker.sh" show-compact 2>/dev/null | while IFS= read -r line; do
+            echo -e "${BLUE}│${NC}${line}"
+        done
+    fi
+
+    echo -e "${BLUE}└─────────────────────────────────────────────────────────────┘${NC}"
+}
+
 run_audit() {
     local file="$1"
     local current_time=$(date +%s)
@@ -170,6 +225,18 @@ run_audit() {
     python3 "$SCRIPT_DIR/audit-file.py" "$file"
     local audit_exit=$?
 
+    # Map exit code to result label
+    local audit_result="pass"
+    if [ $audit_exit -ne 0 ]; then
+        audit_result="fail"
+    fi
+
+    # AI-powered audit (if auditor-ai session is running)
+    if tmux has-session -t auditor-ai 2>/dev/null; then
+        echo -e "${PURPLE}🧠 Running AI audit (Gemini Flash)...${NC}"
+        "$SCRIPT_DIR/ai-audit-file.sh" "$file" 2>/dev/null || true
+    fi
+
     # If pattern audit found issues OR Copilot review is enabled, run Copilot
     if [ "$COPILOT_REVIEW" = "1" ]; then
         local time_since_copilot=$((current_time - LAST_COPILOT_RUN))
@@ -184,7 +251,11 @@ run_audit() {
         echo ""
         echo -e "${YELLOW}💡 Tip: Run 'COPILOT_REVIEW=1' to enable AI review${NC}"
         echo -e "${YELLOW}   Or: .ai-workflow/scripts/copilot-review.sh -f $file${NC}"
+        audit_result="warn"
     fi
+
+    # Show the full audit panel (prompts, git, builder)
+    show_audit_panel "$audit_result"
 
     # Periodically show workflow status
     show_workflow_signals

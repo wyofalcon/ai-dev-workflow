@@ -53,12 +53,7 @@ def audit_diff(diff):
     issues = {"critical": [], "warning": []}
     lines = diff.split('\n')
 
-    current_file = ""
     for i, line in enumerate(lines):
-        # Track which file we're in
-        if line.startswith('+++ b/'):
-            current_file = line[6:]
-            continue
         if not line.startswith('+') or line.startswith('+++'):
             continue
 
@@ -80,10 +75,9 @@ def audit_diff(diff):
                 if 'process.env' not in line_content and 'example' not in line_lower and 'test' not in line_lower:
                     issues["critical"].append(f"🔐 Possible {name} found (line ~{i+1})")
 
-        # CRITICAL: SQL injection patterns (skip shell scripts — ${VAR} is normal bash syntax)
-        if not current_file.endswith(('.sh', '.bash', '.md')):
-            if re.search(r'\$\{.*\}.*(?:SELECT|INSERT|UPDATE|DELETE|DROP)', line_content, re.IGNORECASE):
-                issues["critical"].append(f"💉 Possible SQL injection (line ~{i+1})")
+        # CRITICAL: SQL injection patterns
+        if re.search(r'\$\{.*\}.*(?:SELECT|INSERT|UPDATE|DELETE|DROP)', line_content, re.IGNORECASE):
+            issues["critical"].append(f"💉 Possible SQL injection (line ~{i+1})")
 
         # WARNING: Console.log in non-test files
         if 'console.log' in line_content:
@@ -166,7 +160,34 @@ def main():
         print("   💡 Tip: GitHub Copilot will do full review on PR")
         print("="*60)
         log_audit("PASS", "staged-changes", "Clean")
+
+        # Auto-update prompt tracker: mark most recent SENT/BUILDING prompt as DONE
+        auto_complete_prompt()
+
         sys.exit(0)
+
+def auto_complete_prompt():
+    """If there's an active prompt (SENT or BUILDING), mark it DONE after successful commit."""
+    tracker_file = CONTEXT_DIR / "PROMPT_TRACKER.log"
+    tracker_script = SCRIPT_DIR / "prompt-tracker.sh"
+    if not tracker_file.exists() or not tracker_script.exists():
+        return
+    try:
+        with open(tracker_file, "r") as f:
+            lines = f.readlines()
+        # Find the most recent SENT or BUILDING prompt
+        for line in reversed(lines):
+            parts = line.strip().split("|")
+            if len(parts) >= 4 and parts[1] in ("SENT", "BUILDING"):
+                prompt_id = parts[0]
+                subprocess.run(
+                    [str(tracker_script), "status", prompt_id, "DONE"],
+                    capture_output=True, timeout=5
+                )
+                print(f"\n   🏷️  Prompt {prompt_id} → DONE")
+                break
+    except Exception:
+        pass  # Don't fail audit if tracker update fails
 
 if __name__ == "__main__":
     main()

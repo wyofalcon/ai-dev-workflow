@@ -49,7 +49,7 @@
 
   // Extension settings
   "errorLens.enabledDiagnosticLevels": ["error", "warning"],
-  "cSpell.words": ["cvstomize", "prisma", "gemini", "vertex", "devcontainer"],
+  "cSpell.words": ["gemini", "vertex", "devcontainer"],
 
   // GitHub Copilot Settings
   "github.copilot.chat.codeGeneration.instructions": [

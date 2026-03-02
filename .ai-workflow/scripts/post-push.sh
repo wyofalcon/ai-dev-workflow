@@ -77,8 +77,8 @@ generate_pr_title() {
         chore/*|maintenance/*)
             title="chore: ${branch#*/}"
             ;;
-        EasyCV*|easycv*)
-            title="feat(easy-cv): ${branch}"
+        auto-gen/*|wizard/*)
+            title="feat: ${branch}"
             ;;
         *)
             # Use last commit message as fallback

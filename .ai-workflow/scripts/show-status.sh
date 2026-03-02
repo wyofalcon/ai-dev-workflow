@@ -54,7 +54,9 @@ case "${2:-full}" in
         echo -e "[Relay: $RELAY_DISPLAY | Audit: $AUDIT_DISPLAY]"
         ;;
     oneline)
+        PROMPT_STATUS=$( "$SCRIPT_DIR/prompt-tracker.sh" show-compact 2>/dev/null || echo "" )
         echo -e "📤 Relay: $RELAY_DISPLAY  🔍 Audit: $AUDIT_DISPLAY"
+        [ -n "$PROMPT_STATUS" ] && echo -e "$PROMPT_STATUS"
         ;;
     workflow)
         # Run the full workflow signals detection
@@ -66,7 +68,38 @@ case "${2:-full}" in
         echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo -e "  📤 Prompt Relay:  $RELAY_DISPLAY"
         echo -e "  🔍 Audit Watch:   $AUDIT_DISPLAY"
+
+        # Add tmux session statuses
+        if tmux has-session -t builder 2>/dev/null; then
+            echo -e "  🤖 Builder:       ${GREEN}RUNNING${NC}"
+        else
+            echo -e "  🤖 Builder:       ${RED}STOPPED${NC}"
+        fi
+
+        if tmux has-session -t shell 2>/dev/null; then
+            echo -e "  🐚 Shell:         ${GREEN}RUNNING${NC}"
+        else
+            echo -e "  🐚 Shell:         ${RED}STOPPED${NC}"
+        fi
+
+        if tmux has-session -t gh-ops 2>/dev/null; then
+            echo -e "  🔄 GH Ops:        ${GREEN}RUNNING${NC}"
+        else
+            echo -e "  🔄 GH Ops:        ${RED}STOPPED${NC}"
+        fi
+
+        if tmux has-session -t auditor-ai 2>/dev/null; then
+            echo -e "  🧠 AI Auditor:    ${GREEN}RUNNING${NC}"
+        else
+            echo -e "  🧠 AI Auditor:    ${RED}STOPPED${NC}"
+        fi
         echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+        # Show prompt tracker
+        if [ -x "$SCRIPT_DIR/prompt-tracker.sh" ]; then
+            PROMPT_LINE=$( "$SCRIPT_DIR/prompt-tracker.sh" show-compact 2>/dev/null || echo "" )
+            [ -n "$PROMPT_LINE" ] && echo -e "  $PROMPT_LINE"
+        fi
 
         # Show workflow signals if available
         if [ -x "$SCRIPT_DIR/workflow-signals.sh" ]; then

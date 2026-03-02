@@ -1,8 +1,8 @@
 #!/bin/bash
-# Sync AI Dev Workflow files between cvstomize and the public template repo
+# Sync AI Dev Workflow files between project and the public template repo
 # Usage: ./scripts/sync-workflow.sh [push|pull]
-#   push: Copy cvstomize changes → ai-dev-workflow repo
-#   pull: Copy ai-dev-workflow → cvstomize
+#   push: Copy project changes → ai-dev-workflow repo
+#   pull: Copy ai-dev-workflow → project
 
 set -e
 
@@ -16,7 +16,7 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 WORKFLOW_REMOTE="workflow"
-WORKFLOW_REPO="wyofalcon/ai-dev-workflow"
+WORKFLOW_REPO="YOUR_USERNAME/ai-dev-workflow"
 
 # Files that are part of the workflow (shared between repos)
 # Updated to use .ai-workflow/ paths
@@ -80,8 +80,8 @@ show_usage() {
     echo "Usage: $0 [push|pull|diff|status]"
     echo ""
     echo "Commands:"
-    echo "  push    Copy cvstomize workflow files → ai-dev-workflow repo"
-    echo "  pull    Copy ai-dev-workflow files → cvstomize"
+    echo "  push    Copy project workflow files → ai-dev-workflow repo"
+    echo "  pull    Copy ai-dev-workflow files → project"
     echo "  diff    Show differences between repos"
     echo "  status  Show which files are in sync"
     echo ""
@@ -90,7 +90,7 @@ show_usage() {
 sync_push() {
     echo ""
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}📤 Pushing cvstomize → ai-dev-workflow${NC}"
+    echo -e "${GREEN}📤 Pushing project → ai-dev-workflow${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 
@@ -108,7 +108,7 @@ sync_push() {
             cp "$ROOT_DIR/$file" "$TEMP_DIR/$file"
             echo -e "  ${GREEN}✓${NC} $file"
         else
-            echo -e "  ${YELLOW}⚠${NC} $file (not found in cvstomize)"
+            echo -e "  ${YELLOW}⚠${NC} $file (not found in project)"
         fi
     done
 
@@ -127,7 +127,7 @@ sync_push() {
         read -p "Push these changes to ai-dev-workflow? [y/N] " -n 1 -r
         echo ""
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            git commit -m "sync: Update workflow files from cvstomize"
+            git commit -m "sync: Update workflow files from project"
             git push origin main
             echo ""
             echo -e "${GREEN}✅ Pushed to ai-dev-workflow!${NC}"
@@ -140,7 +140,7 @@ sync_push() {
 sync_pull() {
     echo ""
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}📥 Pulling ai-dev-workflow → cvstomize${NC}"
+    echo -e "${GREEN}📥 Pulling ai-dev-workflow → project${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 
@@ -194,7 +194,7 @@ sync_pull() {
 sync_diff() {
     echo ""
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}🔍 Diff: cvstomize vs ai-dev-workflow${NC}"
+    echo -e "${GREEN}🔍 Diff: project vs ai-dev-workflow${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 
@@ -233,7 +233,7 @@ sync_status() {
                     echo -e "  ${YELLOW}≠${NC} $file (out of sync)"
                 fi
             else
-                echo -e "  ${CYAN}→${NC} $file (cvstomize only)"
+                echo -e "  ${CYAN}→${NC} $file (project only)"
             fi
         else
             echo -e "  ${RED}✗${NC} $file (missing locally)"

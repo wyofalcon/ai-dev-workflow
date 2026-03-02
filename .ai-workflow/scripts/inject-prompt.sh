@@ -84,6 +84,10 @@ tmux load-buffer -b prompt "$TEMP_FILE"
 tmux paste-buffer -b prompt -t "$SESSION_NAME"
 # Small delay to ensure paste completes before sending Enter
 sleep 0.3
+# NOTE: Gemini CLI requires TWO Enters to submit.
+# First Enter ends the current line, second Enter on empty line = submit.
+tmux send-keys -t "$SESSION_NAME" C-m
+sleep 0.5
 tmux send-keys -t "$SESSION_NAME" C-m
 
 rm -f "$TEMP_FILE"

@@ -3,7 +3,8 @@
 # Shows reassuring messages during container initialization
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-FIRST_TIME_MARKER="$HOME/.cvstomize_welcomed"
+PROJECT_NAME="${AI_WORKFLOW_PROJECT_NAME:-My Project}"
+FIRST_TIME_MARKER="$HOME/.ai-workflow_welcomed"
 
 # Colors
 GREEN='\033[0;32m'
@@ -28,7 +29,7 @@ wait_for_whiptail() {
 # Show first-time welcome popup
 show_first_time_popup() {
     if [ ! -f "$FIRST_TIME_MARKER" ] && wait_for_whiptail; then
-        whiptail --title "🎉 Welcome to CVstomize!" --msgbox "$(cat << 'EOF'
+        whiptail --title "🎉 Welcome to $PROJECT_NAME!" --msgbox "$(cat << 'EOF'
 Welcome! This dev container uses a Builder/Auditor workflow:
 
 📝 HOW IT WORKS:
@@ -57,8 +58,9 @@ EOF
         # Offer to create desktop shortcut
         if whiptail --title "🖥️ Desktop Shortcut" --yesno "Would you like to create a Desktop shortcut to quickly reopen this project?\n\nThis creates a clickable icon that:\n  • Starts Docker if needed\n  • Opens VS Code with this dev container\n  • Works even after restart\n\n(WSL users can choose Windows or Linux desktop)" 16 60; then
             # Run the shortcut creator
-            if [ -f "/workspaces/cvstomize/scripts/create-shortcut.sh" ]; then
-                bash /workspaces/cvstomize/scripts/create-shortcut.sh
+            SHORTCUT_SCRIPT="$(git rev-parse --show-toplevel 2>/dev/null)/scripts/create-shortcut.sh"
+            if [ -f "$SHORTCUT_SCRIPT" ]; then
+                bash "$SHORTCUT_SCRIPT"
             else
                 whiptail --title "⚠️ Script Not Found" --msgbox "Shortcut script not found.\n\nYou can run it manually later:\n  ./scripts/create-shortcut.sh" 10 50
             fi
@@ -78,21 +80,22 @@ echo -e "${BLUE}"
 cat << 'BANNER'
    ╔═══════════════════════════════════════════════════════════════╗
    ║                                                               ║
-   ║     ██████╗██╗   ██╗███████╗████████╗ ██████╗ ███╗   ███╗    ║
-   ║    ██╔════╝██║   ██║██╔════╝╚══██╔══╝██╔═══██╗████╗ ████║    ║
-   ║    ██║     ██║   ██║███████╗   ██║   ██║   ██║██╔████╔██║    ║
-   ║    ██║     ╚██╗ ██╔╝╚════██║   ██║   ██║   ██║██║╚██╔╝██║    ║
-   ║    ╚██████╗ ╚████╔╝ ███████║   ██║   ╚██████╔╝██║ ╚═╝ ██║    ║
-   ║     ╚═════╝  ╚═══╝  ╚══════╝   ╚═╝    ╚═════╝ ╚═╝     ╚═╝    ║
+   ║    █████╗ ██╗    ██████╗ ███████╗██╗   ██╗                   ║
+   ║   ██╔══██╗██║    ██╔══██╗██╔════╝██║   ██║                   ║
+   ║   ███████║██║    ██║  ██║█████╗  ██║   ██║                   ║
+   ║   ██╔══██║██║    ██║  ██║██╔══╝  ╚██╗ ██╔╝                   ║
+   ║   ██║  ██║██║    ██████╔╝███████╗ ╚████╔╝                    ║
+   ║   ╚═╝  ╚═╝╚═╝    ╚═════╝ ╚══════╝  ╚═══╝                    ║
+   ║                                                               ║
+   ║           Builder / Auditor Workflow                          ║
    ║                                                               ║
    ╚═══════════════════════════════════════════════════════════════╝
 BANNER
 echo -e "${NC}"
 
-echo -e "${CYAN}${BOLD}   🎉 Welcome to CVstomize!${NC}"
+echo -e "${CYAN}${BOLD}   🎉 Welcome to $PROJECT_NAME!${NC}"
 echo ""
-echo -e "   ${DIM}This is a personality-aware resume builder powered by AI.${NC}"
-echo -e "   ${DIM}We use a Builder/Auditor workflow for quality code.${NC}"
+echo -e "   ${DIM}AI-powered Builder/Auditor workflow for quality code.${NC}"
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
@@ -172,7 +175,7 @@ fi
 
 # Show Builder selection GUI
 AI_CHOICE=$(whiptail --title "🤖 Choose Your AI Builder" \
---menu "\nWelcome to CVstomize!\n\nThe Builder generates code, the Auditor (GitHub Copilot) reviews it.\n\nWhich AI CLI do you want as your Builder?" 18 65 3 \
+--menu "\nWelcome to $PROJECT_NAME!\n\nThe Builder generates code, the Auditor (GitHub Copilot) reviews it.\n\nWhich AI CLI do you want as your Builder?" 18 65 3 \
 "gemini" "Gemini CLI  ⭐ (Google account / API key)" \
 "claude" "Claude CLI     (Anthropic API key required)" \
 "skip" "Skip for now   (set up later)" \

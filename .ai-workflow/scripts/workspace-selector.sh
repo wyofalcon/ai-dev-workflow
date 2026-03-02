@@ -16,7 +16,7 @@ then
 fi
 
 # Display Menu
-CHOICE=$(whiptail --title "🚀 CVstomize Environment Selector" \
+CHOICE=$(whiptail --title "🚀 AI Dev Workflow - Environment Selector" \
 --menu "Select your workflow for this session:" 16 78 4 \
 "1" "Builder + 2 Auditors  (🛡️ Strict: Copilot CLI blocks bad commits)" \
 "2" "Rapid Prototyping     (⚡ Fast: No blocking audits)" \

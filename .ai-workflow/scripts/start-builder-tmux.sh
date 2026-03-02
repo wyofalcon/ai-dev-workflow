@@ -61,7 +61,12 @@ tmux send-keys -t "$SESSION_NAME" "cd $PROJECT_ROOT" Enter
 tmux send-keys -t "$SESSION_NAME" "clear" Enter
 tmux send-keys -t "$SESSION_NAME" "echo '🤖 AI Builder Ready - Copilot can inject prompts'" Enter
 tmux send-keys -t "$SESSION_NAME" "echo ''" Enter
-tmux send-keys -t "$SESSION_NAME" "$CLI_CMD" Enter
+# Launch in auto-edit mode: free file read/write, asks before shell commands
+if [ "$CLI_CMD" = "gemini" ]; then
+    tmux send-keys -t "$SESSION_NAME" "unset NODE_OPTIONS && $CLI_CMD --sandbox=auto_edit" Enter
+else
+    tmux send-keys -t "$SESSION_NAME" "unset NODE_OPTIONS && $CLI_CMD --dangerously-skip-permissions" Enter
+fi
 
 echo -e "${GREEN}✓ Builder session started (detached)${NC}"
 
@@ -72,6 +77,16 @@ if ! tmux has-session -t shell 2>/dev/null; then
     tmux send-keys -t shell "cd $PROJECT_ROOT && clear" Enter
     tmux send-keys -t shell "echo '🐚 Shell session ready - for git, docker, npm commands'" Enter
     echo -e "${GREEN}✓ Shell session started (detached)${NC}"
+fi
+
+if ! tmux has-session -t gh-ops 2>/dev/null; then
+    echo -e "${BLUE}Creating gh-ops session for GitHub automation...${NC}"
+    bash "$SCRIPT_DIR/start-gh-ops-tmux.sh" &
+    echo -e "${GREEN}✓ GH Ops session started (detached)${NC}"
+fi
+
+if ! tmux has-session -t auditor-ai 2>/dev/null; then
+    bash "$SCRIPT_DIR/start-auditor-ai-tmux.sh" &
 fi
 
 echo ""

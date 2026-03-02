@@ -31,9 +31,9 @@
           "path": "Dockerfile"
         }
       },
-      "image": "cvstomize",
+      "image": "my-project",
       "service": {
-        "name": "cvstomize",
+        "name": "my-project",
         "containerPort": 8080,
         "resources": {
           "limits": {

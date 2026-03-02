@@ -14,7 +14,7 @@ fi
 
 CURRENT_DIR=$(pwd)
 
-CHOICE=$(whiptail --title "🚀 CVstomize: Session Mode" \
+CHOICE=$(whiptail --title "🚀 AI Dev Workflow: Session Mode" \
 --menu "Builder: Gemini/Claude CLI  •  Auditor: GitHub Copilot\n\nWorking in: $CURRENT_DIR\n\nSelect workflow:" 18 70 3 \
 "1" "Builder + Auditor   (🛡️ Pre-commit checks enabled)" \
 "2" "Rapid Prototyping   (⚡ Skip auditor, fast iteration)" \
